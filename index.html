@@ -598,6 +598,220 @@ body.erase-cursor .beat-cell.active:hover {
   box-shadow: 0 0 0 2px #e94560 !important;
 }
 
+
+/* ════════════════════════════════════════════════════
+   STAGE MODE
+════════════════════════════════════════════════════ */
+.stage-open-btn{
+  display:flex;align-items:center;gap:5px;padding:7px 14px;
+  background:linear-gradient(135deg,rgba(124,111,247,.15),rgba(233,69,96,.1));
+  border:1px solid rgba(124,111,247,.4);border-radius:8px;
+  color:#a09af5;font-family:"Syne",sans-serif;font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.stage-open-btn:hover{background:rgba(124,111,247,.25);border-color:rgba(124,111,247,.7);color:#c4beff;}
+
+/* Full-screen overlay */
+.stage-overlay{
+  position:fixed;inset:0;z-index:900;
+  background:#000;
+  display:flex;align-items:stretch;
+  opacity:0;pointer-events:none;
+  transition:opacity .4s;
+  overflow:hidden;
+}
+.stage-overlay.show{opacity:1;pointer-events:all;}
+
+/* Smoke layer */
+.stage-smoke{
+  position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(60,20,80,.7) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 30% 80%, rgba(20,40,80,.5) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 70% 80%, rgba(40,10,60,.5) 0%, transparent 60%);
+}
+/* Animated smoke particles */
+.smoke-particle{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle, rgba(120,80,160,.15) 0%, transparent 70%);
+  animation:smokeRise linear infinite;
+  pointer-events:none;
+}
+@keyframes smokeRise{
+  0%{transform:translateY(0) scale(1);opacity:.4;}
+  100%{transform:translateY(-120px) scale(2.5);opacity:0;}
+}
+
+/* Close button */
+.stage-close{
+  position:absolute;top:16px;right:18px;z-index:20;
+  width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.5);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.stage-close:hover{background:rgba(233,69,96,.2);border-color:#e94560;color:#e94560;}
+
+/* Left panel */
+.stage-panel{
+  width:180px;flex-shrink:0;
+  background:rgba(10,8,20,.8);
+  border-right:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;gap:4px;
+  padding:20px 0 20px;z-index:10;
+  backdrop-filter:blur(8px);
+}
+.stage-panel-title{
+  font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.25);
+  text-transform:uppercase;padding:0 18px 10px;
+}
+.stage-panel-divider{height:1px;background:rgba(255,255,255,.06);margin:10px 18px;}
+.stage-bpm-row{display:flex;align-items:center;justify-content:space-between;padding:0 18px;}
+.stage-bpm-label{font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2px;}
+.stage-bpm-val{font-family:"Space Mono",monospace;font-size:18px;font-weight:700;color:rgba(255,255,255,.5);}
+.stage-status{
+  font-size:10px;font-family:"Space Mono",monospace;
+  color:rgba(255,255,255,.3);padding:6px 18px 0;line-height:1.5;
+}
+.stage-hint{
+  margin-top:auto;padding:0 18px;
+  font-size:9px;color:rgba(255,255,255,.18);
+  font-family:"Space Mono",monospace;line-height:1.8;
+}
+
+/* Instrument rows */
+.stage-instr-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 18px;cursor:pointer;
+  transition:all .2s;border-left:3px solid transparent;
+  position:relative;
+}
+.stage-instr-item:hover{background:rgba(255,255,255,.04);}
+.stage-instr-item.active{background:rgba(255,255,255,.06);}
+.stage-instr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:box-shadow .2s;}
+.stage-instr-name{font-size:12px;font-weight:700;transition:color .2s;}
+.stage-instr-sound{
+  font-size:8px;font-family:"Space Mono",monospace;
+  color:rgba(255,255,255,.25);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  max-width:90px;
+}
+.stage-instr-steps{
+  margin-left:auto;font-family:"Space Mono",monospace;font-size:9px;
+  color:rgba(255,255,255,.2);
+}
+/* Active instrument — neon glow */
+.stage-instr-item.active .stage-instr-dot{
+  box-shadow: 0 0 12px 3px var(--instr-col);
+}
+.stage-instr-item.active .stage-instr-name{color:var(--instr-col);}
+.stage-instr-item.active{border-left-color:var(--instr-col);}
+/* Sound swap hint on hover */
+.stage-swap-hint{display:none;} /* removed */
+
+/* Per-track rec button in stage */
+.stage-rec-btn{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;
+  border:1.5px solid rgba(233,69,96,.35);background:transparent;
+  color:rgba(233,69,96,.4);font-size:9px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;padding:0;line-height:1;
+}
+.stage-rec-btn:hover{border-color:#e94560;color:#e94560;background:rgba(233,69,96,.12);}
+.stage-rec-btn.armed{
+  border-color:#e94560;color:#e94560;background:rgba(233,69,96,.18);
+  box-shadow:0 0 10px rgba(233,69,96,.5);
+  animation:recpulse .6s ease-in-out infinite alternate;
+}
+.stage-rec-btn.recording{
+  border-color:#ff2244;color:#ff2244;background:rgba(255,34,68,.25);
+  box-shadow:0 0 14px rgba(255,34,68,.7);
+}
+/* Instrument name = clickable for sound swap */
+.stage-instr-name{
+  cursor:pointer;transition:color .15s;text-decoration:none;
+}
+.stage-instr-name:hover{text-decoration:underline;text-underline-offset:2px;}
+/* rec track indicator bar */
+.stage-track-rec-bar{
+  height:2px;width:0%;
+  background:linear-gradient(90deg,rgba(74,222,128,.5),rgba(74,222,128,.9));
+  border-radius:1px;
+  transition:width .06s linear;
+  margin-top:2px;
+}
+
+/* Main canvas area */
+.stage-main{
+  flex:1;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  z-index:5;
+}
+.stage-canvas{
+  position:absolute;inset:0;width:100%;height:100%;
+  display:block;
+}
+/* Hit ring flash */
+.stage-hit-ring{
+  position:absolute;
+  width:320px;height:320px;
+  border-radius:50%;
+  border:2px solid transparent;
+  pointer-events:none;
+  transition:none;
+  z-index:8;
+}
+.stage-hit-ring.flash{
+  animation:ringFlash .35s ease-out forwards;
+}
+@keyframes ringFlash{
+  0%{transform:scale(.9);border-color:var(--ring-col);box-shadow:0 0 40px 10px var(--ring-col),inset 0 0 20px 5px var(--ring-col);opacity:1;}
+  100%{transform:scale(1.3);border-color:transparent;box-shadow:none;opacity:0;}
+}
+
+/* Center instrument label */
+.stage-center-label{
+  position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
+  font-size:11px;font-weight:700;letter-spacing:6px;text-transform:uppercase;
+  color:rgba(255,255,255,.3);font-family:"Space Mono",monospace;
+  pointer-events:none;z-index:9;transition:color .3s,text-shadow .3s;
+}
+.stage-center-label.active{
+  text-shadow:0 0 20px var(--label-col);
+}
+
+/* Rec badge */
+.stage-rec-badge{
+  position:absolute;top:18px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:7px;
+  background:rgba(0,0,0,.5);border:1px solid rgba(233,69,96,.3);
+  border-radius:20px;padding:5px 14px;
+  font-family:"Space Mono",monospace;font-size:10px;color:rgba(233,69,96,.7);
+  opacity:0;transition:opacity .3s;z-index:9;
+}
+.stage-rec-badge.show{opacity:1;}
+.stage-rec-dot{
+  width:7px;height:7px;border-radius:50%;background:#e94560;
+  animation:recBlink 1s ease-in-out infinite;
+}
+
+/* Step counter */
+.stage-step-counter{
+  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+  font-family:"Space Mono",monospace;font-size:10px;color:rgba(255,255,255,.2);
+  pointer-events:none;z-index:9;letter-spacing:2px;
+}
+
+/* Hit particles */
+.stage-particle{
+  position:absolute;border-radius:50%;pointer-events:none;
+  animation:particleFly .6s ease-out forwards;z-index:7;
+}
+@keyframes particleFly{
+  0%{transform:translate(-50%,-50%) scale(1);opacity:.9;}
+  100%{transform:translate(var(--px),var(--py)) scale(0);opacity:0;}
+}
+
 </style>
 </head>
 <body>
@@ -649,6 +863,7 @@ body.erase-cursor .beat-cell.active:hover {
   </div>
   <div class="header-spacer"></div>
   <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;">hover a lit cell → click ⊹ to edit envelope</div>
+  <button class="stage-open-btn" id="stageOpenBtn" title="Stage Modu — F">🎭 Stage</button>
 </header>
 
 <!-- STRUCTURE BAR -->
@@ -1012,6 +1227,53 @@ body.erase-cursor .beat-cell.active:hover {
   </div>
 </div>
 
+
+<!-- ═══════════════════════════════════════════════════════
+     STAGE MODE OVERLAY
+════════════════════════════════════════════════════════ -->
+<div class="stage-overlay" id="stageOverlay">
+
+  <!-- Smoke particles (CSS animated) -->
+  <div class="stage-smoke" id="stageSmoke"></div>
+
+  <!-- Close button -->
+  <button class="stage-close" id="stageClose" title="Kapat (Esc)">✕</button>
+
+  <!-- Left panel — instrument selector -->
+  <div class="stage-panel" id="stagePanel">
+    <div class="stage-panel-title">TRACKS</div>
+    <div class="stage-instruments" id="stageInstruments"></div>
+    <div class="stage-panel-divider"></div>
+    <div class="stage-bpm-row">
+      <span class="stage-bpm-label">BPM</span>
+      <span class="stage-bpm-val" id="stageBpmVal">120</span>
+    </div>
+    <div class="stage-status" id="stageStatus">Çalmaya hazır</div>
+    <div class="stage-hint">SPACE = aktif enstrüman<br>1-5 = enstrüman seç<br>İsme tıkla = ses değiştir<br>● = kayıt başlat/durdur<br>F / ESC = kapat</div>
+  </div>
+
+  <!-- Main canvas area -->
+  <div class="stage-main">
+    <!-- Speaker canvas -->
+    <canvas class="stage-canvas" id="stageCanvas"></canvas>
+
+    <!-- Hit flash ring -->
+    <div class="stage-hit-ring" id="stageHitRing"></div>
+
+    <!-- Center instrument name -->
+    <div class="stage-center-label" id="stageCenterLabel">KICK</div>
+
+    <!-- Record indicator -->
+    <div class="stage-rec-badge" id="stageRecBadge">
+      <span class="stage-rec-dot"></span>
+      <span id="stageRecText">REC</span>
+    </div>
+
+    <!-- Step counter -->
+    <div class="stage-step-counter" id="stageStepCounter">—</div>
+  </div>
+</div>
+
 <!-- EXPORT MODAL -->
 <div class="modal-overlay" id="exportModal">
   <div class="modal">
@@ -1113,11 +1375,12 @@ function buildEnvCurve(env, N){
   return {pts, totalSec};
 }
 
-function applyEnvGain(g,env,t){
+function applyEnvGain(g,env,t,masterVol=1){
   const N = 128;
   let {pts, totalSec} = buildEnvCurve(env, N);
   if(env.inverted) pts = [...pts].reverse();
-  const peak = 0.75 * ((env.vol != null ? env.vol : 100) / 100);
+  // env.vol = ADSR panel ses (0-150), masterVol = track volume slider (0-1)
+  const peak = 0.75 * ((env.vol != null ? env.vol : 100) / 100) * masterVol;
   g.gain.setValueAtTime(pts[0]*peak, t);
   for(let i=1;i<N;i++){
     const st = t + (i/(N-1))*totalSec;
@@ -1126,51 +1389,51 @@ function applyEnvGain(g,env,t){
   return totalSec + 0.01;
 }
 function defaultEnv(){return{a:5,d:40,s:70,r:30,dur:300,pitch:0,inverted:false,vol:100};}
-function playKick(t,v,env){
+function playKick(t,v,env,masterVol=1){
   const c=getCtx(),o=c.createOscillator(),g=c.createGain();
   o.connect(g);g.connect(c.destination);
-  const dur=env?applyEnvGain(g,env,t):0.5;
+  const dur=env?applyEnvGain(g,env,t,masterVol):0.5;
   o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(0.001,t+dur);
   if(!env){g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);}
   o.start(t);o.stop(t+dur+.1);
 }
-function playSnare(t,v,env){
+function playSnare(t,v,env,masterVol=1){
   const c=getCtx(),bufLen=Math.max(c.sampleRate*(env?(env.dur||300)/1000:0.22)*1.5, c.sampleRate*0.05);
   const b=c.createBuffer(1,bufLen,c.sampleRate),d=b.getChannelData(0);
   for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
   const s=c.createBufferSource(),g=c.createGain(),f=c.createBiquadFilter();
   f.type='highpass';f.frequency.value=1000;s.buffer=b;s.connect(f);f.connect(g);g.connect(c.destination);
-  const dur=env?applyEnvGain(g,env,t):0.22;
+  const dur=env?applyEnvGain(g,env,t,masterVol):0.22;
   if(!env){g.gain.setValueAtTime(v*.8,t);g.gain.exponentialRampToValueAtTime(0.001,t+.22);}
   s.start(t);s.stop(t+dur+.1);
 }
-function playHihat(t,v,env){
+function playHihat(t,v,env,masterVol=1){
   const c=getCtx(),bufLen=Math.max(c.sampleRate*(env?(env.dur||300)/1000:0.09)*1.5, c.sampleRate*0.03);
   const b=c.createBuffer(1,bufLen,c.sampleRate),d=b.getChannelData(0);
   for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
   const s=c.createBufferSource(),g=c.createGain(),f=c.createBiquadFilter();
   f.type='highpass';f.frequency.value=7000;s.buffer=b;s.connect(f);f.connect(g);g.connect(c.destination);
-  const dur=env?applyEnvGain(g,env,t):0.09;
+  const dur=env?applyEnvGain(g,env,t,masterVol):0.09;
   if(!env){g.gain.setValueAtTime(v*.5,t);g.gain.exponentialRampToValueAtTime(0.001,t+.09);}
   s.start(t);s.stop(t+dur+.1);
 }
-function playMelody(t,v,step,env){
+function playMelody(t,v,step,env,masterVol=1){
   const c=getCtx(),n=[261.63,293.66,329.63,349.23,392,440,493.88,523.25];
   const o=c.createOscillator(),g=c.createGain();
   o.type='triangle';o.connect(g);g.connect(c.destination);
   const e=env||defaultEnv();
   o.frequency.value=n[step%n.length]*Math.pow(2,(e.pitch||0)/12);
-  const dur=applyEnvGain(g,e,t);
+  const dur=applyEnvGain(g,e,t,masterVol);
   o.start(t);o.stop(t+dur+.1);
 }
-function playBass(t,v,step,env){
+function playBass(t,v,step,env,masterVol=1){
   const c=getCtx(),n=[65.41,73.42,82.41,87.31,98,110];
   const o=c.createOscillator(),g=c.createGain(),f=c.createBiquadFilter();
   o.type='sawtooth';f.type='lowpass';f.frequency.value=400;
   o.connect(f);f.connect(g);g.connect(c.destination);
   const e=env||defaultEnv();
   o.frequency.value=n[step%n.length]*Math.pow(2,(e.pitch||0)/12);
-  const dur=applyEnvGain(g,e,t);
+  const dur=applyEnvGain(g,e,t,masterVol);
   o.start(t);o.stop(t+dur+.1);
 }
 function playMetronome(t,down){const c=getCtx(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=down?1200:800;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(0.001,t+.04);o.start(t);o.stop(t+.04);}
@@ -1184,11 +1447,12 @@ function triggerSound(track,t,step,overrideEnv){
     playLoadedBuffer(track,t,v,env);
     return;
   }
-  if(track==='kick')playKick(t,v,env);
-  else if(track==='snare')playSnare(t,v,env);
-  else if(track==='hihat')playHihat(t,v,env);
-  else if(track==='melody')playMelody(t,v,step,env);
-  else if(track==='bass')playBass(t,v,step,env);
+  const mv=volumes[track];
+  if(track==='kick')playKick(t,v,env,mv);
+  else if(track==='snare')playSnare(t,v,env,mv);
+  else if(track==='hihat')playHihat(t,v,env,mv);
+  else if(track==='melody')playMelody(t,v,step,env,mv);
+  else if(track==='bass')playBass(t,v,step,env,mv);
 }
 
 function playLoadedBuffer(track,t,v,env){
@@ -1215,9 +1479,11 @@ function playLoadedBuffer(track,t,v,env){
   const g=c.createGain();
   src.buffer=playBuf;
   src.connect(g);g.connect(c.destination);
-  const totalDur=env?applyEnvGain(g,env,t):playBuf.duration;
+  const _mv = volumes[track] || 1;
+  const totalDur=env?applyEnvGain(g,env,t,_mv):playBuf.duration;
   if(env&&env.pitch)src.playbackRate.value=Math.pow(2,env.pitch/12);
-  g.gain.value=((v||1)*((env&&env.vol!=null?env.vol:100)/100));
+  // Env varken applyEnvGain zaten gain ayarlar, yoksa v (= volumes[track]) kullan
+  if(!env) g.gain.value = (v || 1);
   src.start(t);
   src.stop(t+Math.min(totalDur+0.1, playBuf.duration+0.5));
 }
@@ -1289,13 +1555,16 @@ function showHoldToast(text){
 document.addEventListener('keydown', e => {
   if(e.target.tagName === 'INPUT') return;
   if(e.repeat) return;
+  if(stageOpen) return;  // stage handles its own keys
   const track = KEY_MAP[e.key.toLowerCase()] || KEY_MAP[e.key];
   if(!track) return;
   e.preventDefault(); getCtx();
   selectTrack(track);
   const ctx = getCtx();
   const now = ctx.currentTime;
-  const step = currentStep;
+  // Kayıt için: lastHL = şu an çalan adım. currentStep = henüz schedule edilmemiş.
+  // Kullanıcı tuşa bastığında duyduğu adıma kaydedelim.
+  const step = (isPlaying && lastHL >= 0) ? lastHL : currentStep;
 
   // Visual flash
   const sb = document.getElementById(`sidebar-${track}`);
@@ -1349,6 +1618,7 @@ document.addEventListener('keydown', e => {
 
 document.addEventListener('keyup', e => {
   if(e.target.tagName === 'INPUT') return;
+  if(stageOpen) return;
   const track = KEY_MAP[e.key.toLowerCase()] || KEY_MAP[e.key];
   if(!track) return;
   const hs = holdState[track];
@@ -1390,6 +1660,13 @@ document.addEventListener('keyup', e => {
   }
 
   delete holdState[track];
+});
+
+// Global F key shortcut for stage
+document.addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT') return;
+  if(stageOpen) return;
+  if(e.key === 'f' || e.key === 'F') openStage();
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -2245,10 +2522,14 @@ async function confirmSound(){
     setTimeout(()=>{
       btn.innerHTML='✓ Use This Sound';btn.style.background='';btn.disabled=false;
       closeSoundSearch();
-      showToast(`${TNAMES[popupTrack]}: "${sound.name}" eklendi — ADSR panelinden trim edebilirsin`);
-      // If ADSR panel is open for this track, refresh trim section
+      showToast(`${TNAMES[popupTrack]}: "${sound.name}" eklendi`);
       if(adsrTrack===popupTrack && document.getElementById('adsrPanel').classList.contains('open')){
         showTrimSection();
+      }
+      // Refresh stage instrument list if stage open
+      if(stageOpen) {
+        const soundEl = document.getElementById(`stage-instr-sound-${popupTrack}`);
+        if(soundEl) soundEl.textContent = sound.name;
       }
     },1000);
   }catch(e){
@@ -2729,6 +3010,429 @@ function stopHoldBar(track){
   document.getElementById(`trec-${track}`)?.classList.remove('recording');
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+// STAGE MODE
+// ═══════════════════════════════════════════════════════════════
+const STAGE_COLORS = {
+  kick:   { col:'#e94560', glow:'rgba(233,69,96,.6)',  dark:'rgba(233,69,96,.08)'  },
+  snare:  { col:'#f5a623', glow:'rgba(245,166,35,.6)', dark:'rgba(245,166,35,.08)' },
+  hihat:  { col:'#00d4aa', glow:'rgba(0,212,170,.6)',  dark:'rgba(0,212,170,.08)'  },
+  melody: { col:'#7c6ff7', glow:'rgba(124,111,247,.6)',dark:'rgba(124,111,247,.08)'},
+  bass:   { col:'#3a9ff5', glow:'rgba(58,159,245,.6)', dark:'rgba(58,159,245,.08)' }
+};
+
+let stageOpen = false;
+let stageTrack = 'kick';
+let stageAnimFrame = null;
+let stageSpeakerPush = 0;   // 0..1, decays each frame
+let stageSpeakerVel  = 0;
+let stageLastHit = 0;
+let stageHitCount = 0;
+let stageSmokeParticles = [];
+
+// Speaker drawing
+function drawSpeaker(canvas, track, push) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W/2, cy = H/2;
+  const sc = STAGE_COLORS[track];
+
+  // Background glow
+  const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300);
+  bgGrad.addColorStop(0, sc.dark);
+  bgGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Speaker outer ring (cabinet)
+  const outerR = 130 + push * 8;
+  ctx.beginPath();
+  ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+  ctx.fillStyle = '#0d0d14';
+  ctx.fill();
+  ctx.strokeStyle = sc.col + '44';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Neon outer ring glow
+  ctx.shadowColor = sc.col;
+  ctx.shadowBlur = 20 + push * 30;
+  ctx.beginPath();
+  ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+  ctx.strokeStyle = sc.col + (push > 0.05 ? 'cc' : '44');
+  ctx.lineWidth = push > 0.05 ? 2.5 : 1.5;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Speaker surround rings
+  for (let i = 0; i < 3; i++) {
+    const r = outerR - 18 - i * 18 - push * (i+1) * 6;
+    const alpha = 0.12 + i * 0.08;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = sc.col + Math.floor(alpha * 255).toString(16).padStart(2,'0');
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Speaker cone (filled circle that pushes)
+  const coneR = 58 + push * 18;
+  const coneGrad = ctx.createRadialGradient(cx - 12, cy - 12, 0, cx, cy, coneR);
+  coneGrad.addColorStop(0, '#2a2a3a');
+  coneGrad.addColorStop(0.6, '#141420');
+  coneGrad.addColorStop(1, '#0a0a14');
+  ctx.beginPath();
+  ctx.arc(cx, cy, coneR, 0, Math.PI*2);
+  ctx.fillStyle = coneGrad;
+  ctx.fill();
+  // Cone glow edge
+  ctx.shadowColor = sc.col;
+  ctx.shadowBlur = push * 25;
+  ctx.strokeStyle = sc.col + (push > 0.1 ? '88' : '22');
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Dust cap (center circle)
+  const capR = 16 + push * 6;
+  const capGrad = ctx.createRadialGradient(cx - 4, cy - 4, 0, cx, cy, capR);
+  capGrad.addColorStop(0, '#3a3a4a');
+  capGrad.addColorStop(1, '#1a1a24');
+  ctx.beginPath();
+  ctx.arc(cx, cy, capR, 0, Math.PI*2);
+  ctx.fillStyle = capGrad;
+  ctx.fill();
+  ctx.strokeStyle = sc.col + (push > 0.1 ? 'aa' : '33');
+  ctx.lineWidth = 1;
+  ctx.shadowColor = sc.col;
+  ctx.shadowBlur = push * 20;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, 3 + push*2, 0, Math.PI*2);
+  ctx.fillStyle = push > 0.1 ? sc.col : '#333';
+  ctx.fill();
+
+  // Neon scan lines (atmosphere)
+  ctx.save();
+  ctx.globalAlpha = 0.03 + push * 0.04;
+  for (let y = 0; y < H; y += 4) {
+    ctx.beginPath();
+    ctx.moveTo(0, y); ctx.lineTo(W, y);
+    ctx.strokeStyle = sc.col;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function stageHitEffect(track) {
+  const ring = document.getElementById('stageHitRing');
+  const col = STAGE_COLORS[track].col;
+  ring.style.setProperty('--ring-col', col);
+  ring.classList.remove('flash');
+  void ring.offsetWidth;
+  ring.classList.add('flash');
+
+  // Spawn hit particles
+  const main = document.querySelector('.stage-main');
+  if (!main) return;
+  const R = main.offsetWidth / 2;
+  const Cy = main.offsetHeight / 2;
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('div');
+    p.className = 'stage-particle';
+    const angle = (Math.PI*2/10)*i + Math.random()*0.4;
+    const dist = 80 + Math.random()*100;
+    p.style.cssText = `
+      left:50%;top:${Cy}px;
+      width:${4+Math.random()*6}px;height:${4+Math.random()*6}px;
+      background:${col};
+      box-shadow:0 0 8px ${col};
+      --px:${Math.cos(angle)*dist}px;
+      --py:${Math.sin(angle)*dist - 40}px;
+      animation-duration:${0.4+Math.random()*0.4}s;
+    `;
+    main.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+  }
+
+  // Update center label
+  const lbl = document.getElementById('stageCenterLabel');
+  if (lbl) {
+    lbl.style.setProperty('--label-col', col);
+    lbl.classList.add('active');
+    clearTimeout(lbl._t);
+    lbl._t = setTimeout(() => lbl.classList.remove('active'), 400);
+  }
+}
+
+function stageLoop() {
+  if (!stageOpen) return;
+  const canvas = document.getElementById('stageCanvas');
+  if (!canvas) return;
+
+  // Physics: decay push with spring
+  stageSpeakerPush *= 0.82;
+  if (stageSpeakerPush < 0.001) stageSpeakerPush = 0;
+
+  // Idle breathing
+  const breath = 0.015 * Math.sin(Date.now() * 0.0015);
+  drawSpeaker(canvas, stageTrack, stageSpeakerPush + Math.max(0, breath));
+
+  // Update step counter
+  const ctr = document.getElementById('stageStepCounter');
+  if (ctr && isPlaying) {
+    const bar = Math.floor(currentStep / 4) + 1;
+    const beat = (currentStep % 4) + 1;
+    ctr.textContent = `BAR ${bar}  ·  BEAT ${beat}`;
+  } else if (ctr) {
+    ctr.textContent = '— DURDURULDU —';
+  }
+
+  stageAnimFrame = requestAnimationFrame(stageLoop);
+}
+
+// Per-track recording state in stage
+const stageRecording = {}; // track -> boolean
+TRACKS.forEach(t => stageRecording[t] = false);
+
+function buildStageInstruments() {
+  const container = document.getElementById('stageInstruments');
+  if (!container) return;
+  container.innerHTML = '';
+  TRACKS.forEach(track => {
+    const sc = STAGE_COLORS[track];
+    const sn = selectedSounds[track];
+    const stepCount = grid[track].filter(Boolean).length;
+
+    const item = document.createElement('div');
+    item.className = 'stage-instr-item' + (track === stageTrack ? ' active' : '');
+    item.style.setProperty('--instr-col', sc.col);
+    item.id = `stage-instr-${track}`;
+    item.style.cursor = 'default';
+
+    item.innerHTML = `
+      <div class="stage-instr-dot" style="background:${sc.col};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;cursor:default;" id="stage-instr-body-${track}">
+        <div class="stage-instr-name" id="stage-instr-name-${track}" title="Sesi değiştir">${TNAMES[track]}</div>
+        <div class="stage-instr-sound" id="stage-instr-sound-${track}">${sn ? sn.name : '· varsayılan'}</div>
+        <div class="stage-track-rec-bar" id="stage-rec-bar-${track}"></div>
+      </div>
+      <div class="stage-instr-steps" id="stage-instr-steps-${track}">${stepCount > 0 ? stepCount+'✓' : ''}</div>
+      <button class="stage-rec-btn ${stageRecording[track] ? 'recording' : ''}" id="stage-rec-btn-${track}" title="Kayıt başlat/durdur">●</button>
+    `;
+
+    // Clicking instrument name → sound swap
+    item.querySelector(`#stage-instr-name-${track}`).addEventListener('click', (e) => {
+      e.stopPropagation();
+      openSoundSearch(track);
+    });
+
+    // Clicking anywhere else on the row → select this track
+    item.addEventListener('click', (e) => {
+      if(e.target.id === `stage-instr-name-${track}`) return;
+      if(e.target.id === `stage-rec-btn-${track}`) return;
+      selectStageTrack(track);
+    });
+
+    // Rec button
+    item.querySelector(`#stage-rec-btn-${track}`).addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleStageRec(track);
+    });
+
+    container.appendChild(item);
+  });
+}
+
+function toggleStageRec(track) {
+  const wasRec = stageRecording[track];
+  stageRecording[track] = !wasRec;
+  const btn = document.getElementById(`stage-rec-btn-${track}`);
+  if (!btn) return;
+  if (stageRecording[track]) {
+    btn.classList.add('recording');
+    btn.classList.remove('armed');
+    // Auto-select this track for Space key
+    selectStageTrack(track);
+    showToast(`${TNAMES[track]} kaydediliyor`);
+  } else {
+    btn.classList.remove('recording', 'armed');
+    showToast(`${TNAMES[track]} kaydı durduruldu — ${grid[track].filter(Boolean).length} adım`);
+  }
+  updateStageStatus();
+}
+
+function updateStageStatus() {
+  const recTracks = TRACKS.filter(t => stageRecording[t]);
+  const status = document.getElementById('stageStatus');
+  if (!status) return;
+  if (recTracks.length === 0) {
+    status.textContent = 'Kayıt yok — ● bas';
+  } else {
+    status.textContent = recTracks.map(t => TNAMES[t]).join(', ') + ' kaydediyor';
+  }
+}
+
+function selectStageTrack(track) {
+  stageTrack = track;
+  const sc = STAGE_COLORS[track];
+
+  // Update active instrument
+  TRACKS.forEach(t => {
+    const el = document.getElementById(`stage-instr-${t}`);
+    if (el) {
+      el.classList.toggle('active', t === track);
+      el.style.setProperty('--instr-col', STAGE_COLORS[t].col);
+    }
+  });
+
+  // Update center label
+  const lbl = document.getElementById('stageCenterLabel');
+  if (lbl) lbl.textContent = TNAMES[track].toUpperCase();
+
+  // Pulse speaker immediately
+  stageSpeakerPush = 0.4;
+  stageHitEffect(track);
+}
+
+function spawnSmokeParticles() {
+  const smoke = document.getElementById('stageSmoke');
+  if (!smoke) return;
+  // Clear old dynamic particles
+  smoke.querySelectorAll('.smoke-particle').forEach(p => p.remove());
+
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'smoke-particle';
+    const size = 80 + Math.random() * 160;
+    const left = 20 + Math.random() * 60;
+    const bottom = -20 + Math.random() * 40;
+    const delay = Math.random() * 8;
+    const dur = 6 + Math.random() * 8;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${left}%;bottom:${bottom}%;
+      animation-duration:${dur}s;
+      animation-delay:${delay}s;
+    `;
+    smoke.appendChild(p);
+  }
+}
+
+function openStage() {
+  stageOpen = true;
+  const overlay = document.getElementById('stageOverlay');
+  overlay.classList.add('show');
+
+  // Resize canvas
+  const canvas = document.getElementById('stageCanvas');
+  const main = document.querySelector('.stage-main');
+  if (canvas && main) {
+    canvas.width = main.offsetWidth;
+    canvas.height = main.offsetHeight;
+  }
+
+  buildStageInstruments();
+  spawnSmokeParticles();
+  selectStageTrack(stageTrack);
+
+  // Update BPM display
+  const bv = document.getElementById('stageBpmVal');
+  if (bv) bv.textContent = bpm;
+
+  // Start sequencer if not already playing (so we hear existing tracks)
+  if (!isPlaying) startSequencer();
+
+  // Start animation loop
+  if (stageAnimFrame) cancelAnimationFrame(stageAnimFrame);
+  stageLoop();
+
+  // Reset all per-track rec states
+  TRACKS.forEach(t => { stageRecording[t] = false; });
+  updateStageStatus();
+  // Hide main rec badge (it's per-track now)
+  document.getElementById('stageRecBadge').classList.remove('show');
+}
+
+function closeStage() {
+  stageOpen = false;
+  document.getElementById('stageOverlay').classList.remove('show');
+  if (stageAnimFrame) { cancelAnimationFrame(stageAnimFrame); stageAnimFrame = null; }
+}
+
+// Stage keydown handler — Space triggers the active instrument
+function stageKeyHandler(e) {
+  if (!stageOpen) return;
+  if (e.key === 'Escape') { closeStage(); return; }
+  if (e.key === 'f' || e.key === 'F') { closeStage(); return; }
+
+  // Number keys 1-5: switch instrument
+  const numMap = {'1':'kick','2':'snare','3':'hihat','4':'melody','5':'bass'};
+  if (numMap[e.key]) { selectStageTrack(numMap[e.key]); return; }
+
+  if (e.key === ' ' || KEY_MAP[e.key.toLowerCase()]) {
+    e.preventDefault();
+    if (e.repeat) return;
+    const track = e.key === ' ' ? stageTrack : (KEY_MAP[e.key.toLowerCase()] || stageTrack);
+    // Auto-select track if using instrument keys
+    if (e.key !== ' ') selectStageTrack(track);
+    stageHitTrack(track);
+  }
+}
+
+function stageHitTrack(track) {
+  const ctx = getCtx();
+  const step = currentStep;
+
+  // Always play sound (hear it)
+  triggerSound(track, ctx.currentTime, step);
+
+  // Record to grid ONLY if this track's rec is ON
+  if (stageRecording[track] && !grid[track][step]) {
+    grid[track][step] = true;
+    const cell = document.getElementById(`cell-${track}-${step}`);
+    if (cell) { cell.classList.add('active'); }
+  }
+
+  // Visual hit — speaker push
+  stageSpeakerPush = 1.0;
+  stageHitEffect(track);
+
+  // Flash instrument row
+  const el = document.getElementById(`stage-instr-${track}`);
+  if (el) {
+    // Update step count
+    const stepsEl = document.getElementById(`stage-instr-steps-${track}`);
+    if (stepsEl) {
+      const cnt = grid[track].filter(Boolean).length;
+      stepsEl.textContent = cnt > 0 ? cnt+'✓' : '';
+    }
+    // Row flash
+    el.style.background = STAGE_COLORS[track].dark.replace('08','22');
+    setTimeout(() => { el.style.background = ''; }, 120);
+  }
+
+  stageHitCount++;
+}
+
+// Resize canvas on window resize
+window.addEventListener('resize', () => {
+  if (!stageOpen) return;
+  const canvas = document.getElementById('stageCanvas');
+  const main = document.querySelector('.stage-main');
+  if (canvas && main) {
+    canvas.width = main.offsetWidth;
+    canvas.height = main.offsetHeight;
+  }
+});
+
 // ═══════════════════════════════════════════════════════════════
 // EXPORT
 // ═══════════════════════════════════════════════════════════════
@@ -2873,6 +3577,10 @@ function wireEvents(){
     btn.addEventListener('click',()=>applyTrimPreset(parseFloat(btn.dataset.dur)));
   });
   initTrimDrag();
+  // Stage mode
+  document.getElementById('stageOpenBtn')?.addEventListener('click', openStage);
+  document.getElementById('stageClose')?.addEventListener('click', closeStage);
+  document.addEventListener('keydown', stageKeyHandler);
 }
 
 init();
