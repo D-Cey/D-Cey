@@ -462,6 +462,10 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
 .ap-trim-save-btn{padding:6px 12px;border-radius:7px;border:1px solid #7c6ff7;background:#7c6ff715;color:#7c6ff7;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
 .ap-trim-save-btn:hover{background:#7c6ff730;}
 
+
+.rvol{-webkit-appearance:none;width:100%;height:3px;border-radius:2px;background:var(--surface3);outline:none;cursor:pointer;}
+.rvol::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.5);cursor:pointer;}
+
 </style>
 </head>
 <body>
@@ -657,6 +661,7 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
       <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label s"><span class="dot"></span>Sustain</span><span class="ap-sl-val s" id="apVS">—</span></div><input type="range" class="rs" id="apSS" min="0" max="100" value="70"/><div class="ap-sl-desc">Volume while held</div></div>
       <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label r"><span class="dot"></span>Release</span><span class="ap-sl-val r" id="apVR">—</span></div><input type="range" class="rr" id="apSR" min="0" max="100" value="65"/><div class="ap-sl-desc">Fade after note ends</div></div>
       <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label pitch"><span class="dot"></span>Pitch</span><span class="ap-sl-val pitch" id="apVPitch">—</span></div><input type="range" class="rpitch" id="apSPitch" min="0" max="24" value="0" step="1" /><div class="ap-sl-desc">Semitones up from root</div></div>
+      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label" style="color:#4ade80;display:flex;align-items:center;gap:4px;"><span class="dot" style="background:#4ade80;"></span>Volume</span><span class="ap-sl-val" style="color:#4ade80;" id="apVVol">—</span></div><input type="range" class="rvol" id="apSVol" min="0" max="150" value="100" step="1"/><div class="ap-sl-desc">Bu adımın ses seviyesi (100 = normal)</div></div>
     </div>
     <div class="ap-divider"></div>
     <!-- DURATION CONTROL — directly sets how long the sound plays, separate from envelope shape -->
@@ -929,7 +934,7 @@ function applyEnvGain(g,env,t){
   }
   return totalSec + 0.01;
 }
-function defaultEnv(){return{a:5,d:40,s:70,r:30,dur:300,pitch:0,inverted:false};}
+function defaultEnv(){return{a:5,d:40,s:70,r:30,dur:300,pitch:0,inverted:false,vol:100};}
 function playKick(t,v,env){
   const c=getCtx(),o=c.createOscillator(),g=c.createGain();
   o.connect(g);g.connect(c.destination);
@@ -980,8 +985,9 @@ function playBass(t,v,step,env){
 function playMetronome(t,down){const c=getCtx(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=down?1200:800;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(0.001,t+.04);o.start(t);o.stop(t+.04);}
 // overrideEnv lets the ADSR preview pass in current settings without saving them
 function triggerSound(track,t,step,overrideEnv){
-  const v=volumes[track];
+  const baseVol=volumes[track];
   const env=overrideEnv||envelopes[track][step]||null;
+  const v=baseVol*((env&&env.vol!=null?env.vol:100)/100);
   // If a real Freesound sample is loaded for this track, use it
   if(loadedBuffers[track]){
     playLoadedBuffer(track,t,v,env);
@@ -1020,7 +1026,7 @@ function playLoadedBuffer(track,t,v,env){
   src.connect(g);g.connect(c.destination);
   const totalDur=env?applyEnvGain(g,env,t):playBuf.duration;
   if(env&&env.pitch)src.playbackRate.value=Math.pow(2,env.pitch/12);
-  g.gain.value=(v||1);
+  g.gain.value=((v||1)*((env&&env.vol!=null?env.vol:100)/100));
   src.start(t);
   src.stop(t+Math.min(totalDur+0.1, playBuf.duration+0.5));
 }
@@ -1217,7 +1223,7 @@ function lerp(a,b,t){return a+(b-a)*t;}
 // ADSR PANEL
 // ═══════════════════════════════════════════════════════════════
 let adsrTrack='kick',adsrStep=0;
-let adsrP={a:5,d:40,s:70,r:30,len:1,pitch:0};
+let adsrP={a:5,d:40,s:70,r:30,len:1,pitch:0,vol:100};
 let adsrMode='handle',adsrBlend='replace',adsrUseApi=false,adsrApiKey='';
 let adsrFreehand=null,adsrIsDrawing=false,adsrDragHandle=null,adsrHandles=[];
 let adsrUndoStack=[];
@@ -1504,7 +1510,7 @@ function onDurSlider(val){
   adsrP.dur=val;
   updateAdsrLabels();
 }
-function syncAdsrSliders(){document.getElementById('apSA').value=Math.round(adsrP.a);document.getElementById('apSD').value=Math.round(adsrP.d);document.getElementById('apSS').value=Math.round(adsrP.s);document.getElementById('apSR').value=Math.round(adsrP.r);document.getElementById('apSDur').value=adsrP.dur||300;document.getElementById('apSPitch').value=adsrP.pitch;}
+function syncAdsrSliders(){document.getElementById('apSA').value=Math.round(adsrP.a);document.getElementById('apSD').value=Math.round(adsrP.d);document.getElementById('apSS').value=Math.round(adsrP.s);document.getElementById('apSR').value=Math.round(adsrP.r);document.getElementById('apSDur').value=adsrP.dur||300;document.getElementById('apSPitch').value=adsrP.pitch;document.getElementById('apSVol').value=adsrP.vol||100;}
 function toMs(v){const ms=Math.round(v*8);return ms<1000?`${ms}ms`:`${(ms/1000).toFixed(1)}s`;}
 function updateAdsrLabels(){
   const toMs2=v=>v<1000?`${v}ms`:`${(v/1000).toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}s`;
@@ -1514,6 +1520,7 @@ function updateAdsrLabels(){
   document.getElementById('apVR').textContent=toMs(adsrP.r);
   document.getElementById('apVDur').textContent=toMs2(adsrP.dur||300);
   document.getElementById('apVPitch').textContent=NOTES[clamp(Math.round(adsrP.pitch),0,NOTES.length-1)];
+  document.getElementById('apVVol').textContent=`${Math.round(adsrP.vol||100)}%`;
 }
 
 // ADSR PRESETS
@@ -1830,6 +1837,152 @@ async function confirmSound(){
 // TRIM MODAL
 // ═══════════════════════════════════════════════════════════════
 
+
+// ═══════════════════════════════════════════════════════════════
+// ADSR TRIM — integrated waveform trim
+// ═══════════════════════════════════════════════════════════════
+let trimStart=0, trimEnd=1, trimDragging=null;
+let trimPhAnim=null;
+
+function showTrimSection(){
+  const buf=loadedBuffers[adsrTrack];
+  const sec=document.getElementById('apTrimSection');
+  const saveBtn=document.getElementById('apTrimSaveBtn');
+  if(!buf){
+    sec.style.display='none';
+    if(saveBtn) saveBtn.style.display='none';
+    return;
+  }
+  sec.style.display='block';
+  if(saveBtn) saveBtn.style.display='inline-flex';
+  // Restore existing trim if any
+  const ss=selectedSounds[adsrTrack];
+  if(ss&&ss.trimStart!=null&&buf.duration>0){
+    trimStart=ss.trimStart/buf.duration;
+    trimEnd=ss.trimEnd/buf.duration;
+  } else {
+    trimStart=0; trimEnd=1;
+  }
+  document.getElementById('apTrimInfo').textContent=buf.duration.toFixed(2)+'s';
+  updateTrimUI();
+  requestAnimationFrame(drawTrimCanvas);
+}
+
+function drawTrimCanvas(){
+  const canvas=document.getElementById('apTrimCanvas');
+  if(!canvas) return;
+  const buf=loadedBuffers[adsrTrack];
+  if(!buf) return;
+  const W=canvas.offsetWidth||280, H=canvas.offsetHeight||64;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0d0d14'; ctx.fillRect(0,0,W,H);
+  const data=buf.getChannelData(0);
+  const step=Math.max(1,Math.floor(data.length/W));
+  const col=TCOLORS[adsrTrack]||'#7c6ff7';
+  for(let x=0;x<W;x++){
+    let mn=1,mx=-1;
+    for(let j=0;j<step;j++){const v=data[x*step+j]||0;if(v<mn)mn=v;if(v>mx)mx=v;}
+    const nx=x/W;
+    ctx.strokeStyle=(nx>=trimStart&&nx<=trimEnd)?col:col+'35';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(x,H/2+mn*H*0.44);
+    ctx.lineTo(x,H/2-mx*H*0.44);
+    ctx.stroke();
+  }
+  updateTrimHandles();
+}
+
+function updateTrimHandles(){
+  const wrap=document.getElementById('apTrimWrap');
+  if(!wrap) return;
+  const W=wrap.offsetWidth;
+  document.getElementById('apTrimRegion').style.left=(trimStart*W)+'px';
+  document.getElementById('apTrimRegion').style.width=((trimEnd-trimStart)*W)+'px';
+  document.getElementById('apTrimHs').style.left=(trimStart*W)+'px';
+  document.getElementById('apTrimHe').style.left=(trimEnd*W)+'px';
+}
+
+function updateTrimUI(){
+  const buf=loadedBuffers[adsrTrack];
+  if(!buf) return;
+  const dur=buf.duration;
+  const s=trimStart*dur, e=trimEnd*dur;
+  document.getElementById('apTrimS').textContent=s.toFixed(2)+'s';
+  document.getElementById('apTrimE').textContent=e.toFixed(2)+'s';
+  document.getElementById('apTrimLen').textContent=(e-s).toFixed(2)+'s';
+}
+
+function initTrimDrag(){
+  const hs=document.getElementById('apTrimHs');
+  const he=document.getElementById('apTrimHe');
+  const wrap=document.getElementById('apTrimWrap');
+  if(!hs||!he||!wrap) return;
+  function getN(e){
+    const rect=wrap.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+    return Math.max(0,Math.min(1,cx/rect.width));
+  }
+  function onMove(e){
+    if(!trimDragging) return;
+    const n=getN(e);
+    if(trimDragging==='s') trimStart=Math.min(n,trimEnd-0.01);
+    else trimEnd=Math.max(n,trimStart+0.01);
+    updateTrimUI(); drawTrimCanvas();
+  }
+  function onUp(){trimDragging=null;}
+  hs.addEventListener('mousedown',(e)=>{e.stopPropagation();trimDragging='s';});
+  he.addEventListener('mousedown',(e)=>{e.stopPropagation();trimDragging='e';});
+  hs.addEventListener('touchstart',(e)=>{e.stopPropagation();trimDragging='s';},{passive:true});
+  he.addEventListener('touchstart',(e)=>{e.stopPropagation();trimDragging='e';},{passive:true});
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('touchmove',onMove,{passive:true});
+  document.addEventListener('mouseup',onUp);
+  document.addEventListener('touchend',onUp);
+}
+
+function applyTrimPreset(dur){
+  const buf=loadedBuffers[adsrTrack];
+  if(!buf) return;
+  trimEnd=Math.min(1,trimStart+(dur/buf.duration));
+  updateTrimUI(); drawTrimCanvas();
+}
+
+function resetTrim(){
+  trimStart=0; trimEnd=1;
+  updateTrimUI(); drawTrimCanvas();
+}
+
+function applyTrimToSound(){
+  const buf=loadedBuffers[adsrTrack];
+  if(!buf) return;
+  const dur=buf.duration;
+  if(selectedSounds[adsrTrack]){
+    selectedSounds[adsrTrack].trimStart=trimStart*dur;
+    selectedSounds[adsrTrack].trimEnd=trimEnd*dur;
+  }
+  showToast('Trim kaydedildi');
+}
+
+function getTrimmedBuffer(){
+  const buf=loadedBuffers[adsrTrack];
+  if(!buf) return null;
+  const ctx=getCtx();
+  const dur=buf.duration;
+  const s=Math.floor(trimStart*dur*ctx.sampleRate);
+  const e=Math.floor(trimEnd*dur*ctx.sampleRate);
+  const frames=Math.max(1,e-s);
+  const out=ctx.createBuffer(buf.numberOfChannels,frames,ctx.sampleRate);
+  for(let ch=0;ch<buf.numberOfChannels;ch++){
+    const srcD=buf.getChannelData(ch);
+    const dst=out.getChannelData(ch);
+    for(let i=0;i<frames;i++) dst[i]=srcD[s+i]||0;
+  }
+  return out;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // EXPORT
 // ═══════════════════════════════════════════════════════════════
@@ -1928,6 +2081,7 @@ function wireEvents(){
   document.getElementById('apSS')?.addEventListener('input',(e)=>onAdsrSlider('s',+e.target.value));
   document.getElementById('apSR')?.addEventListener('input',(e)=>onAdsrSlider('r',+e.target.value));
   document.getElementById('apSPitch')?.addEventListener('input',(e)=>onAdsrSlider('pitch',+e.target.value));
+  document.getElementById('apSVol')?.addEventListener('input',(e)=>onAdsrSlider('vol',+e.target.value));
   document.getElementById('apSDur')?.addEventListener('input',(e)=>onDurSlider(+e.target.value));
   document.getElementById('apPreviewBtn')?.addEventListener('click',previewAdsrSound);
   document.getElementById('apUndoBtn')?.addEventListener('click',undoAdsr);
