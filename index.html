@@ -632,7 +632,7 @@ body.erase-cursor .beat-cell.active:hover {
 /* Full-screen overlay */
 .stage-overlay{
   position:fixed;inset:0;z-index:900;
-  background:#000;
+  background:#02010a;
   display:flex;align-items:stretch;
   opacity:0;pointer-events:none;
   transition:opacity .4s;
@@ -644,11 +644,10 @@ body.erase-cursor .beat-cell.active:hover {
 .stage-smoke{
   position:absolute;inset:0;pointer-events:none;z-index:1;
   background:
-    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(80,20,110,.85) 0%, transparent 65%),
-    radial-gradient(ellipse 70% 45% at 20% 90%, rgba(20,50,110,.6) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 45% at 80% 90%, rgba(60,10,90,.6) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 30% at 50% 110%, rgba(120,40,160,.4) 0%, transparent 60%),
-    linear-gradient(to top, rgba(30,10,50,.9) 0%, transparent 40%);
+    radial-gradient(ellipse 110% 55% at 50% 105%, rgba(60,10,90,1) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 50% at 15% 95%, rgba(10,30,90,.8) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 50% at 85% 95%, rgba(50,5,80,.8) 0%, transparent 50%),
+    linear-gradient(to top, rgba(8,3,18,1) 0%, rgba(4,1,12,.8) 25%, transparent 55%);
 }
 /* Animated smoke particles */
 .smoke-particle{
@@ -898,6 +897,48 @@ body.erase-cursor .beat-cell.active:hover {
 }
 .stage-ghost-hint.hidden{opacity:0;}
 
+/* ── Countdown overlay ── */
+.stage-countdown{
+  position:absolute;inset:0;z-index:20;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(4px);
+  pointer-events:none;opacity:0;transition:opacity .2s;
+}
+.stage-countdown.show{opacity:1;pointer-events:all;}
+.stage-countdown-num{
+  font-family:"Syne",sans-serif;font-size:140px;font-weight:900;
+  color:#fff;line-height:1;
+  text-shadow: 0 0 40px var(--cd-col,#e94560), 0 0 80px var(--cd-col,#e94560);
+  animation:cdPop .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cdPop{
+  0%{transform:scale(1.6);opacity:0;}
+  60%{opacity:1;}
+  100%{transform:scale(1);opacity:1;}
+}
+
+/* ── Rec stopped flash ── */
+.stage-stopped-flash{
+  position:absolute;inset:0;z-index:20;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  pointer-events:none;opacity:0;
+}
+.stage-stopped-flash.show{
+  animation:stoppedFlash .9s ease-out forwards;
+}
+@keyframes stoppedFlash{
+  0%{opacity:0;transform:scale(.9);}
+  15%{opacity:1;transform:scale(1.05);}
+  40%{opacity:1;transform:scale(1);}
+  100%{opacity:0;transform:scale(1);}
+}
+.stage-stopped-icon{font-size:52px;filter:drop-shadow(0 0 20px rgba(255,255,255,.5));}
+.stage-stopped-label{
+  font-family:"Syne",sans-serif;font-size:14px;font-weight:800;
+  letter-spacing:6px;color:rgba(255,255,255,.9);
+  text-shadow:0 0 20px rgba(255,255,255,.4);
+}
+
 /* ── Radial backdrop ── */
 .stage-radial-backdrop{
   position:fixed;inset:0;z-index:50;
@@ -976,6 +1017,10 @@ body.erase-cursor .beat-cell.active:hover {
 @keyframes particleFly{
   0%{transform:translate(-50%,-50%) scale(1);opacity:.9;}
   100%{transform:translate(var(--px),var(--py)) scale(0);opacity:0;}
+}
+@keyframes fogBurst{
+  0%{transform:translate(-50%,-50%) scale(0.2);opacity:.8;}
+  100%{transform:translate(calc(-50% + var(--fa)), calc(-50% + var(--fb))) scale(3.5);opacity:0;}
 }
 
 
@@ -1493,6 +1538,17 @@ body.erase-cursor .beat-cell.active:hover {
 
     <!-- Hint ghost text -->
     <div class="stage-ghost-hint" id="stageGhostHint">basılı tut → enstrüman seç</div>
+
+    <!-- Countdown overlay -->
+    <div class="stage-countdown" id="stageCountdown">
+      <div class="stage-countdown-num" id="stageCountdownNum">4</div>
+    </div>
+
+    <!-- Rec stopped flash -->
+    <div class="stage-stopped-flash" id="stageStoppedFlash">
+      <div class="stage-stopped-icon">⏹</div>
+      <div class="stage-stopped-label">KAYIT DURDURULDU</div>
+    </div>
   </div>
 
   <!-- Radial instrument picker — shown on long press -->
@@ -3472,17 +3528,21 @@ function drawSpeaker(canvas, track, push) {
   const sc = STAGE_COLORS[track];
   const col = sc.col;
 
-  // ── Derin arka plan glow ──
-  const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W,H)*0.7);
-  bgGrad.addColorStop(0, col + (push > 0.1 ? '28' : '14'));
-  bgGrad.addColorStop(0.5, col + '08');
+  // ── Siyah zemin ──
+  ctx.fillStyle = '#02010a';
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Derin arka plan glow — push olunca çok parlak ──
+  const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W,H)*0.65);
+  bgGrad.addColorStop(0, col + (push > 0.1 ? '40' : '18'));
+  bgGrad.addColorStop(0.4, col + (push > 0.1 ? '18' : '06'));
   bgGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // ── Zemin yansıması (neon puddle) ──
-  const floorGrad = ctx.createRadialGradient(cx, H * 0.85, 0, cx, H * 0.85, W * 0.5);
-  floorGrad.addColorStop(0, col + (push > 0.05 ? '20' : '0c'));
+  // ── Zemin neon puddle ──
+  const floorGrad = ctx.createRadialGradient(cx, H * 0.9, 0, cx, H * 0.9, W * 0.55);
+  floorGrad.addColorStop(0, col + (push > 0.05 ? '30' : '10'));
   floorGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = floorGrad;
   ctx.fillRect(0, 0, W, H);
@@ -3510,15 +3570,17 @@ function drawSpeaker(canvas, track, push) {
   ctx.lineWidth = 5;
   ctx.stroke();
 
-  // ── Neon outer ring (ana parlama) ──
-  const glowLayers = push > 0.1 ? 4 : 2;
-  for (let g = 0; g < glowLayers; g++) {
+  // ── Neon outer ring — çok daha parlak katmanlar ──
+  for (let g = 0; g < 5; g++) {
     ctx.beginPath();
-    ctx.arc(cx, cy, outerR + g*0.5, 0, Math.PI*2);
+    ctx.arc(cx, cy, outerR + g * 0.8, 0, Math.PI * 2);
     ctx.shadowColor = col;
-    ctx.shadowBlur = (15 + push * 45) / (g + 1);
-    ctx.strokeStyle = col + (push > 0.05 ? Math.floor(220 / (g+1)).toString(16).padStart(2,'0') : '55');
-    ctx.lineWidth = push > 0.05 ? 2.5 : 1.5;
+    ctx.shadowBlur = (30 + push * 70) / (g * 0.6 + 1);
+    const alpha = push > 0.05
+      ? Math.floor(255 / (g * 0.7 + 1)).toString(16).padStart(2, '0')
+      : Math.floor(100 / (g + 1)).toString(16).padStart(2, '0');
+    ctx.strokeStyle = col + alpha;
+    ctx.lineWidth = g === 0 ? (push > 0.05 ? 3.5 : 2) : 1;
     ctx.stroke();
   }
   ctx.shadowBlur = 0;
@@ -3613,36 +3675,55 @@ function drawSpeaker(canvas, track, push) {
 
 function stageHitEffect(track) {
   const ring = document.getElementById('stageHitRing');
-  const col = STAGE_COLORS[track].col;
+  const col = (STAGE_COLORS[track] || STAGE_COLORS['kick']).col;
   ring.style.setProperty('--ring-col', col);
   ring.classList.remove('flash');
   void ring.offsetWidth;
   ring.classList.add('flash');
 
-  // Spawn hit particles
-  const main = document.querySelector('.stage-main');
+  const main = document.getElementById('stageMain');
   if (!main) return;
-  const R = main.offsetWidth / 2;
-  const Cy = main.offsetHeight / 2;
-  for (let i = 0; i < 10; i++) {
+  const mw = main.offsetWidth, mh = main.offsetHeight;
+  const cx = mw / 2, cy = mh / 2;
+
+  // ── Neon parçacıklar ──
+  for (let i = 0; i < 14; i++) {
     const p = document.createElement('div');
     p.className = 'stage-particle';
-    const angle = (Math.PI*2/10)*i + Math.random()*0.4;
-    const dist = 80 + Math.random()*100;
+    const angle = (Math.PI * 2 / 14) * i + Math.random() * 0.3;
+    const dist = 90 + Math.random() * 130;
     p.style.cssText = `
-      left:50%;top:${Cy}px;
-      width:${4+Math.random()*6}px;height:${4+Math.random()*6}px;
+      left:${cx}px;top:${cy}px;
+      width:${3+Math.random()*7}px;height:${3+Math.random()*7}px;
       background:${col};
-      box-shadow:0 0 8px ${col};
+      box-shadow:0 0 12px 3px ${col};
       --px:${Math.cos(angle)*dist}px;
-      --py:${Math.sin(angle)*dist - 40}px;
-      animation-duration:${0.4+Math.random()*0.4}s;
+      --py:${Math.sin(angle)*dist - 50}px;
+      animation-duration:${0.45+Math.random()*0.35}s;
     `;
     main.appendChild(p);
-    setTimeout(() => p.remove(), 800);
+    setTimeout(() => p.remove(), 900);
   }
 
-  // Update center label
+  // ── Sis patlaması (fog burst) — radyal yayılan blur daireler ──
+  for (let i = 0; i < 6; i++) {
+    const fog = document.createElement('div');
+    fog.style.cssText = `
+      position:absolute;border-radius:50%;pointer-events:none;z-index:6;
+      left:${cx}px;top:${cy}px;
+      width:${60+Math.random()*80}px;height:${60+Math.random()*80}px;
+      background:radial-gradient(circle, ${col}22 0%, ${col}00 70%);
+      filter:blur(${8+Math.random()*12}px);
+      transform:translate(-50%,-50%);
+      animation:fogBurst ${0.6+Math.random()*0.5}s ease-out forwards;
+      --fa:${(Math.random()-0.5)*200}px;
+      --fb:${(Math.random()-0.5)*200 - 40}px;
+    `;
+    main.appendChild(fog);
+    setTimeout(() => fog.remove(), 1200);
+  }
+
+  // ── Center label flash ──
   const lbl = document.getElementById('stageCenterLabel');
   if (lbl) {
     lbl.style.setProperty('--label-col', col);
@@ -3732,22 +3813,64 @@ function _oldBuildStageInstruments_disabled() {
   });
 } // end _oldBuildStageInstruments_disabled
 
+function showStageCountdown(track, onDone) {
+  const col = (STAGE_COLORS[track] || STAGE_COLORS['kick']).col;
+  const overlay = document.getElementById('stageCountdown');
+  const numEl = document.getElementById('stageCountdownNum');
+  if (!overlay || !numEl) { onDone(); return; }
+
+  overlay.style.setProperty('--cd-col', col);
+  overlay.classList.add('show');
+
+  let count = 4;
+  function tick() {
+    numEl.textContent = count;
+    // Reset animation
+    numEl.style.animation = 'none';
+    void numEl.offsetWidth;
+    numEl.style.animation = 'cdPop .35s cubic-bezier(.34,1.56,.64,1)';
+    // Tick sound
+    playMetronome(getCtx().currentTime, count === 4);
+    count--;
+    if (count > 0) {
+      setTimeout(tick, 60000 / bpm);
+    } else {
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        onDone();
+      }, 60000 / bpm);
+    }
+  }
+  tick();
+}
+
+function showStageStoppedFlash() {
+  const el = document.getElementById('stageStoppedFlash');
+  if (!el) return;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 950);
+}
+
 function toggleStageRec(track) {
   const wasRec = stageRecording[track];
-  stageRecording[track] = !wasRec;
-  const btn = document.getElementById(`stage-rec-btn-${track}`);
-  if (!btn) return;
-  if (stageRecording[track]) {
-    btn.classList.add('recording');
-    btn.classList.remove('armed');
-    // Auto-select this track for Space key
-    selectStageTrack(track);
-    showToast(`${TNAMES[track]} kaydediliyor`);
+  if (wasRec) {
+    // DURDUR — anında, belirgin flash
+    stageRecording[track] = false;
+    updateStageStatus();
+    showStageStoppedFlash();
+    showToast(`⏹ ${TNAMES[track]} durduruldu — ${grid[track].filter(Boolean).length} adım`);
   } else {
-    btn.classList.remove('recording', 'armed');
-    showToast(`${TNAMES[track]} kaydı durduruldu — ${grid[track].filter(Boolean).length} adım`);
+    // BAŞLAT — önce geri say, sonra aç
+    updateStageStatus();
+    showStageCountdown(track, () => {
+      stageRecording[track] = true;
+      selectStageTrack(track);
+      updateStageStatus();
+      showToast(`● ${TNAMES[track]} kaydediliyor`);
+    });
   }
-  updateStageStatus();
 }
 
 let stageListenMode = false;
@@ -3851,16 +3974,19 @@ function spawnSmokeParticles() {
 
 function openStage() {
   stageOpen = true;
+  getCtx(); // AudioContext unlock on user gesture
   const overlay = document.getElementById('stageOverlay');
   overlay.classList.add('show');
 
-  // Resize canvas
-  const canvas = document.getElementById('stageCanvas');
-  const main = document.getElementById('stageMain');
-  if (canvas && main) {
-    canvas.width = main.offsetWidth;
-    canvas.height = main.offsetHeight;
-  }
+  // Canvas boyutunu CSS transition bittikten sonra al (ilk tıklamada 0 olmaması için)
+  setTimeout(() => {
+    const canvas = document.getElementById('stageCanvas');
+    const main = document.getElementById('stageMain');
+    if (canvas && main) {
+      canvas.width = main.offsetWidth || window.innerWidth;
+      canvas.height = main.offsetHeight || window.innerHeight;
+    }
+  }, 50);
 
   buildStageInstruments();
   spawnSmokeParticles();
@@ -4036,18 +4162,13 @@ function addCustomTrack(name) {
   });
   // Wire remove
   document.getElementById(`remove-${id}`).addEventListener('click', () => {
-    if(!confirm(`"${name}" track silinsin mi? Bu işlem geri alınamaz.`)) return;
-    removeCustomTrack(id);
+  removeCustomTrack(id);
   });
   // Wire sound search (click on sound name)
   document.getElementById(`sound-${id}`).addEventListener('click', () => openSoundSearch(id));
 
-  // Add to grid rows
-  addGridRowForTrack(id, col);
-  
-  // Add volume control
-  buildVolControls();
-
+  // rebuildAll tüm tracks için grid + vol oluşturur (custom track da dahil)
+  rebuildAll();
   showToast(`"${name}" track eklendi`);
   return id;
 }
