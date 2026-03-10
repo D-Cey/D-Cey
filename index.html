@@ -926,7 +926,7 @@ function applyEnvGain(g,env,t){
   const N = 128;
   let {pts, totalSec} = buildEnvCurve(env, N);
   if(env.inverted) pts = [...pts].reverse();
-  const peak = 0.75;
+  const peak = 0.75 * ((env.vol != null ? env.vol : 100) / 100);
   g.gain.setValueAtTime(pts[0]*peak, t);
   for(let i=1;i<N;i++){
     const st = t + (i/(N-1))*totalSec;
