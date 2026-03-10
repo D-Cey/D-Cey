@@ -467,14 +467,9 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
 .rvol::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.5);cursor:pointer;}
 
 
-.ap-fade-handle{position:absolute;bottom:0;width:22px;height:22px;cursor:ns-resize;z-index:12;display:flex;align-items:flex-end;justify-content:center;transition:transform .1s;}
-.ap-fade-handle:hover{transform:scale(1.2);}
+.ap-fade-handle{position:absolute;bottom:0;width:22px;height:22px;cursor:ew-resize;z-index:12;display:flex;align-items:flex-end;justify-content:center;transition:filter .1s;}
+.ap-fade-handle:hover{filter:brightness(1.4);}
 .ap-fade-handle:hover svg polygon{opacity:1;}
-.ap-fade-in{left:0;}
-.ap-fade-out{right:0;}
-.ap-fade-label{position:absolute;font-size:8px;color:#7c6ff7;font-family:"Space Mono",monospace;pointer-events:none;white-space:nowrap;}
-.ap-fade-in-label{bottom:22px;left:2px;}
-.ap-fade-out-label{bottom:22px;right:2px;}
 
 </style>
 </head>
@@ -1937,17 +1932,17 @@ function drawTrimCanvas(){
 function updateFadeHandles(){
   const wrap=document.getElementById('apTrimWrap');
   if(!wrap) return;
-  const W=wrap.offsetWidth, H=wrap.offsetHeight;
+  const W=wrap.offsetWidth;
   const selW=(trimEnd-trimStart)*W;
   const fiEl=document.getElementById('apFadeIn');
   const foEl=document.getElementById('apFadeOut');
   if(fiEl){
     fiEl.style.left=(trimStart*W + fadeIn*selW - 11)+'px';
-    fiEl.style.bottom='0px';
+    fiEl.style.right='auto';
   }
   if(foEl){
-    foEl.style.right=((1-trimEnd)*W + fadeOut*selW - 11)+'px';
-    foEl.style.bottom='0px';
+    foEl.style.left=(trimEnd*W - fadeOut*selW - 11)+'px';
+    foEl.style.right='auto';
   }
 }
 
@@ -1994,41 +1989,48 @@ function initTrimDrag(){
   hs.addEventListener('touchstart',(e)=>{e.stopPropagation();trimDragging='s';},{passive:true});
   he.addEventListener('touchstart',(e)=>{e.stopPropagation();trimDragging='e';},{passive:true});
 
-  // Fade handles — drag vertically (up=more fade, down=less)
+  // Fade handles — drag horizontally
+  // FadeIn: drag RIGHT to increase, LEFT to decrease
+  // FadeOut: drag LEFT to increase, RIGHT to decrease
   const fi=document.getElementById('apFadeIn');
   const fo=document.getElementById('apFadeOut');
-  let fadeDragStart=null, fadeDragVal=0;
 
-  function onFadeMove(e, which){
-    if(!fadeDragStart) return;
-    const cy=e.touches?e.touches[0].clientY:e.clientY;
-    const dy=fadeDragStart.y - cy; // positive = dragged up = more fade
-    const delta=dy/wrap.offsetHeight;
-    if(which==='in') fadeIn=Math.max(0,Math.min(0.99, fadeDragVal+delta));
-    else fadeOut=Math.max(0,Math.min(0.99, fadeDragVal+delta));
-    drawTrimCanvas();
-  }
-
-  if(fi){
-    fi.addEventListener('mousedown',(e)=>{e.stopPropagation();fadeDragStart={y:e.clientY};fadeDragVal=fadeIn;
-      const mm=(ev)=>onFadeMove(ev,'in');
-      const mu=()=>{fadeDragStart=null;document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
-      document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
+  function makeFadeDrag(el, which){
+    if(!el) return;
+    function onFadeMove(e){
+      const cx=e.touches?e.touches[0].clientX:e.clientX;
+      const rect=wrap.getBoundingClientRect();
+      const nx=Math.max(0,Math.min(1,(cx-rect.left)/rect.width));
+      const selW=trimEnd-trimStart;
+      if(selW<=0) return;
+      if(which==='in'){
+        // fadeIn = how far right from trimStart
+        fadeIn=Math.max(0,Math.min(0.99,(nx-trimStart)/selW));
+      } else {
+        // fadeOut = how far left from trimEnd
+        fadeOut=Math.max(0,Math.min(0.99,(trimEnd-nx)/selW));
+      }
+      drawTrimCanvas();
+    }
+    function onFadeUp(){
+      document.removeEventListener('mousemove',onFadeMove);
+      document.removeEventListener('mouseup',onFadeUp);
+      document.removeEventListener('touchmove',onFadeMove);
+      document.removeEventListener('touchend',onFadeUp);
+    }
+    el.addEventListener('mousedown',(e)=>{
+      e.stopPropagation();e.preventDefault();
+      document.addEventListener('mousemove',onFadeMove);
+      document.addEventListener('mouseup',onFadeUp);
     });
-    fi.addEventListener('touchstart',(e)=>{e.stopPropagation();fadeDragStart={y:e.touches[0].clientY};fadeDragVal=fadeIn;},{passive:true});
-    fi.addEventListener('touchmove',(e)=>onFadeMove(e,'in'),{passive:true});
-    fi.addEventListener('touchend',()=>{fadeDragStart=null;},{passive:true});
+    el.addEventListener('touchstart',(e)=>{
+      e.stopPropagation();
+      document.addEventListener('touchmove',onFadeMove,{passive:true});
+      document.addEventListener('touchend',onFadeUp,{passive:true});
+    },{passive:true});
   }
-  if(fo){
-    fo.addEventListener('mousedown',(e)=>{e.stopPropagation();fadeDragStart={y:e.clientY};fadeDragVal=fadeOut;
-      const mm=(ev)=>onFadeMove(ev,'out');
-      const mu=()=>{fadeDragStart=null;document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
-      document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
-    });
-    fo.addEventListener('touchstart',(e)=>{e.stopPropagation();fadeDragStart={y:e.touches[0].clientY};fadeDragVal=fadeOut;},{passive:true});
-    fo.addEventListener('touchmove',(e)=>onFadeMove(e,'out'),{passive:true});
-    fo.addEventListener('touchend',()=>{fadeDragStart=null;},{passive:true});
-  }
+  makeFadeDrag(fi,'in');
+  makeFadeDrag(fo,'out');
 
   document.addEventListener('mousemove',onMove);
   document.addEventListener('touchmove',onMove,{passive:true});
