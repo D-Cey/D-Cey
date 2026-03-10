@@ -632,8 +632,7 @@ body.erase-cursor .beat-cell.active:hover {
 /* Full-screen overlay */
 .stage-overlay{
   position:fixed;inset:0;z-index:900;
-  background:#000000;
-  display:flex;align-items:stretch;
+  background:#000;
   opacity:0;pointer-events:none;
   transition:opacity .4s;
   overflow:hidden;
@@ -947,74 +946,66 @@ body.erase-cursor .beat-cell.active:hover {
   text-shadow:0 0 20px rgba(255,255,255,.4);
 }
 
-/* ── Radial backdrop ── */
-.stage-radial-backdrop{
-  position:fixed;inset:0;z-index:50;
-  background:rgba(0,0,0,.75);
-  backdrop-filter:blur(6px);
-  opacity:0;pointer-events:none;
-  transition:opacity .25s;
+/* ── Bottom instrument dock ── */
+.stage-dock{
+  position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:14px;
+  z-index:10;
+  padding:10px 18px;
+  background:rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:50px;
+  backdrop-filter:blur(12px);
 }
-.stage-radial-backdrop.show{opacity:1;pointer-events:all;}
-
-/* ── Radial container ── */
-.stage-radial{
-  position:fixed;z-index:51;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  pointer-events:none;opacity:0;
-  transition:opacity .2s;
-  /* centered by JS */
-}
-.stage-radial.show{opacity:1;pointer-events:all;}
-.stage-radial-inner{
-  position:relative;
-  width:320px;height:320px;
-}
-.stage-radial-cancel{
-  margin-top:16px;
-  font-size:9px;font-family:"Space Mono",monospace;
-  color:rgba(255,255,255,.2);letter-spacing:2px;text-transform:uppercase;
-}
-
-/* ── Radial items ── */
-.stage-radial-item{
-  position:absolute;
-  width:72px;height:72px;border-radius:50%;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  cursor:pointer;
-  background:rgba(10,8,20,.9);
-  border:2px solid var(--ri-col);
-  box-shadow:0 0 20px var(--ri-col-glow), inset 0 0 15px rgba(0,0,0,.5);
-  transform:translate(-50%,-50%) scale(0);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .15s;
+.stage-dock-item{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  cursor:pointer;transition:transform .15s;
+  -webkit-tap-highlight-color:transparent;
   user-select:none;
 }
-.stage-radial-item.bloom{
-  transform:translate(-50%,-50%) scale(1);
-}
-.stage-radial-item:hover, .stage-radial-item.hover{
-  transform:translate(-50%,-50%) scale(1.2)!important;
-  box-shadow:0 0 35px var(--ri-col-glow), inset 0 0 20px rgba(0,0,0,.3);
-  z-index:2;
-}
-.stage-radial-item.selected-track{
-  border-width:3px;
-  box-shadow:0 0 40px var(--ri-col-glow), 0 0 80px var(--ri-col-glow);
-}
-.stage-radial-item .ri-emoji{font-size:20px;line-height:1;}
-.stage-radial-item .ri-name{
-  font-size:8px;font-family:"Syne",sans-serif;font-weight:800;
-  color:var(--ri-col);letter-spacing:1px;text-transform:uppercase;
-}
-/* Center circle in radial */
-.stage-radial-center{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:48px;height:48px;border-radius:50%;
-  background:rgba(10,8,20,.95);
-  border:1px solid rgba(255,255,255,.1);
+.stage-dock-item:active{transform:scale(.88);}
+.stage-dock-dot{
+  width:38px;height:38px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:9px;color:rgba(255,255,255,.3);font-family:"Space Mono",monospace;
-  letter-spacing:1px;
+  font-size:16px;
+  border:2px solid var(--dk-col);
+  background:rgba(0,0,0,.7);
+  box-shadow:0 0 10px var(--dk-glow);
+  transition:all .18s;
+  position:relative;
+}
+.stage-dock-item.active .stage-dock-dot{
+  background:var(--dk-col);
+  box-shadow:0 0 22px var(--dk-glow), 0 0 44px var(--dk-glow);
+  border-color:var(--dk-col);
+}
+.stage-dock-item.active .stage-dock-dot::after{
+  content:'';
+  position:absolute;inset:-4px;border-radius:50%;
+  border:1.5px solid var(--dk-col);
+  opacity:.4;
+  animation:dockPing .9s ease-out infinite;
+}
+@keyframes dockPing{
+  0%{transform:scale(1);opacity:.4;}
+  100%{transform:scale(1.5);opacity:0;}
+}
+.stage-dock-name{
+  font-size:7px;font-family:"Space Mono",monospace;
+  color:var(--dk-col);letter-spacing:1px;text-transform:uppercase;
+  opacity:.5;transition:opacity .18s;
+}
+.stage-dock-item.active .stage-dock-name{opacity:1;}
+/* Rec indicator on dock item */
+.stage-dock-rec{
+  position:absolute;top:-2px;right:-2px;
+  width:9px;height:9px;border-radius:50%;
+  background:#e94560;border:1.5px solid #000;
+  display:none;
+}
+.stage-dock-item.recording .stage-dock-rec{
+  display:block;
+  animation:recpulse .6s ease-in-out infinite alternate;
 }
 
 /* Hit particles */
@@ -1085,6 +1076,29 @@ body.erase-cursor .beat-cell.active:hover {
 
 /* ─── STAGE EXTRA TRACK COLORS ───────────────── */
 .stage-instr-item.extra{--instr-col:#c084fc;}
+
+
+/* ════════════════════════════════════════════════════
+   ARC INSTRUMENT SELECTOR
+════════════════════════════════════════════════════ */
+.stage-arc-canvas{
+  position:absolute;
+  bottom:0;left:0;
+  width:100%;height:310px;
+  z-index:10;
+  touch-action:none;
+  cursor:grab;
+}
+.stage-arc-canvas:active{cursor:grabbing;}
+.stage-center-label{display:none;}
+.stage-swipe-hint{
+  position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+  font-size:8px;font-family:"Space Mono",monospace;
+  color:rgba(255,255,255,.13);letter-spacing:2px;
+  white-space:nowrap;transition:opacity .6s;
+  pointer-events:none;z-index:15;
+}
+.stage-swipe-hint.hidden{opacity:0;}
 
 </style>
 </head>
@@ -1511,62 +1525,40 @@ body.erase-cursor .beat-cell.active:hover {
 ════════════════════════════════════════════════════════ -->
 <div class="stage-overlay" id="stageOverlay">
 
-  <!-- Smoke -->
-  <div class="stage-smoke" id="stageSmoke"></div>
-
   <!-- Close -->
   <button class="stage-close" id="stageClose" title="Kapat (Esc)">✕</button>
 
-  <!-- Top minimal bar -->
+  <!-- Top bar -->
   <div class="stage-topbar">
     <div class="stage-bpm-pill" id="stageBpmPill">♩ <span id="stageBpmVal">120</span> BPM</div>
-    <div class="stage-status" id="stageStatus">Basılı tut → enstrüman seç</div>
+    <div class="stage-status" id="stageStatus"></div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button class="stage-topbar-pill" id="stageClearBtn" title="Aktif track'i temizle">✕ Clear</button>
-      <div class="stage-listen-pill" id="stageListenPill" title="Dinle / Kayda dön">👂</div>
+      <button class="stage-topbar-pill" id="stageClearBtn">✕ Clear</button>
+      <div class="stage-listen-pill" id="stageListenPill">👂</div>
     </div>
   </div>
 
-  <!-- Full canvas area -->
-  <div class="stage-main" id="stageMain">
-    <canvas class="stage-canvas" id="stageCanvas"></canvas>
-    <div class="stage-hit-ring" id="stageHitRing"></div>
+  <!-- Nebula canvas — full stage -->
+  <canvas id="stageNebulaCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;"></canvas>
 
-    <!-- Rec indicator (top center) -->
-    <div class="stage-rec-badge" id="stageRecBadge">
-      <span class="stage-rec-dot"></span>
-      <span id="stageRecText">REC</span>
-    </div>
+  <!-- Hit area over sphere -->
+  <div id="stageHitArea" style="position:absolute;border-radius:50%;z-index:8;cursor:pointer;touch-action:none;"></div>
 
-    <!-- Active instrument name (bottom center) -->
-    <div class="stage-center-label" id="stageCenterLabel">KICK</div>
+  <!-- Arc selector canvas — bottom -->
+  <canvas id="stageArcCanvas" style="position:absolute;bottom:0;left:0;width:100%;height:130px;z-index:15;touch-action:none;cursor:grab;"></canvas>
 
-    <!-- Rec toggle for active track -->
-    <button class="stage-inline-rec" id="stageInlineRec" title="Bu enstrüman için kayıt aç/kapat">●</button>
+  <!-- Rec button -->
+  <button class="stage-inline-rec" id="stageInlineRec">●</button>
 
-    <!-- Step counter -->
-    <div class="stage-step-counter" id="stageStepCounter">—</div>
-
-    <!-- Hint ghost text -->
-    <div class="stage-ghost-hint" id="stageGhostHint">basılı tut → enstrüman seç</div>
-
-    <!-- Countdown overlay -->
-    <div class="stage-countdown" id="stageCountdown">
-      <div class="stage-countdown-num" id="stageCountdownNum">4</div>
-    </div>
-
-    <!-- Rec stopped flash -->
-    <div class="stage-stopped-flash" id="stageStoppedFlash">
-      <div class="stage-stopped-icon">⏹</div>
-      <div class="stage-stopped-label">KAYIT DURDURULDU</div>
-    </div>
+  <!-- Countdown overlay -->
+  <div class="stage-countdown" id="stageCountdown">
+    <div class="stage-countdown-num" id="stageCountdownNum">4</div>
   </div>
 
-  <!-- Radial instrument picker — shown on long press -->
-  <div class="stage-radial-backdrop" id="stageRadialBackdrop"></div>
-  <div class="stage-radial" id="stageRadial">
-    <div class="stage-radial-inner" id="stageRadialInner"></div>
-    <div class="stage-radial-cancel">bırak → iptal</div>
+  <!-- Rec stopped flash -->
+  <div class="stage-stopped-flash" id="stageStoppedFlash">
+    <div class="stage-stopped-icon">⏹</div>
+    <div class="stage-stopped-label">KAYIT DURDURULDU</div>
   </div>
 </div>
 
@@ -3339,809 +3331,387 @@ function stopHoldBar(track){
 
 
 // ═══════════════════════════════════════════════════════════════
-// RADIAL INSTRUMENT PICKER
+// STAGE — NEBULA + ARC SYSTEM
 // ═══════════════════════════════════════════════════════════════
-let radialOpen = false;
-let radialLongPressTimer = null;
-let radialOriginX = 0, radialOriginY = 0;
-let radialHovered = null;
 
-function buildRadialItems() {
-  const inner = document.getElementById('stageRadialInner');
-  if (!inner) return;
-  inner.innerHTML = '';
+// ── Arc position float ──
+let stageArcPosition = 0;
+let stageArcTarget   = 0;
+let stageArcVel      = 0;
+let stageSpeakerPush = 0;
+let stageSilhouette  = 0;
+let stageHoldCharge  = 0;
+let stageHoldActive  = false;
+let stageHoldStartT  = 0;
+let stageNebulaClouds = [];
+let stageNebulaLoop  = null;
+let STAGE_CX, STAGE_CY, STAGE_SR; // sphere center + radius
 
-  // Center label
-  const center = document.createElement('div');
-  center.className = 'stage-radial-center';
-  center.textContent = 'SEÇ';
-  inner.appendChild(center);
-
-  const tracks = TRACKS;
-  const N = tracks.length;
-  const radius = 115; // px from center
-  const cx = 160, cy = 160; // inner is 320x320
-
-  tracks.forEach((track, i) => {
-    const angle = (Math.PI * 2 / N) * i - Math.PI / 2; // start top
-    const x = cx + Math.cos(angle) * radius;
-    const y = cy + Math.sin(angle) * radius;
-    const sc = STAGE_COLORS[track] || { col: '#888', glow: 'rgba(136,136,136,.4)' };
-    const emoji = TRACK_EMOJIS[track] || '🎵';
-
-    const item = document.createElement('div');
-    item.className = 'stage-radial-item' + (track === stageTrack ? ' selected-track' : '');
-    item.id = `radial-item-${track}`;
-    item.dataset.track = track;
-    item.style.cssText = `left:${x}px;top:${y}px;--ri-col:${sc.col};--ri-glow-col:${sc.glow};--ri-col-glow:${sc.glow};transition-delay:${i*35}ms;`;
-    item.innerHTML = `<span class="ri-emoji">${emoji}</span><span class="ri-name">${TNAMES[track]}</span>`;
-
-    item.addEventListener('mouseenter', () => { radialHovered = track; });
-    item.addEventListener('mouseleave', () => { if(radialHovered===track) radialHovered=null; });
-    item.addEventListener('click', (e) => { e.stopPropagation(); closeRadial(track); });
-    item.addEventListener('touchend', (e) => { e.preventDefault(); closeRadial(track); });
-
-    inner.appendChild(item);
-  });
-
-  // Bloom animation
-  requestAnimationFrame(() => {
-    inner.querySelectorAll('.stage-radial-item').forEach(el => el.classList.add('bloom'));
-  });
+function stageTrackIndex() {
+  return Math.max(0, TRACKS.indexOf(stageTrack));
 }
 
-function openRadial(originX, originY) {
-  if (radialOpen) return;
-  radialOpen = true;
-
-  // Position radial centered at origin
-  const radial = document.getElementById('stageRadial');
-  const W = window.innerWidth, H = window.innerHeight;
-  const size = 320;
-  let left = originX - size / 2;
-  let top = originY - size / 2;
-  // Clamp to viewport
-  left = Math.max(8, Math.min(W - size - 8, left));
-  top = Math.max(8, Math.min(H - size - 8, top));
-  radial.style.cssText = `left:${left}px;top:${top}px;width:${size}px;height:${size}px;`;
-
-  buildRadialItems();
-  document.getElementById('stageRadialBackdrop').classList.add('show');
-  radial.classList.add('show');
-
-  // Haptic on mobile
-  if (navigator.vibrate) navigator.vibrate(30);
+function stageSafeIdx(i) {
+  const N = TRACKS.length;
+  return (((Math.round(i) % N) + N) % N);
 }
 
-function closeRadial(selectedTrack) {
-  if (!radialOpen) return;
-  radialOpen = false;
+// ── Cloud system ──
+function stageMakeCloud(randomPhase) {
+  const N2 = TRACKS.length;
+  const angle  = Math.random() * Math.PI * 2;
+  const startR = STAGE_SR * (0.9 + Math.random() * 0.3);
+  const maxR   = STAGE_SR * (2.4 + Math.random() * 3.5);
+  return {
+    angle, drift: (Math.random() - 0.5) * 0.008,
+    r: randomPhase ? startR + Math.random() * (maxR - startR) : startR,
+    startR, maxR,
+    speed:   0.12 + Math.random() * 0.22,
+    size0:   18 + Math.random() * 55,
+    opacity0:0.06 + Math.random() * 0.18,
+    yScale:  0.55 + Math.random() * 0.35,
+  };
+}
 
-  // Shrink items
-  document.querySelectorAll('.stage-radial-item').forEach(el => {
-    el.classList.remove('bloom');
+function stageInitClouds() {
+  stageNebulaClouds = [];
+  for (let i = 0; i < 140; i++) stageNebulaClouds.push(stageMakeCloud(true));
+}
+
+function stageUpdateCloud(cl, dt, charge) {
+  const pull = 1 + stageSpeakerPush * 4 - (charge || 0) * 1.8;
+  cl.r += cl.speed * dt * Math.max(pull, -0.6);
+  cl.angle += cl.drift;
+  if (cl.r > cl.maxR) { Object.assign(cl, stageMakeCloud(false)); cl.angle = Math.random() * Math.PI * 2; }
+  if (cl.r < cl.startR * 0.7) cl.r = cl.startR * 0.7;
+}
+
+// ── Nebula draw ──
+function stageDrawNebula(nc, nctx, ts) {
+  const W = nc.width, H = nc.height;
+  nctx.clearRect(0, 0, W, H);
+  const track = TRACKS[stageSafeIdx(stageArcPosition)];
+  const _sc = STAGE_COLORS[track] || STAGE_COLORS['kick'];
+  const [r,g,b] = _sc.rgb || [200,200,200];
+
+  // Background glow
+  const bgG = nctx.createRadialGradient(STAGE_CX, STAGE_CY, 0, STAGE_CX, STAGE_CY, H * 0.9);
+  bgG.addColorStop(0, `rgba(${r},${g},${b},${0.06 + stageSpeakerPush * 0.1})`);
+  bgG.addColorStop(0.35, `rgba(${r},${g},${b},0.025)`);
+  bgG.addColorStop(1, 'rgba(0,0,0,0)');
+  nctx.fillStyle = bgG; nctx.fillRect(0, 0, W, H);
+
+  // Clouds
+  const sorted = [...stageNebulaClouds].sort((a,b2)=>b2.r-a.r);
+  sorted.forEach(cl => {
+    const t2 = (cl.r - cl.startR) / (cl.maxR - cl.startR);
+    const lifeFade = Math.min(t2*4,1) * Math.min((1-t2)*2,1);
+    const size = cl.size0 * (0.3 + t2*1.8) * (1 + stageSpeakerPush * 0.6);
+    const opa  = cl.opacity0 * lifeFade * (1 + stageSpeakerPush * 1.5);
+    if (opa < 0.005) return;
+    const px = STAGE_CX + Math.cos(cl.angle) * cl.r;
+    const py = STAGE_CY + Math.sin(cl.angle) * cl.r * cl.yScale;
+    nctx.save(); nctx.translate(px, py); nctx.scale(1, cl.yScale);
+    const cg2 = nctx.createRadialGradient(0,0,0,0,0,size);
+    cg2.addColorStop(0,   `rgba(${r},${g},${b},${opa})`);
+    cg2.addColorStop(0.35,`rgba(${r},${g},${b},${opa*.55})`);
+    cg2.addColorStop(0.7, `rgba(${r},${g},${b},${opa*.15})`);
+    cg2.addColorStop(1,   'rgba(0,0,0,0)');
+    nctx.fillStyle = cg2;
+    nctx.beginPath(); nctx.arc(0,0,size,0,Math.PI*2); nctx.fill();
+    nctx.restore();
   });
-  document.getElementById('stageRadialBackdrop').classList.remove('show');
-  setTimeout(() => {
-    document.getElementById('stageRadial').classList.remove('show');
-  }, 200);
 
-  if (selectedTrack) {
-    selectStageTrack(selectedTrack);
-    // Flash ghost hint hidden
-    const hint = document.getElementById('stageGhostHint');
-    if (hint) hint.classList.add('hidden');
-  }
-}
-
-function initRadialListeners() {
-  const main = document.getElementById('stageMain');
-  if (!main) return;
-
-  let pressStartTime = 0;
-  let pressActive = false;
-
-  function onPressStart(clientX, clientY, fromButton) {
-    if (radialOpen) return;
-    if (fromButton) return;
-    pressActive = true;
-    pressStartTime = Date.now();
-    radialOriginX = clientX;
-    radialOriginY = clientY;
-    radialLongPressTimer = setTimeout(() => {
-      pressActive = false;
-      openRadial(clientX, clientY);
-    }, 430);
+  // Accretion rings
+  for (let i=0;i<4;i++){
+    const rr2 = STAGE_SR*(1.02+i*0.12);
+    const opa2 = (0.2+stageSpeakerPush*0.4)/(i*1.2+1);
+    nctx.beginPath(); nctx.ellipse(STAGE_CX,STAGE_CY,rr2,rr2*0.65,0,0,Math.PI*2);
+    nctx.strokeStyle=`rgba(${r},${g},${b},${opa2})`;
+    nctx.lineWidth=i===0?(1.5+stageSpeakerPush*2):0.6;
+    nctx.shadowColor=`rgba(${r},${g},${b},${opa2*1.5})`; nctx.shadowBlur=6+stageSpeakerPush*20;
+    nctx.stroke(); nctx.shadowBlur=0;
   }
 
-  function onPressEnd(clientX, clientY) {
-    const held = Date.now() - pressStartTime;
-    clearTimeout(radialLongPressTimer);
-    if (pressActive && held < 430 && !radialOpen) {
-      // Kısa tıklama → ses çal
-      stageHitTrack(stageTrack);
-    }
-    pressActive = false;
-    // Radial açıkken bırakınca seç
-    if (radialOpen && radialHovered) {
-      closeRadial(radialHovered);
-      radialHovered = null;
-    }
+  // Black sphere
+  const halo2 = nctx.createRadialGradient(STAGE_CX,STAGE_CY,STAGE_SR*.8,STAGE_CX,STAGE_CY,STAGE_SR*1.5);
+  halo2.addColorStop(0,'rgba(0,0,0,0.95)'); halo2.addColorStop(1,'rgba(0,0,0,0)');
+  nctx.fillStyle=halo2; nctx.beginPath(); nctx.arc(STAGE_CX,STAGE_CY,STAGE_SR*1.5,0,Math.PI*2); nctx.fill();
+  const sg2 = nctx.createRadialGradient(STAGE_CX-STAGE_SR*.28,STAGE_CY-STAGE_SR*.28,1,STAGE_CX,STAGE_CY,STAGE_SR);
+  sg2.addColorStop(0,'#0a0a15'); sg2.addColorStop(0.5,'#030306'); sg2.addColorStop(1,'#000000');
+  nctx.fillStyle=sg2; nctx.beginPath(); nctx.arc(STAGE_CX,STAGE_CY,STAGE_SR,0,Math.PI*2); nctx.fill();
+  const rim2 = nctx.createRadialGradient(STAGE_CX,STAGE_CY,STAGE_SR*.7,STAGE_CX,STAGE_CY,STAGE_SR);
+  rim2.addColorStop(0,'rgba(0,0,0,0)'); rim2.addColorStop(0.82,'rgba(0,0,0,0)');
+  rim2.addColorStop(1,`rgba(${r},${g},${b},${0.12+stageSpeakerPush*0.18})`);
+  nctx.fillStyle=rim2; nctx.beginPath(); nctx.arc(STAGE_CX,STAGE_CY,STAGE_SR,0,Math.PI*2); nctx.fill();
+
+  // Speaker silhouette
+  if (stageSilhouette > 0.01) {
+    const sa = stageSilhouette;
+    nctx.save(); nctx.globalAlpha = sa * 0.8;
+    nctx.translate(STAGE_CX, STAGE_CY);
+    const ss2 = STAGE_SR * (0.58 + stageSpeakerPush * 0.06);
+    nctx.scale(ss2, ss2);
+    nctx.beginPath(); nctx.arc(0,0,1,0,Math.PI*2); nctx.clip();
+    nctx.lineCap='round'; nctx.lineJoin='round';
+    [0.92,0.74,0.56,0.38].forEach((rr3,i)=>{
+      const a2=sa*(0.1+i*0.06);
+      nctx.beginPath(); nctx.arc(0,0,rr3,0,Math.PI*2);
+      nctx.strokeStyle=`rgba(${r},${g},${b},${a2})`;
+      nctx.lineWidth=0.022+i*0.01;
+      nctx.shadowColor=`rgba(${r},${g},${b},${a2*1.8})`; nctx.shadowBlur=(8+i*6)/ss2;
+      nctx.stroke(); nctx.shadowBlur=0;
+    });
+    const cg3=nctx.createRadialGradient(0,0,0,0,0,0.35);
+    cg3.addColorStop(0,`rgba(${r},${g},${b},${sa*.22})`);
+    cg3.addColorStop(0.5,`rgba(${r},${g},${b},${sa*.08})`);
+    cg3.addColorStop(1,'rgba(0,0,0,0)');
+    nctx.fillStyle=cg3; nctx.beginPath(); nctx.arc(0,0,0.35,0,Math.PI*2); nctx.fill();
+    nctx.restore();
+    stageSilhouette *= 0.93;
   }
 
-  function onPressMove(clientX, clientY) {
-    if (Math.abs(clientX - radialOriginX) + Math.abs(clientY - radialOriginY) > 14) {
-      clearTimeout(radialLongPressTimer);
-      pressActive = false;
-    }
-    if (radialOpen) {
-      document.querySelectorAll('.stage-radial-item').forEach(el => {
-        const r = el.getBoundingClientRect();
-        const inside = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
-        el.classList.toggle('hover', inside);
-        if (inside) radialHovered = el.dataset.track;
+  // Hold charge glow
+  if (stageHoldCharge > 0.05) {
+    const hc2 = stageHoldCharge;
+    const innerG2 = nctx.createRadialGradient(STAGE_CX,STAGE_CY,0,STAGE_CX,STAGE_CY,STAGE_SR);
+    innerG2.addColorStop(0,`rgba(${r},${g},${b},${hc2*0.35})`);
+    innerG2.addColorStop(0.55,`rgba(${r},${g},${b},${hc2*0.12})`);
+    innerG2.addColorStop(1,'rgba(0,0,0,0)');
+    nctx.fillStyle=innerG2; nctx.beginPath(); nctx.arc(STAGE_CX,STAGE_CY,STAGE_SR,0,Math.PI*2); nctx.fill();
+    const pulseR2 = STAGE_SR*(0.98+Math.sin(ts*0.012)*0.04*hc2);
+    nctx.beginPath(); nctx.arc(STAGE_CX,STAGE_CY,pulseR2,0,Math.PI*2);
+    nctx.strokeStyle=`rgba(${r},${g},${b},${hc2*0.7})`;
+    nctx.lineWidth=1+hc2*2;
+    nctx.shadowColor=`rgba(${r},${g},${b},${hc2})`; nctx.shadowBlur=15+hc2*25;
+    nctx.stroke(); nctx.shadowBlur=0;
+    if (hc2>0.85){
+      const ca=(hc2-0.85)/0.15;
+      [0.3,1.1,2.0,3.5,4.4,5.2].forEach(ang2=>{
+        const cx3=STAGE_CX+Math.cos(ang2)*STAGE_SR*.92, cy3=STAGE_CY+Math.sin(ang2)*STAGE_SR*.92;
+        const cg4=nctx.createRadialGradient(cx3,cy3,0,cx3,cy3,STAGE_SR*.3);
+        cg4.addColorStop(0,`rgba(${r},${g},${b},${ca*.6})`); cg4.addColorStop(1,'rgba(0,0,0,0)');
+        nctx.fillStyle=cg4; nctx.beginPath(); nctx.arc(cx3,cy3,STAGE_SR*.3,0,Math.PI*2); nctx.fill();
       });
     }
   }
-
-  // ── Mouse ──
-  main.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return;
-    onPressStart(e.clientX, e.clientY, !!e.target.closest('button'));
-  });
-  main.addEventListener('mouseup', (e) => onPressEnd(e.clientX, e.clientY));
-  main.addEventListener('mousemove', (e) => onPressMove(e.clientX, e.clientY));
-
-  // ── Touch ──
-  main.addEventListener('touchstart', (e) => {
-    const t = e.touches[0];
-    onPressStart(t.clientX, t.clientY, !!e.target.closest('button'));
-  }, {passive:true});
-  main.addEventListener('touchend', (e) => {
-    const t = e.changedTouches[0];
-    onPressEnd(t.clientX, t.clientY);
-  });
-  main.addEventListener('touchmove', (e) => {
-    const t = e.touches[0];
-    onPressMove(t.clientX, t.clientY);
-  }, {passive:true});
-
-  // Backdrop click = cancel
-  document.getElementById('stageRadialBackdrop')?.addEventListener('click', () => closeRadial(null));
-  document.getElementById('stageRadialBackdrop')?.addEventListener('touchend', () => closeRadial(null));
+  stageSpeakerPush *= 0.87;
 }
 
-// Keyboard 1-5 shortcut visual flash on radial item
-function radialFlashTrack(track) {
-  if (!stageOpen) return;
-  // Brief glow flash on the center label
-  const lbl = document.getElementById('stageCenterLabel');
-  if (lbl) {
-    lbl.style.animation = 'none';
-    void lbl.offsetWidth;
-    lbl.style.animation = '';
-  }
-}
+// ── Arc draw ──
+function stageDrawArc(ac2, actx2) {
+  const AW = ac2.width, AH = ac2.height;
+  const N2 = TRACKS.length;
+  actx2.clearRect(0, 0, AW, AH);
 
-// ═══════════════════════════════════════════════════════════════
-// STAGE MODE
-// ═══════════════════════════════════════════════════════════════
-const TRACK_EMOJIS = {kick:'🥁',snare:'🔊',hihat:'🎩',melody:'🎹',bass:'🎸'};
-const STAGE_COLORS = {
-  kick:   { col:'#e94560', glow:'rgba(233,69,96,.6)',  dark:'rgba(233,69,96,.08)'  },
-  snare:  { col:'#f5a623', glow:'rgba(245,166,35,.6)', dark:'rgba(245,166,35,.08)' },
-  hihat:  { col:'#00d4aa', glow:'rgba(0,212,170,.6)',  dark:'rgba(0,212,170,.08)'  },
-  melody: { col:'#7c6ff7', glow:'rgba(124,111,247,.6)',dark:'rgba(124,111,247,.08)'},
-  bass:   { col:'#3a9ff5', glow:'rgba(58,159,245,.6)', dark:'rgba(58,159,245,.08)' }
-};
+  const fadeG2 = actx2.createLinearGradient(0,0,0,AH);
+  fadeG2.addColorStop(0,'rgba(0,0,0,1)'); fadeG2.addColorStop(0.3,'rgba(0,0,0,0)');
+  actx2.fillStyle=fadeG2; actx2.fillRect(0,0,AW,AH);
 
-let stageOpen = false;
-let stageTrack = 'kick';
-let stageAnimFrame = null;
-let stageSpeakerPush = 0;   // 0..1, decays each frame
-let stageSpeakerVel  = 0;
-let stageLastHit = 0;
-let stageHitCount = 0;
-let stageSmokeParticles = [];
+  const AEX=AW/2, AEY=AH+55, ARX=AW*0.52, ARY=AH*1.1;
 
-// Speaker drawing
-function drawSpeaker(canvas, track, push) {
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
+  [-2,2,-1,1,0].forEach(drawOff => {
+    const floatOff = drawOff - (stageArcPosition - Math.round(stageArcPosition));
+    const absOff   = Math.abs(floatOff);
+    if (absOff > 2.9) return;
+    const ang3=(270+floatOff*40)*Math.PI/180;
+    const x=AEX+ARX*Math.cos(ang3), y=AEY+ARY*Math.sin(ang3);
+    if (y<-20||y>AH+20) return;
+    const weight=Math.max(0,1-absOff*0.52);
+    const opa3=Math.pow(weight,1.5);
+    const scale2=0.38+weight*0.75;
+    const blur2=absOff*2.8;
+    if (opa3<0.03) return;
 
-  const cx = W/2, cy = H/2;
-  const sc = STAGE_COLORS[track];
-  const col = sc.col;
+    const ti2=(((Math.round(stageArcPosition)+drawOff)%N2)+N2)%N2;
+    const track2=TRACKS[ti2];
+    const _sc2 = STAGE_COLORS[track2] || STAGE_COLORS['kick'];
+    const [r2,g2,b2] = _sc2.rgb || [180,180,180];
+    const isAct=absOff<0.25;
 
-  // ── Siyah zemin ──
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(0, 0, W, H);
+    actx2.save(); actx2.globalAlpha=opa3;
+    if (blur2>0.5) actx2.filter=`blur(${blur2.toFixed(1)}px)`;
+    actx2.translate(x,y); actx2.scale(scale2,scale2);
 
-  // ── Derin arka plan glow — push olunca çok parlak ──
-  const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W,H)*0.65);
-  bgGrad.addColorStop(0, col + (push > 0.1 ? '40' : '18'));
-  bgGrad.addColorStop(0.4, col + (push > 0.1 ? '18' : '06'));
-  bgGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, W, H);
+    if(isAct){
+      const hg2=actx2.createRadialGradient(0,0,0,0,0,80);
+      hg2.addColorStop(0,`rgba(${r2},${g2},${b2},.14)`); hg2.addColorStop(1,'transparent');
+      actx2.fillStyle=hg2; actx2.beginPath(); actx2.arc(0,0,80,0,Math.PI*2); actx2.fill();
+    }
 
-  // ── Zemin neon puddle ──
-  const floorGrad = ctx.createRadialGradient(cx, H * 0.9, 0, cx, H * 0.9, W * 0.55);
-  floorGrad.addColorStop(0, col + (push > 0.05 ? '30' : '10'));
-  floorGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = floorGrad;
-  ctx.fillRect(0, 0, W, H);
+    actx2.filter=blur2>0.5?`blur(${blur2.toFixed(1)}px) saturate(${isAct?1:0.2})`:`saturate(${isAct?1:0.2})`;
+    actx2.font=`${isAct?16:13}px serif`; actx2.textAlign='center'; actx2.textBaseline='middle';
+    actx2.fillText(track2.emoji||'🎵',0,-32);
 
-  // ── Hoparlör kabini (büyük outer disk) ──
-  const outerR = 190 + push * 12;
-  // Kabinin gölgesi / derinliği
-  ctx.beginPath();
-  ctx.arc(cx, cy, outerR + 4, 0, Math.PI*2);
-  ctx.fillStyle = '#020208';
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(cx, cy, outerR, 0, Math.PI*2);
-  ctx.fillStyle = '#050510';
-  ctx.fill();
+    const fs2=isAct?28:12;
+    actx2.font=isAct?`900 ${fs2}px 'Lexend',sans-serif`:`200 ${fs2}px 'Lexend',sans-serif`;
+    actx2.filter=blur2>0.5?`blur(${blur2.toFixed(1)}px)`:'none';
 
-  // Outer rim metalik görünüm
-  const rimGrad = ctx.createLinearGradient(cx - outerR, cy - outerR, cx + outerR, cy + outerR);
-  rimGrad.addColorStop(0, '#1a1a28');
-  rimGrad.addColorStop(0.5, '#0e0e1c');
-  rimGrad.addColorStop(1, '#1a1a28');
-  ctx.beginPath();
-  ctx.arc(cx, cy, outerR, 0, Math.PI*2);
-  ctx.strokeStyle = rimGrad;
-  ctx.lineWidth = 5;
-  ctx.stroke();
-
-  // ── Neon outer ring — çok daha parlak katmanlar ──
-  for (let g = 0; g < 5; g++) {
-    ctx.beginPath();
-    ctx.arc(cx, cy, outerR + g * 0.8, 0, Math.PI * 2);
-    ctx.shadowColor = col;
-    ctx.shadowBlur = (30 + push * 70) / (g * 0.6 + 1);
-    const alpha = push > 0.05
-      ? Math.floor(255 / (g * 0.7 + 1)).toString(16).padStart(2, '0')
-      : Math.floor(100 / (g + 1)).toString(16).padStart(2, '0');
-    ctx.strokeStyle = col + alpha;
-    ctx.lineWidth = g === 0 ? (push > 0.05 ? 3.5 : 2) : 1;
-    ctx.stroke();
-  }
-  ctx.shadowBlur = 0;
-
-  // ── Surround rings (concentric grooves) ──
-  for (let i = 0; i < 4; i++) {
-    const r = outerR - 20 - i * 22 - push * (i + 1) * 7;
-    if (r <= 0) continue;
-    const a = Math.floor((0.08 + i * 0.06 + push * 0.12) * 255).toString(16).padStart(2,'0');
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI*2);
-    ctx.strokeStyle = col + a;
-    ctx.lineWidth = push > 0.2 ? 1.5 : 1;
-    ctx.shadowColor = col;
-    ctx.shadowBlur = push * 8;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-  }
-
-  // ── Speaker cone (merkez) ──
-  const coneR = 88 + push * 24;
-  const coneGrad = ctx.createRadialGradient(cx - 18, cy - 18, 0, cx, cy, coneR);
-  coneGrad.addColorStop(0, '#2e2e42');
-  coneGrad.addColorStop(0.5, '#161625');
-  coneGrad.addColorStop(1, '#080812');
-  ctx.beginPath();
-  ctx.arc(cx, cy, coneR, 0, Math.PI*2);
-  ctx.fillStyle = coneGrad;
-  ctx.fill();
-  // Cone neon edge
-  ctx.shadowColor = col;
-  ctx.shadowBlur = 6 + push * 35;
-  ctx.strokeStyle = col + (push > 0.1 ? 'bb' : '33');
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // ── Cone inner radial lines (texture) ──
-  ctx.save();
-  ctx.globalAlpha = 0.06 + push * 0.08;
-  ctx.strokeStyle = col;
-  ctx.lineWidth = 0.5;
-  for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a) * 28, cy + Math.sin(a) * 28);
-    ctx.lineTo(cx + Math.cos(a) * (coneR - 4), cy + Math.sin(a) * (coneR - 4));
-    ctx.stroke();
-  }
-  ctx.restore();
-
-  // ── Dust cap (merkez daire) ──
-  const capR = 24 + push * 9;
-  const capGrad = ctx.createRadialGradient(cx - 6, cy - 6, 0, cx, cy, capR);
-  capGrad.addColorStop(0, '#3c3c52');
-  capGrad.addColorStop(1, '#18182a');
-  ctx.beginPath();
-  ctx.arc(cx, cy, capR, 0, Math.PI*2);
-  ctx.fillStyle = capGrad;
-  ctx.fill();
-  ctx.shadowColor = col;
-  ctx.shadowBlur = 4 + push * 28;
-  ctx.strokeStyle = col + (push > 0.1 ? 'cc' : '44');
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // ── Center pulse dot ──
-  const dotR = 5 + push * 5;
-  const dotGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, dotR);
-  dotGrad.addColorStop(0, push > 0.15 ? col : '#555566');
-  dotGrad.addColorStop(1, 'transparent');
-  ctx.beginPath();
-  ctx.arc(cx, cy, dotR, 0, Math.PI*2);
-  ctx.fillStyle = dotGrad;
-  ctx.shadowColor = col;
-  ctx.shadowBlur = push * 30;
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // ── Neon scan lines ──
-  ctx.save();
-  ctx.globalAlpha = 0.025 + push * 0.05;
-  for (let y = 0; y < H; y += 3) {
-    ctx.beginPath();
-    ctx.moveTo(0, y); ctx.lineTo(W, y);
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function stageHitEffect(track) {
-  const ring = document.getElementById('stageHitRing');
-  const col = (STAGE_COLORS[track] || STAGE_COLORS['kick']).col;
-  ring.style.setProperty('--ring-col', col);
-  ring.classList.remove('flash');
-  void ring.offsetWidth;
-  ring.classList.add('flash');
-
-  const main = document.getElementById('stageMain');
-  if (!main) return;
-  const mw = main.offsetWidth, mh = main.offsetHeight;
-  const cx = mw / 2, cy = mh / 2;
-
-  // ── Neon parçacıklar ──
-  for (let i = 0; i < 14; i++) {
-    const p = document.createElement('div');
-    p.className = 'stage-particle';
-    const angle = (Math.PI * 2 / 14) * i + Math.random() * 0.3;
-    const dist = 90 + Math.random() * 130;
-    p.style.cssText = `
-      left:${cx}px;top:${cy}px;
-      width:${3+Math.random()*7}px;height:${3+Math.random()*7}px;
-      background:${col};
-      box-shadow:0 0 12px 3px ${col};
-      --px:${Math.cos(angle)*dist}px;
-      --py:${Math.sin(angle)*dist - 50}px;
-      animation-duration:${0.45+Math.random()*0.35}s;
-    `;
-    main.appendChild(p);
-    setTimeout(() => p.remove(), 900);
-  }
-
-  // ── Sis patlaması (fog burst) — radyal yayılan blur daireler ──
-  for (let i = 0; i < 6; i++) {
-    const fog = document.createElement('div');
-    fog.style.cssText = `
-      position:absolute;border-radius:50%;pointer-events:none;z-index:6;
-      left:${cx}px;top:${cy}px;
-      width:${60+Math.random()*80}px;height:${60+Math.random()*80}px;
-      background:radial-gradient(circle, ${col}22 0%, ${col}00 70%);
-      filter:blur(${8+Math.random()*12}px);
-      transform:translate(-50%,-50%);
-      animation:fogBurst ${0.6+Math.random()*0.5}s ease-out forwards;
-      --fa:${(Math.random()-0.5)*200}px;
-      --fb:${(Math.random()-0.5)*200 - 40}px;
-    `;
-    main.appendChild(fog);
-    setTimeout(() => fog.remove(), 1200);
-  }
-
-  // ── Center label flash ──
-  const lbl = document.getElementById('stageCenterLabel');
-  if (lbl) {
-    lbl.style.setProperty('--label-col', col);
-    lbl.classList.add('active');
-    clearTimeout(lbl._t);
-    lbl._t = setTimeout(() => lbl.classList.remove('active'), 400);
-  }
-}
-
-function stageLoop() {
-  if (!stageOpen) return;
-  const canvas = document.getElementById('stageCanvas');
-  if (!canvas) return;
-
-  // Physics: decay push with spring
-  stageSpeakerPush *= 0.82;
-  if (stageSpeakerPush < 0.001) stageSpeakerPush = 0;
-
-  // Idle breathing
-  const breath = 0.015 * Math.sin(Date.now() * 0.0015);
-  drawSpeaker(canvas, stageTrack, stageSpeakerPush + Math.max(0, breath));
-
-  // Update step counter
-  const ctr = document.getElementById('stageStepCounter');
-  if (ctr && isPlaying) {
-    const bar = Math.floor(currentStep / 4) + 1;
-    const beat = (currentStep % 4) + 1;
-    ctr.textContent = `BAR ${bar}  ·  BEAT ${beat}`;
-  } else if (ctr) {
-    ctr.textContent = '— DURDURULDU —';
-  }
-
-  stageAnimFrame = requestAnimationFrame(stageLoop);
-}
-
-// Per-track recording state in stage
-const stageRecording = {}; // track -> boolean
-TRACKS.forEach(t => stageRecording[t] = false);
-
-function buildStageInstruments() { /* replaced by radial picker */ }
-function _oldBuildStageInstruments_disabled() {
-  const container = document.getElementById('stageInstruments');
-  if (!container) return;
-  container.innerHTML = '';
-  TRACKS.forEach(track => {
-    const sc = STAGE_COLORS[track];
-    const sn = selectedSounds[track];
-    const stepCount = grid[track].filter(Boolean).length;
-
-    const item = document.createElement('div');
-    item.className = 'stage-instr-item' + (track === stageTrack ? ' active' : '');
-    item.style.setProperty('--instr-col', sc.col);
-    item.id = `stage-instr-${track}`;
-    item.style.cursor = 'default';
-
-    item.innerHTML = `
-      <div class="stage-instr-dot" style="background:${sc.col};flex-shrink:0;"></div>
-      <div style="flex:1;min-width:0;cursor:default;" id="stage-instr-body-${track}">
-        <div class="stage-instr-name" id="stage-instr-name-${track}" title="Sesi değiştir">${TNAMES[track]}</div>
-        <div class="stage-instr-sound" id="stage-instr-sound-${track}">${sn ? sn.name : '· varsayılan'}</div>
-        <div class="stage-track-rec-bar" id="stage-rec-bar-${track}"></div>
-      </div>
-      <div class="stage-instr-steps" id="stage-instr-steps-${track}">${stepCount > 0 ? stepCount+'✓' : ''}</div>
-      <button class="stage-rec-btn ${stageRecording[track] ? 'recording' : ''}" id="stage-rec-btn-${track}" title="Kayıt başlat/durdur">●</button>
-    `;
-
-    // Clicking instrument name → sound swap
-    item.querySelector(`#stage-instr-name-${track}`).addEventListener('click', (e) => {
-      e.stopPropagation();
-      openSoundSearch(track);
-    });
-
-    // Clicking anywhere else on the row → select this track
-    item.addEventListener('click', (e) => {
-      if(e.target.id === `stage-instr-name-${track}`) return;
-      if(e.target.id === `stage-rec-btn-${track}`) return;
-      selectStageTrack(track);
-    });
-
-    // Rec button
-    item.querySelector(`#stage-rec-btn-${track}`).addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleStageRec(track);
-    });
-
-    container.appendChild(item);
-  });
-} // end _oldBuildStageInstruments_disabled
-
-function showStageCountdown(track, onDone) {
-  const col = (STAGE_COLORS[track] || STAGE_COLORS['kick']).col;
-  const overlay = document.getElementById('stageCountdown');
-  const numEl = document.getElementById('stageCountdownNum');
-  if (!overlay || !numEl) { onDone(); return; }
-
-  overlay.style.setProperty('--cd-col', col);
-  overlay.classList.add('show');
-
-  let count = 4;
-  function tick() {
-    numEl.textContent = count;
-    // Reset animation
-    numEl.style.animation = 'none';
-    void numEl.offsetWidth;
-    numEl.style.animation = 'cdPop .35s cubic-bezier(.34,1.56,.64,1)';
-    // Tick sound
-    playMetronome(getCtx().currentTime, count === 4);
-    count--;
-    if (count > 0) {
-      setTimeout(tick, 60000 / bpm);
+    if(isAct){
+      actx2.shadowColor=track2.col; actx2.shadowBlur=80; actx2.globalAlpha=0.25;
+      actx2.fillStyle=track2.col; actx2.fillText(track2.name,0,0);
+      actx2.shadowBlur=35; actx2.globalAlpha=0.55; actx2.fillText(track2.name,0,0);
+      actx2.shadowBlur=12; actx2.globalAlpha=0.85; actx2.fillText(track2.name,0,0);
+      actx2.shadowBlur=4;  actx2.globalAlpha=1; actx2.fillStyle='rgba(255,255,255,.92)';
+      actx2.fillText(track2.name,0,0); actx2.shadowBlur=0; actx2.shadowColor='transparent';
+      const bw=fs2*track2.name.length*0.52+30;
+      const barG2=actx2.createLinearGradient(-bw/2,0,bw/2,0);
+      barG2.addColorStop(0,'rgba(0,0,0,0)');
+      barG2.addColorStop(0.15,`rgba(${r2},${g2},${b2},.18)`);
+      barG2.addColorStop(0.5,`rgba(${r2},${g2},${b2},.32)`);
+      barG2.addColorStop(0.85,`rgba(${r2},${g2},${b2},.18)`);
+      barG2.addColorStop(1,'rgba(0,0,0,0)');
+      actx2.globalAlpha=opa3; actx2.fillStyle=barG2; actx2.fillRect(-bw/2,-6,bw,14);
     } else {
-      setTimeout(() => {
-        overlay.classList.remove('show');
-        onDone();
-      }, 60000 / bpm);
+      actx2.fillStyle=`rgba(255,255,255,${0.06+weight*0.16})`; actx2.fillText(track2.name,0,0);
     }
-  }
-  tick();
-}
-
-function showStageStoppedFlash() {
-  const el = document.getElementById('stageStoppedFlash');
-  if (!el) return;
-  el.classList.remove('show');
-  void el.offsetWidth;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 950);
-}
-
-function toggleStageRec(track) {
-  const wasRec = stageRecording[track];
-  if (wasRec) {
-    // DURDUR — anında, belirgin flash
-    stageRecording[track] = false;
-    updateStageStatus();
-    showStageStoppedFlash();
-    // Başka aktif kayıt veya dinleme yoksa durdur
-    const anyStillRec = TRACKS.some(t => stageRecording[t]);
-    if (!anyStillRec && !stageListenMode && isPlaying) pauseSequencer();
-    showToast(`⏹ ${TNAMES[track]} durduruldu — ${grid[track].filter(Boolean).length} adım`);
-  } else {
-    // BAŞLAT — önce geri say, sonra aç
-    updateStageStatus();
-    showStageCountdown(track, () => {
-      stageRecording[track] = true;
-      selectStageTrack(track);
-      if (!isPlaying) startSequencer();
-      updateStageStatus();
-      showToast(`● ${TNAMES[track]} kaydediliyor`);
-    });
-  }
-}
-
-let stageListenMode = false;
-
-function updateStageStatus() {
-  const recTracks = TRACKS.filter(t => stageRecording[t]);
-  const status = document.getElementById('stageStatus');
-  if (!status) return;
-  if (stageListenMode) {
-    status.textContent = '👂 dinleme modu';
-  } else if (recTracks.length === 0) {
-    status.textContent = 'basılı tut → enstrüman seç';
-  } else {
-    status.textContent = recTracks.map(t => `● ${TNAMES[t]}`).join('  ');
-  }
-  // Also update inline rec button
-  const inlineRec = document.getElementById('stageInlineRec');
-  if (inlineRec) inlineRec.classList.toggle('recording', stageRecording[stageTrack]);
-}
-
-function toggleStageListenMode() {
-  stageListenMode = !stageListenMode;
-  const pill = document.getElementById('stageListenPill');
-  if (stageListenMode) {
-    TRACKS.forEach(t => { stageRecording[t] = false; });
-    if (pill) pill.classList.add('active');
-    if (!isPlaying) startSequencer();
-    showToast('👂 Dinleme modu');
-  } else {
-    if (pill) pill.classList.remove('active');
-    // Dinlemeden çıkınca kayıt yoksa durdur
-    const anyRec = TRACKS.some(t => stageRecording[t]);
-    if (!anyRec && isPlaying) pauseSequencer();
-    showToast('● Kayıt moduna dönüldü');
-  }
-  updateStageStatus();
-}
-
-function toggleStagePlay() {
-  if (isPlaying) {
-    pauseSequencer();
-    const btn = document.getElementById('stagePlayPauseBtn');
-    if (btn) btn.textContent = '▶';
-  } else {
-    startSequencer();
-    const btn = document.getElementById('stagePlayPauseBtn');
-    if (btn) btn.textContent = '⏸';
-  }
-}
-
-function selectStageTrack(track) {
-  stageTrack = track;
-  const sc = STAGE_COLORS[track];
-
-  // Update active instrument
-  TRACKS.forEach(t => {
-    const el = document.getElementById(`stage-instr-${t}`);
-    if (el) {
-      el.classList.toggle('active', t === track);
-      el.style.setProperty('--instr-col', STAGE_COLORS[t].col);
-    }
+    actx2.restore();
   });
 
-  // Update center label
-  const lbl = document.getElementById('stageCenterLabel');
-  if (lbl) lbl.textContent = TNAMES[track].toUpperCase();
-
-  // Pulse speaker immediately
-  stageSpeakerPush = 0.4;
-  stageHitEffect(track);
-  // Update inline rec button
-  updateStageStatus();
+  // Side masks
+  const lm2=actx2.createLinearGradient(0,0,AW*.28,0);
+  lm2.addColorStop(0,'rgba(0,0,0,1)'); lm2.addColorStop(1,'rgba(0,0,0,0)');
+  actx2.fillStyle=lm2; actx2.fillRect(0,0,AW*.28,AH);
+  const rm2=actx2.createLinearGradient(AW*.72,0,AW,0);
+  rm2.addColorStop(0,'rgba(0,0,0,0)'); rm2.addColorStop(1,'rgba(0,0,0,1)');
+  actx2.fillStyle=rm2; actx2.fillRect(AW*.72,0,AW,AH);
 }
 
-function spawnSmokeParticles() {
-  const smoke = document.getElementById('stageSmoke');
-  if (!smoke) return;
-  smoke.querySelectorAll('.smoke-particle').forEach(p => p.remove());
+// ── Arc swipe ──
+let stageArcDragSX=0, stageArcDragSY=0, stageArcDragging=false;
+let stageArcDragVel=0, stageArcLastX=0, stageArcLastT=0;
 
-  const smokeColors = [
-    'rgba(90,30,140,.3)', 'rgba(40,20,100,.25)', 'rgba(120,50,160,.2)',
-    'rgba(30,60,120,.25)', 'rgba(100,30,80,.3)', 'rgba(60,20,120,.22)'
-  ];
+function stageArcDragStart(x,y){
+  stageArcDragging=true; stageArcDragSX=x; stageArcDragSY=y;
+  stageArcDragVel=0; stageArcLastX=x; stageArcLastT=Date.now();
+}
+function stageArcDragMove(x){
+  if(!stageArcDragging) return;
+  const now=Date.now();
+  stageArcDragVel=(x-stageArcLastX)/Math.max(1,now-stageArcLastT)*16;
+  stageArcLastX=x; stageArcLastT=now;
+  stageArcTarget=stageArcPosition+(stageArcDragSX-x)/320;
+}
+function stageArcDragEnd(x,y){
+  if(!stageArcDragging) return; stageArcDragging=false;
+  const N2=TRACKS.length;
+  const fling=Math.sign(stageArcDragVel)*Math.min(Math.abs(stageArcDragVel*0.08),0.6);
+  const pn=((Math.round(stageArcPosition)%N2)+N2)%N2;
+  const tn=(((Math.round(stageArcPosition-fling))%N2)+N2)%N2;
+  let diff=tn-pn;
+  if(diff>N2/2) diff-=N2;
+  if(diff<-N2/2) diff+=N2;
+  stageArcTarget=Math.round(stageArcPosition)+diff;
+  // Update active track
+  const newIdx=((Math.round(stageArcTarget)%N2)+N2)%N2;
+  selectStageTrack(TRACKS[newIdx]);
+}
 
-  for (let i = 0; i < 30; i++) {
-    const p = document.createElement('div');
-    p.className = 'smoke-particle';
-    const size = 150 + Math.random() * 350;
-    const left = -15 + Math.random() * 130;
-    // Çoğu altta, bazıları ortada
-    const bottom = i < 20 ? -40 + Math.random() * 60 : 20 + Math.random() * 40;
-    const delay = Math.random() * 14;
-    const dur = 8 + Math.random() * 14;
-    const col = smokeColors[i % smokeColors.length];
-    p.style.cssText = `
-      width:${size}px;height:${size}px;
-      left:${left}%;bottom:${bottom}%;
-      background:radial-gradient(circle, ${col} 0%, transparent 65%);
-      animation-duration:${dur}s;
-      animation-delay:-${delay}s;
-      opacity:${0.5 + Math.random() * 0.35};
-    `;
-    smoke.appendChild(p);
+// ── Hold ──
+function stageStartHold(){
+  if(stageHoldActive) return;
+  stageHoldActive=true; stageHoldStartT=performance.now(); stageHoldCharge=0;
+}
+function stageReleaseHold(){
+  if(!stageHoldActive) return;
+  stageHoldActive=false;
+  stageDoHit(stageHoldCharge);
+  stageHoldCharge=0;
+}
+function stageDoHit(charge){
+  const power=1+(charge||0)*2.5;
+  stageSpeakerPush=Math.min(power,3.5);
+  stageSilhouette=Math.min(power*0.8,1);
+  stageNebulaClouds.forEach(cl=>{
+    cl.speed*=1+Math.random()*3*power;
+    setTimeout(()=>{ cl.speed=0.12+Math.random()*0.22; },500+Math.random()*600);
+  });
+  // Kayıt
+  stageHitTrack(stageTrack);
+}
+
+// ── Main stage loop ──
+let stageLastFrameT=0;
+function stageLoop2(ts){
+  if(!stageOpen){ stageAnimFrame=null; return; }
+  const dt=Math.min((ts-stageLastFrameT)/1000,0.05);
+  stageLastFrameT=ts;
+
+  if(stageHoldActive) stageHoldCharge=Math.min((performance.now()-stageHoldStartT)/1200,1);
+
+  stageNebulaClouds.forEach(cl=>stageUpdateCloud(cl,dt,stageHoldCharge));
+
+  // Arc spring
+  const N2=TRACKS.length;
+  const force2=(stageArcTarget-stageArcPosition)*28;
+  stageArcVel+=(force2-stageArcVel*9)*dt;
+  stageArcPosition+=stageArcVel*dt;
+  if(Math.abs(stageArcPosition-stageArcTarget)<0.008&&Math.abs(stageArcVel)<0.05){
+    stageArcPosition=stageArcTarget; stageArcVel=0;
+  }
+  if(Math.abs(stageArcPosition)>N2*3){
+    const sh2=Math.round(stageArcPosition/N2)*N2;
+    stageArcPosition-=sh2; stageArcTarget-=sh2;
+  }
+
+  const nc2=document.getElementById('stageNebulaCanvas');
+  const ac3=document.getElementById('stageArcCanvas');
+  if(nc2&&nc2.getContext){
+    const nctx2=nc2.getContext('2d');
+    stageDrawNebula(nc2,nctx2,ts);
+  }
+  if(ac3&&ac3.getContext){
+    const actx3=ac3.getContext('2d');
+    stageDrawArc(ac3,actx3);
+  }
+
+  stageAnimFrame=requestAnimationFrame(stageLoop2);
+}
+
+function initStageCanvases(){
+  const nc2=document.getElementById('stageNebulaCanvas');
+  const ac3=document.getElementById('stageArcCanvas');
+  if(nc2){ nc2.width=window.innerWidth; nc2.height=window.innerHeight; }
+  if(ac3){ ac3.width=window.innerWidth; ac3.height=130; }
+  STAGE_CX=window.innerWidth/2;
+  STAGE_CY=window.innerHeight*0.38;
+  STAGE_SR=Math.min(window.innerWidth,window.innerHeight)*0.155;
+
+  const ha=document.getElementById('stageHitArea');
+  if(ha){
+    ha.style.width=STAGE_SR*2+'px'; ha.style.height=STAGE_SR*2+'px';
+    ha.style.left=(STAGE_CX-STAGE_SR)+'px'; ha.style.top=(STAGE_CY-STAGE_SR)+'px';
   }
 }
 
-function openStage() {
-  stageOpen = true;
-  getCtx(); // AudioContext unlock on user gesture
-  const overlay = document.getElementById('stageOverlay');
-  overlay.classList.add('show');
+function initStageArcListeners(){
+  const ac3=document.getElementById('stageArcCanvas');
+  if(!ac3||ac3._arcInited) return; ac3._arcInited=true;
+  ac3.addEventListener('mousedown', e=>stageArcDragStart(e.clientX,e.clientY));
+  window.addEventListener('mousemove', e=>{ if(stageArcDragging) stageArcDragMove(e.clientX); });
+  window.addEventListener('mouseup', e=>{ if(stageArcDragging) stageArcDragEnd(e.clientX,e.clientY); });
+  ac3.addEventListener('touchstart', e=>stageArcDragStart(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+  ac3.addEventListener('touchmove', e=>{ if(stageArcDragging) stageArcDragMove(e.touches[0].clientX); },{passive:true});
+  ac3.addEventListener('touchend', e=>stageArcDragEnd(e.changedTouches[0].clientX,e.changedTouches[0].clientY));
 
-  // Canvas boyutunu CSS transition bittikten sonra al (ilk tıklamada 0 olmaması için)
-  setTimeout(() => {
-    const canvas = document.getElementById('stageCanvas');
-    const main = document.getElementById('stageMain');
-    if (canvas && main) {
-      canvas.width = main.offsetWidth || window.innerWidth;
-      canvas.height = main.offsetHeight || window.innerHeight;
-    }
-  }, 50);
-
-  buildStageInstruments();
-  spawnSmokeParticles();
-  selectStageTrack(stageTrack);
-
-  // Update BPM display
-  const bv = document.getElementById('stageBpmVal');
-  if (bv) bv.textContent = bpm;
-
-  // Stage açılınca sequencer DURUR — sadece kayıt/dinle aktifken çalacak
-  if (isPlaying) pauseSequencer();
-
-  // Start animation loop
-  if (stageAnimFrame) cancelAnimationFrame(stageAnimFrame);
-  stageLoop();
-
-  // Reset states
-  TRACKS.forEach(t => { stageRecording[t] = false; });
-  stageListenMode = false;
-  updateStageStatus();
-  document.getElementById('stageRecBadge').classList.remove('show');
-  // Wire new inline controls
-  const listenPill = document.getElementById('stageListenPill');
-  if (listenPill) { listenPill.onclick = toggleStageListenMode; listenPill.classList.remove('active'); }
-  const clearBtn = document.getElementById('stageClearBtn');
-  if (clearBtn) { clearBtn.onclick = () => {
-    const t = stageTrack;
-    grid[t].fill(false);
-    envelopes[t] = {};
-    document.querySelectorAll(`.beat-cell.${CSS.escape(t)}`).forEach(c => c.classList.remove('active','has-env'));
-    showToast(`✕ ${TNAMES[t]} temizlendi`);
-    showStageStoppedFlash();
-  };}
-  const inlineRec = document.getElementById('stageInlineRec');
-  if (inlineRec) { inlineRec.onclick = () => toggleStageRec(stageTrack); inlineRec.classList.remove('recording'); }
-  // Init radial listeners (once)
-  if (!main._radialInited) { main._radialInited = true; initRadialListeners(); }
-  // Show ghost hint briefly
-  const hint = document.getElementById('stageGhostHint');
-  if (hint) { hint.classList.remove('hidden'); }
-}
-
-function closeStage() {
-  stageOpen = false;
-  document.getElementById('stageOverlay').classList.remove('show');
-  if (stageAnimFrame) { cancelAnimationFrame(stageAnimFrame); stageAnimFrame = null; }
-}
-
-// Stage keydown handler — Space triggers the active instrument
-function stageKeyHandler(e) {
-  if (!stageOpen) return;
-  if (e.key === 'Escape') { closeStage(); return; }
-  if (e.key === 'f' || e.key === 'F') { closeStage(); return; }
-
-  // Number keys 1-5: switch instrument
-  const numMap = {'1':'kick','2':'snare','3':'hihat','4':'melody','5':'bass'};
-  if (numMap[e.key]) {
-    if (radialOpen) closeRadial(numMap[e.key]);
-    else selectStageTrack(numMap[e.key]);
-    return;
-  }
-
-  if (e.key === ' ' || KEY_MAP[e.key.toLowerCase()]) {
-    e.preventDefault();
-    if (e.repeat) return;
-    const track = e.key === ' ' ? stageTrack : (KEY_MAP[e.key.toLowerCase()] || stageTrack);
-    // Auto-select track if using instrument keys
-    if (e.key !== ' ') selectStageTrack(track);
-    stageHitTrack(track);
+  const ha=document.getElementById('stageHitArea');
+  if(ha){
+    ha.addEventListener('mousedown', ()=>stageStartHold());
+    ha.addEventListener('mouseup', ()=>stageReleaseHold());
+    ha.addEventListener('mouseleave', ()=>{ if(stageHoldActive) stageReleaseHold(); });
+    ha.addEventListener('touchstart', e=>{ e.preventDefault(); stageStartHold(); },{passive:false});
+    ha.addEventListener('touchend', ()=>stageReleaseHold());
   }
 }
 
-function stageHitTrack(track) {
-  const ctx = getCtx();
-  // Kayıt sırasında lastHL kullan (gerçek çalan adım)
-  const step = (isPlaying && lastHL >= 0) ? lastHL : currentStep;
-
-  const isRec = stageRecording[track];
-  // Her zaman sesi anlık çal (kullanıcı duymalı)
-  triggerSound(track, ctx.currentTime, step);
-
-  // Record to grid ONLY if this track's rec is ON
-  if (isRec && !grid[track][step]) {
-    grid[track][step] = true;
-    liveTriggered.add(`${track}-${step}`); // scheduler bu turda tekrar çalmasın
-    const cell = document.getElementById(`cell-${track}-${step}`);
-    if (cell) { cell.classList.add('active'); }
-  }
-
-  // Visual hit — speaker push
-  stageSpeakerPush = 1.0;
-  stageHitEffect(track);
-
-  // Flash instrument row
-  const el = document.getElementById(`stage-instr-${track}`);
-  if (el) {
-    // Update step count
-    const stepsEl = document.getElementById(`stage-instr-steps-${track}`);
-    if (stepsEl) {
-      const cnt = grid[track].filter(Boolean).length;
-      stepsEl.textContent = cnt > 0 ? cnt+'✓' : '';
-    }
-    // Row flash
-    el.style.background = STAGE_COLORS[track].dark.replace('08','22');
-    setTimeout(() => { el.style.background = ''; }, 120);
-  }
-
-  stageHitCount++;
-}
-
-// Resize canvas on window resize
-window.addEventListener('resize', () => {
-  if (!stageOpen) return;
-  const canvas = document.getElementById('stageCanvas');
-  const main = document.getElementById('stageMain');
-  if (canvas && main) {
-    canvas.width = main.offsetWidth;
-    canvas.height = main.offsetHeight;
-  }
+window.addEventListener('resize', ()=>{
+  if(!stageOpen) return;
+  initStageCanvases();
+  stageInitClouds();
 });
+
+
+
 
 
 // ═══════════════════════════════════════════════════════════════
