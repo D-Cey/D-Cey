@@ -435,6 +435,33 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
 .btn-preview:hover{border-color:#7c6ff7;color:#7c6ff7;}
 .btn-preview.playing{background:#7c6ff730;border-color:#7c6ff7;color:#7c6ff7;}
 
+
+/* ─── ADSR TRIM SECTION ──────────────────────── */
+.ap-trim-section{padding:0 12px 4px;}
+.ap-trim-header{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.ap-trim-title{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.05em;}
+.ap-trim-info{flex:1;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;text-align:right;}
+.ap-trim-reset{font-size:9px;padding:2px 8px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;}
+.ap-trim-reset:hover{border-color:#7c6ff7;color:#7c6ff7;}
+.ap-trim-wrap{position:relative;height:64px;background:var(--bg);border-radius:8px;overflow:hidden;cursor:ew-resize;user-select:none;margin-bottom:6px;}
+#apTrimCanvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+.ap-trim-region{position:absolute;top:0;height:100%;background:rgba(124,111,247,.15);border-top:1.5px solid #7c6ff7aa;border-bottom:1.5px solid #7c6ff7aa;pointer-events:none;}
+.ap-trim-handle{position:absolute;top:0;height:100%;width:12px;cursor:ew-resize;z-index:10;display:flex;align-items:center;justify-content:center;}
+.ap-trim-handle::after{content:'';display:block;width:3px;height:55%;border-radius:2px;background:#7c6ff7;box-shadow:0 0 6px #7c6ff7aa;}
+.ap-trim-hs{transform:translateX(-6px);}
+.ap-trim-he{transform:translateX(-6px);}
+.ap-trim-ph{position:absolute;top:0;height:100%;width:2px;background:#fff8;pointer-events:none;display:none;}
+.ap-trim-ph.on{display:block;}
+.ap-trim-times{display:flex;justify-content:space-between;font-size:10px;font-family:'Space Mono',monospace;color:var(--text3);margin-bottom:6px;}
+.ap-trim-times .accent{color:#7c6ff7;font-weight:700;}
+.ap-trim-presets{display:flex;gap:4px;flex-wrap:wrap;}
+.ap-tpbtn{padding:3px 8px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:10px;cursor:pointer;transition:all .15s;}
+.ap-tpbtn:hover{border-color:#7c6ff7;color:#7c6ff7;}
+
+
+.ap-trim-save-btn{padding:6px 12px;border-radius:7px;border:1px solid #7c6ff7;background:#7c6ff715;color:#7c6ff7;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.ap-trim-save-btn:hover{background:#7c6ff730;}
+
 </style>
 </head>
 <body>
@@ -652,6 +679,34 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
       </div>
     </div>
     <div class="ap-divider"></div>
+    <!-- WAVEFORM TRIM — shown only when a real buffer is loaded -->
+    <div class="ap-trim-section" id="apTrimSection" style="display:none;">
+      <div class="ap-trim-header">
+        <span class="ap-trim-title">✂ Trim</span>
+        <span class="ap-trim-info" id="apTrimInfo">—</span>
+        <button class="ap-trim-reset" id="apTrimReset">Reset</button>
+      </div>
+      <div class="ap-trim-wrap" id="apTrimWrap">
+        <canvas id="apTrimCanvas"></canvas>
+        <div class="ap-trim-region" id="apTrimRegion"></div>
+        <div class="ap-trim-handle ap-trim-hs" id="apTrimHs"></div>
+        <div class="ap-trim-handle ap-trim-he" id="apTrimHe"></div>
+        <div class="ap-trim-ph" id="apTrimPh"></div>
+      </div>
+      <div class="ap-trim-times">
+        <span id="apTrimS">0.00s</span>
+        <span id="apTrimLen" class="accent">—</span>
+        <span id="apTrimE">—</span>
+      </div>
+      <div class="ap-trim-presets">
+        <button class="ap-tpbtn" data-dur="0.1">100ms</button>
+        <button class="ap-tpbtn" data-dur="0.3">300ms</button>
+        <button class="ap-tpbtn" data-dur="0.5">500ms</button>
+        <button class="ap-tpbtn" data-dur="1">1s</button>
+        <button class="ap-tpbtn" data-dur="2">2s</button>
+      </div>
+    </div>
+    <div class="ap-divider"></div>
     <div class="ap-presets">
       <span class="ap-preset-label">Presets</span>
       <button class="ap-preset" id="presetPluck">Pluck</button>
@@ -666,6 +721,7 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
       <button class="ap-undo-btn" id="apUndoBtn" disabled>↩</button>
       <button class="ap-copy-btn" id="apInvertBtn" title="Swap attack↔release, invert sustain — exact reverse of this sound">⇄ Invert</button>
       <button class="ap-copy-btn" id="apCopyBtn">Copy → All</button>
+      <button class="ap-trim-save-btn" id="apTrimSaveBtn" title="Save trim region for sequencer playback" style="display:none;">✂ Trim</button>
       <button class="ap-apply-btn" id="apApplyBtn">✓ Apply</button>
     </div>
   </div>
@@ -940,15 +996,33 @@ function triggerSound(track,t,step,overrideEnv){
 
 function playLoadedBuffer(track,t,v,env){
   const c=getCtx();
+  // Use trimmed buffer if this is the active track being edited, otherwise use full buffer
+  const buf=loadedBuffers[track];
+  if(!buf)return;
+  // Apply trim - stored in selectedSounds
+  const ss=selectedSounds[track];
+  let playBuf=buf;
+  if(ss&&ss.trimStart!=null&&ss.trimEnd!=null&&buf.duration>0){
+    const s=Math.floor((ss.trimStart/buf.duration)*buf.duration*c.sampleRate);
+    const e=Math.floor((ss.trimEnd/buf.duration)*buf.duration*c.sampleRate);
+    const frames=e-s;
+    if(frames>0){
+      playBuf=c.createBuffer(buf.numberOfChannels,frames,c.sampleRate);
+      for(let ch=0;ch<buf.numberOfChannels;ch++){
+        const src2=buf.getChannelData(ch);const dst=playBuf.getChannelData(ch);
+        for(let i=0;i<frames;i++)dst[i]=src2[s+i]||0;
+      }
+    }
+  }
   const src=c.createBufferSource();
   const g=c.createGain();
-  src.buffer=loadedBuffers[track];
+  src.buffer=playBuf;
   src.connect(g);g.connect(c.destination);
-  const totalDur=env?applyEnvGain(g,env,t):src.buffer.duration;
-  // Pitch shift if env has pitch
+  const totalDur=env?applyEnvGain(g,env,t):playBuf.duration;
   if(env&&env.pitch)src.playbackRate.value=Math.pow(2,env.pitch/12);
+  g.gain.value=(v||1);
   src.start(t);
-  src.stop(t+Math.min(totalDur+0.1, src.buffer.duration+0.5));
+  src.stop(t+Math.min(totalDur+0.1, playBuf.duration+0.5));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1193,6 +1267,7 @@ function openADSR(track,step){
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
       resizeAdsrCanvas();
+      showTrimSection();
     });
   });
   showToast(`Envelope editor — ${TNAMES[track]} step ${step+1}`);
@@ -1505,12 +1580,45 @@ function copyAdsrToAll(){
 
 // PREVIEW
 function previewAdsrSound(){
-  const now=getCtx().currentTime;
+  const ctx=getCtx();
+  const now=ctx.currentTime;
   const btn=document.getElementById('apPreviewBtn');btn.textContent='■';btn.classList.add('playing');
-  // Pass current editor settings directly — never touches saved envelopes
-  triggerSound(adsrTrack,now,adsrStep,{...adsrP});
-  const totalDur=(adsrP.dur||300)/1000 + 0.05;
-  setTimeout(()=>{btn.textContent='▶ Preview';btn.classList.remove('playing');},(totalDur*1000)+300);
+  const env={...adsrP};
+  // If trimmed buffer exists, play it with envelope
+  const trimmed=getTrimmedBuffer();
+  if(trimmed){
+    const src=ctx.createBufferSource();
+    const g=ctx.createGain();
+    src.buffer=trimmed;
+    src.connect(g);g.connect(ctx.destination);
+    if(env.pitch) src.playbackRate.value=Math.pow(2,env.pitch/12);
+    applyEnvGain(g,env,now);
+    src.start(now);
+    const dur=Math.min(trimmed.duration, (env.dur||300)/1000)+0.1;
+    src.stop(now+dur+0.3);
+    // Playhead animation on trim canvas
+    const wrap=document.getElementById('apTrimWrap');
+    const ph=document.getElementById('apTrimPh');
+    if(wrap&&ph){
+      ph.classList.add('on');
+      const startT=ctx.currentTime;
+      const trimDur=trimmed.duration;
+      function animPh(){
+        const el=ctx.currentTime-startT;
+        const frac=el/trimDur;
+        if(frac>=1){ph.classList.remove('on');return;}
+        const W=wrap.offsetWidth;
+        ph.style.left=(trimStart*W+frac*(trimEnd-trimStart)*W)+'px';
+        requestAnimationFrame(animPh);
+      }
+      requestAnimationFrame(animPh);
+    }
+    setTimeout(()=>{btn.textContent='▶ Preview';btn.classList.remove('playing');ph&&ph.classList.remove('on');},(trimmed.duration*1000)+300);
+  } else {
+    triggerSound(adsrTrack,now,adsrStep,env);
+    const totalDur=(env.dur||300)/1000+0.05;
+    setTimeout(()=>{btn.textContent='▶ Preview';btn.classList.remove('playing');},(totalDur*1000)+300);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1697,9 +1805,19 @@ async function confirmSound(){
     const res=await fetch(previewUrl);
     const arr=await res.arrayBuffer();
     const buffer=await ctx.decodeAudioData(arr);
-    // Open trim modal with this buffer
-    btn.innerHTML='✓ Use This Sound';btn.style.background='';btn.disabled=false;
-    openTrimModal(sound, buffer, popupTrack);
+    loadedBuffers[popupTrack]=buffer;
+    selectedSounds[popupTrack]={name:sound.name,id:sound.id,url:previewUrl,trimStart:null,trimEnd:null};
+    rebuildAll();
+    btn.innerHTML='✓ Applied!';btn.style.background='var(--accent3)';
+    setTimeout(()=>{
+      btn.innerHTML='✓ Use This Sound';btn.style.background='';btn.disabled=false;
+      closeSoundSearch();
+      showToast(`${TNAMES[popupTrack]}: "${sound.name}" eklendi — ADSR panelinden trim edebilirsin`);
+      // If ADSR panel is open for this track, refresh trim section
+      if(adsrTrack===popupTrack && document.getElementById('adsrPanel').classList.contains('open')){
+        showTrimSection();
+      }
+    },1000);
   }catch(e){
     console.warn('Buffer load failed',e);
     showToast('Ses yuklenemedi: '+e.message);
@@ -1711,215 +1829,6 @@ async function confirmSound(){
 // ═══════════════════════════════════════════════════════════════
 // TRIM MODAL
 // ═══════════════════════════════════════════════════════════════
-let trimBuffer=null, trimTrack='kick', trimSound=null;
-let trimStart=0, trimEnd=1; // 0..1 normalized
-let trimDragging=null, trimDragOffX=0;
-let trimPreviewSrc=null, trimPlayheadAnim=null;
-
-function openTrimModal(sound, buffer, track){
-  trimBuffer=buffer; trimTrack=track; trimSound=sound;
-  trimStart=0; trimEnd=1;
-  document.getElementById('trimModal').classList.add('show');
-  closeSoundSearch();
-  // Badge
-  const col=TCOLORS[track];
-  const b=document.getElementById('trimBadge');
-  b.style.background=`${col}18`;b.style.borderColor=`${col}44`;
-  document.getElementById('trimBadgeDot').style.cssText=`background:${col};box-shadow:0 0 7px ${col}`;
-  document.getElementById('trimBadgeName').style.color=col;
-  document.getElementById('trimBadgeName').textContent=TNAMES[track];
-  document.getElementById('trimSoundName').textContent=sound.name;
-  document.getElementById('trimTotalDur').textContent=buffer.duration.toFixed(2)+'s toplam';
-  updateTrimUI();
-  requestAnimationFrame(()=>drawTrimWaveform());
-}
-
-function closeTrimModal(){
-  document.getElementById('trimModal').classList.remove('show');
-  stopTrimPreview();
-  trimBuffer=null;
-}
-
-function drawTrimWaveform(){
-  const canvas=document.getElementById('trimCanvas');
-  if(!canvas||!trimBuffer)return;
-  const W=canvas.offsetWidth, H=canvas.offsetHeight;
-  canvas.width=W; canvas.height=H;
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,W,H);
-  // Background
-  ctx.fillStyle='#0d0d14';
-  ctx.fillRect(0,0,W,H);
-  // Draw waveform
-  const data=trimBuffer.getChannelData(0);
-  const step=Math.ceil(data.length/W);
-  const col=TCOLORS[trimTrack]||'#7c6ff7';
-  for(let x=0;x<W;x++){
-    let min=1,max=-1;
-    for(let j=0;j<step;j++){
-      const v=data[x*step+j]||0;
-      if(v<min)min=v;
-      if(v>max)max=v;
-    }
-    const yMin=H/2+(min*H*0.45);
-    const yMax=H/2-(max*H*0.45);
-    // Dim outside selection
-    const nx=x/W;
-    const inSel=(nx>=trimStart&&nx<=trimEnd);
-    ctx.strokeStyle=inSel?col:col+'40';
-    ctx.lineWidth=1;
-    ctx.beginPath();
-    ctx.moveTo(x,yMin);
-    ctx.lineTo(x,yMax);
-    ctx.stroke();
-  }
-  updateTrimHandles();
-}
-
-function updateTrimHandles(){
-  const wrap=document.getElementById('trimCanvas').parentElement;
-  const W=wrap.offsetWidth;
-  const sx=trimStart*W, ex=trimEnd*W;
-  document.getElementById('trimRegion').style.left=sx+'px';
-  document.getElementById('trimRegion').style.width=(ex-sx)+'px';
-  document.getElementById('trimHandleStart').style.left=sx+'px';
-  document.getElementById('trimHandleEnd').style.left=ex+'px';
-}
-
-function updateTrimUI(){
-  if(!trimBuffer)return;
-  const dur=trimBuffer.duration;
-  const s=trimStart*dur, e=trimEnd*dur;
-  document.getElementById('trimStartVal').textContent=s.toFixed(2)+'s';
-  document.getElementById('trimEndVal').textContent=e.toFixed(2)+'s';
-  document.getElementById('trimLenVal').textContent=(e-s).toFixed(2)+'s';
-}
-
-// Handle dragging
-function initTrimDrag(){
-  const wrap=document.getElementById('trimCanvas').parentElement;
-  const hs=document.getElementById('trimHandleStart');
-  const he=document.getElementById('trimHandleEnd');
-
-  function onMove(e){
-    if(!trimDragging)return;
-    const rect=wrap.getBoundingClientRect();
-    const cx=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
-    const nx=Math.max(0,Math.min(1,cx/rect.width));
-    if(trimDragging==='start'){
-      trimStart=Math.min(nx, trimEnd-0.01);
-    } else {
-      trimEnd=Math.max(nx, trimStart+0.01);
-    }
-    updateTrimUI();
-    drawTrimWaveform();
-  }
-
-  function onUp(){trimDragging=null;}
-
-  hs.addEventListener('mousedown',()=>trimDragging='start');
-  he.addEventListener('mousedown',()=>trimDragging='end');
-  hs.addEventListener('touchstart',()=>trimDragging='start',{passive:true});
-  he.addEventListener('touchstart',()=>trimDragging='end',{passive:true});
-  document.addEventListener('mousemove',onMove);
-  document.addEventListener('touchmove',onMove,{passive:true});
-  document.addEventListener('mouseup',onUp);
-  document.addEventListener('touchend',onUp);
-}
-
-function stopTrimPreview(){
-  if(trimPreviewSrc){try{trimPreviewSrc.stop();}catch(e){}trimPreviewSrc=null;}
-  if(trimPlayheadAnim){cancelAnimationFrame(trimPlayheadAnim);trimPlayheadAnim=null;}
-  const ph=document.getElementById('trimPlayhead');
-  if(ph){ph.classList.remove('active');}
-  const btn=document.getElementById('trimPreviewBtn');
-  if(btn){btn.textContent='▶ Dinle';btn.classList.remove('playing');}
-}
-
-function previewTrim(){
-  const btn=document.getElementById('trimPreviewBtn');
-  if(trimPreviewSrc){stopTrimPreview();return;}
-  if(!trimBuffer)return;
-  const ctx=getCtx();
-  const dur=trimBuffer.duration;
-  const startSec=trimStart*dur;
-  const endSec=trimEnd*dur;
-  const len=endSec-startSec;
-  // Create trimmed buffer
-  const frames=Math.floor(len*ctx.sampleRate);
-  const trimmed=ctx.createBuffer(trimBuffer.numberOfChannels, frames, ctx.sampleRate);
-  const startFrame=Math.floor(startSec*ctx.sampleRate);
-  for(let ch=0;ch<trimBuffer.numberOfChannels;ch++){
-    const src=trimBuffer.getChannelData(ch);
-    const dst=trimmed.getChannelData(ch);
-    for(let i=0;i<frames;i++) dst[i]=src[startFrame+i]||0;
-  }
-  const src=ctx.createBufferSource();
-  src.buffer=trimmed;
-  src.connect(ctx.destination);
-  src.start();
-  trimPreviewSrc=src;
-  btn.textContent='■ Dur';btn.classList.add('playing');
-  // Playhead animation
-  const startTime=ctx.currentTime;
-  const wrap=document.getElementById('trimCanvas').parentElement;
-  const ph=document.getElementById('trimPlayhead');
-  ph.classList.add('active');
-  function animPH(){
-    const elapsed=ctx.currentTime-startTime;
-    const frac=elapsed/len;
-    if(frac>=1){stopTrimPreview();return;}
-    const W=wrap.offsetWidth;
-    ph.style.left=(trimStart*W + frac*(trimEnd-trimStart)*W)+'px';
-    trimPlayheadAnim=requestAnimationFrame(animPH);
-  }
-  animPH();
-  src.onended=()=>stopTrimPreview();
-}
-
-function applyTrim(){
-  if(!trimBuffer)return;
-  const ctx=getCtx();
-  const dur=trimBuffer.duration;
-  const startSec=trimStart*dur;
-  const endSec=trimEnd*dur;
-  const len=endSec-startSec;
-  const frames=Math.floor(len*ctx.sampleRate);
-  const startFrame=Math.floor(startSec*ctx.sampleRate);
-  const trimmed=ctx.createBuffer(trimBuffer.numberOfChannels, frames, ctx.sampleRate);
-  for(let ch=0;ch<trimBuffer.numberOfChannels;ch++){
-    const src=trimBuffer.getChannelData(ch);
-    const dst=trimmed.getChannelData(ch);
-    for(let i=0;i<frames;i++) dst[i]=src[startFrame+i]||0;
-  }
-  loadedBuffers[trimTrack]=trimmed;
-  selectedSounds[trimTrack]={name:trimSound.name,id:trimSound.id,trimStart:startSec,trimEnd:endSec};
-  rebuildAll();
-  closeTrimModal();
-  showToast(`${TNAMES[trimTrack]}: "${trimSound.name}" (${len.toFixed(2)}s) eklendi`);
-}
-
-// Preset buttons - set end to start+dur
-function applyTrimPreset(dur){
-  if(!trimBuffer)return;
-  const maxEnd=trimStart+(dur/trimBuffer.duration);
-  trimEnd=Math.min(1, maxEnd);
-  updateTrimUI();
-  drawTrimWaveform();
-}
-
-function wireTrimEvents(){
-  document.getElementById('trimCloseBtn')?.addEventListener('click',closeTrimModal);
-  document.getElementById('trimCancelBtn')?.addEventListener('click',closeTrimModal);
-  document.getElementById('trimPreviewBtn')?.addEventListener('click',previewTrim);
-  document.getElementById('trimApplyBtn')?.addEventListener('click',applyTrim);
-  document.getElementById('trimResetBtn')?.addEventListener('click',()=>{trimStart=0;trimEnd=1;updateTrimUI();drawTrimWaveform();});
-  document.querySelectorAll('.trim-preset-btn[data-dur]').forEach(btn=>{
-    btn.addEventListener('click',()=>applyTrimPreset(parseFloat(btn.dataset.dur)));
-  });
-  initTrimDrag();
-  window.addEventListener('resize',()=>{if(trimBuffer)drawTrimWaveform();});
-}
 
 // ═══════════════════════════════════════════════════════════════
 // EXPORT
@@ -2048,7 +1957,13 @@ function wireEvents(){
   document.getElementById('expWav')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'wav'));
   document.getElementById('expStems')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'stems'));
   document.getElementById('expMidi')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'midi'));
-  wireTrimEvents();
+  // Trim section events
+  document.getElementById('apTrimReset')?.addEventListener('click',resetTrim);
+  document.getElementById('apTrimSaveBtn')?.addEventListener('click',applyTrimToSound);
+  document.querySelectorAll('.ap-tpbtn').forEach(btn=>{
+    btn.addEventListener('click',()=>applyTrimPreset(parseFloat(btn.dataset.dur)));
+  });
+  initTrimDrag();
 }
 
 init();
