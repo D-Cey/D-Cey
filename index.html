@@ -486,16 +486,23 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
 
 
 /* ─── PLAYHEAD RULER ─────────────────────────────── */
-.ph-ruler-wrap{display:flex;align-items:center;gap:8px;padding:4px 14px 2px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;height:28px;}
-.ph-ruler-label{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.06em;white-space:nowrap;flex-shrink:0;width:72px;}
-.ph-ruler{flex:1;position:relative;height:18px;cursor:pointer;user-select:none;}
-.ph-ruler-ticks{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
-.ph-marker{position:absolute;top:0;height:100%;display:flex;flex-direction:column;align-items:center;z-index:5;cursor:ew-resize;transform:translateX(-50%);}
-.ph-marker-flag{font-size:9px;color:#4ade80;line-height:1;margin-bottom:1px;pointer-events:none;white-space:nowrap;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);border-radius:3px;padding:0 3px;}
-.ph-marker-line{width:2px;flex:1;background:#4ade80;border-radius:1px;box-shadow:0 0 6px rgba(74,222,128,.5);}
+.ph-ruler-wrap{display:flex;align-items:center;gap:6px;padding:3px 14px 3px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;height:30px;}
+.ph-ruler-label{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.06em;white-space:nowrap;flex-shrink:0;}
+.ph-ruler{flex:1;position:relative;height:22px;user-select:none;background:var(--surface2);border-radius:5px;border:1px solid var(--border);overflow:hidden;}
+.ph-ruler-ticks{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;}
+.ph-tick-bar{position:absolute;top:0;height:100%;box-sizing:border-box;border-right:1px solid var(--border);cursor:pointer;transition:background .1s;display:flex;align-items:center;padding-left:4px;}
+.ph-tick-bar:hover,.ph-tick-bar.hover{background:rgba(74,222,128,.12);}
+.ph-tick-bar.active-start{background:rgba(74,222,128,.18)!important;border-right-color:rgba(74,222,128,.3);}
+.ph-bar-num{font-size:8px;font-family:"Space Mono",monospace;color:var(--text3);pointer-events:none;}
+.ph-tick-bar:hover .ph-bar-num{color:#4ade80;}
+.ph-tick-bar.active-start .ph-bar-num{color:#4ade80;font-weight:700;}
+.ph-marker{position:absolute;top:0;height:100%;display:flex;flex-direction:column;align-items:center;z-index:5;cursor:ew-resize;transform:translateX(-50%);pointer-events:none;}
+.ph-marker-flag{font-size:8px;color:#4ade80;white-space:nowrap;background:rgba(74,222,128,.2);border:1px solid rgba(74,222,128,.5);border-radius:3px;padding:1px 4px;pointer-events:none;}
+.ph-marker-line{width:2px;flex:1;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.6);}
 .ph-save-btn,.ph-clear-btn{font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;flex-shrink:0;transition:all .15s;font-family:"Syne",sans-serif;font-weight:700;}
 .ph-save-btn:hover{border-color:#4ade80;color:#4ade80;}
 .ph-save-btn.saved{border-color:#4ade80;color:#4ade80;background:rgba(74,222,128,.1);}
+.ph-step-display{font-size:9px;font-family:"Space Mono",monospace;color:#4ade80;font-weight:700;flex-shrink:0;min-width:52px;text-align:right;}
 .ph-clear-btn:hover{border-color:#e94560;color:#e94560;}
 .ph-tick{position:absolute;bottom:0;width:1px;background:var(--border);pointer-events:none;}
 .ph-tick.bar{height:8px;background:var(--text3);opacity:.4;}
@@ -550,6 +557,35 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
   font-size:8px;font-family:"Space Mono",monospace;color:#4ade80;
   font-weight:700;pointer-events:none;
 }
+
+
+/* ─── CELL HOLD-TO-SET-DURATION ─────────────────── */
+.beat-cell.cell-holding{
+  outline:2px solid rgba(74,222,128,.8);
+  outline-offset:1px;
+  z-index:3;
+}
+/* Green progress bar at bottom of cell during hold */
+.beat-cell.cell-holding::before{
+  content: attr(data-hold-ms);
+  position:absolute;bottom:0;left:0;
+  height:3px;
+  width: var(--hold-pct, 0%);
+  background:linear-gradient(90deg,#4ade80,#22d3ee);
+  border-radius:0 2px 0 0;
+  transition:none;
+  z-index:4;
+}
+/* ms label inside cell while holding */
+.beat-cell.cell-holding::after{
+  content: "";
+  position:absolute;top:2px;left:3px;
+  font-size:7px;font-family:"Space Mono",monospace;
+  color:rgba(255,255,255,.8);pointer-events:none;
+  z-index:4;
+}
+/* Override has-env dot while holding */
+.beat-cell.cell-holding.has-env::after{display:none;}
 
 </style>
 </head>
@@ -1421,12 +1457,103 @@ function buildGridRows(){
         });
         cell.appendChild(envBtn);
 
-        // Left click: toggle on/off
-        cell.addEventListener('click',()=>{
-          grid[track][sc]=!grid[track][sc];
-          cell.classList.toggle('active',grid[track][sc]);
-          if(grid[track][sc])triggerSound(track,getCtx().currentTime,sc);
-          if(!grid[track][sc]){delete envelopes[track][sc];cell.classList.remove('has-env');}
+        // Mousedown: start hold-to-set-duration
+        let cellHoldTimer=null, cellHoldStart=0, cellHoldActive=false;
+        let cellHoldSrc=null, cellHoldGain=null, cellHoldAnim=null;
+
+        cell.addEventListener('mousedown', e=>{
+          if(e.button!==0) return;
+          e.preventDefault();
+          cellHoldStart = performance.now();
+          cellHoldActive = false;
+
+          // Activate cell immediately if not active
+          if(!grid[track][sc]){
+            grid[track][sc]=true;
+            cell.classList.add('active');
+          }
+
+          // Start playing sound on hold
+          const ctx=getCtx(); const now=ctx.currentTime;
+          const buf=loadedBuffers[track];
+          if(buf){
+            // Build trimmed buffer
+            const ss=selectedSounds[track];
+            let playBuf=buf;
+            if(ss&&ss.trimStart!=null){
+              const s2=Math.floor((ss.trimStart/buf.duration)*buf.duration*ctx.sampleRate);
+              const e2=Math.floor((ss.trimEnd/buf.duration)*buf.duration*ctx.sampleRate);
+              const fr=Math.max(1,e2-s2);
+              playBuf=ctx.createBuffer(buf.numberOfChannels,fr,ctx.sampleRate);
+              for(let ch=0;ch<buf.numberOfChannels;ch++){const sd=buf.getChannelData(ch),dd=playBuf.getChannelData(ch);for(let i=0;i<fr;i++)dd[i]=sd[s2+i]||0;}
+            }
+            cellHoldSrc=ctx.createBufferSource();
+            cellHoldGain=ctx.createGain();
+            cellHoldSrc.buffer=playBuf; cellHoldSrc.loop=true;
+            cellHoldSrc.connect(cellHoldGain); cellHoldGain.connect(ctx.destination);
+            cellHoldGain.gain.value=volumes[track];
+            cellHoldSrc.start(now);
+          } else {
+            triggerSound(track,now,sc);
+          }
+
+          // Show hold bar on cell
+          cell.classList.add('cell-holding');
+          const MAX=2000;
+          function animBar(){
+            const el=performance.now()-cellHoldStart;
+            const pct=Math.min(100,(el/MAX)*100);
+            cell.style.setProperty('--hold-pct', pct+'%');
+            cell.style.setProperty('--hold-ms', Math.round(el)+'ms');
+            if(cellHoldActive) cellHoldAnim=requestAnimationFrame(animBar);
+          }
+          cellHoldActive=true;
+          cellHoldAnim=requestAnimationFrame(animBar);
+
+          // Listen for mouseup globally
+          function onUp(){
+            cellHoldActive=false;
+            if(cellHoldAnim){cancelAnimationFrame(cellHoldAnim);cellHoldAnim=null;}
+            const holdMs=Math.round(performance.now()-cellHoldStart);
+
+            // Stop sound
+            if(cellHoldSrc&&cellHoldGain){
+              cellHoldGain.gain.setValueAtTime(cellHoldGain.gain.value,ctx.currentTime);
+              cellHoldGain.gain.linearRampToValueAtTime(0,ctx.currentTime+0.04);
+              cellHoldSrc.stop(ctx.currentTime+0.05);
+              cellHoldSrc=null; cellHoldGain=null;
+            }
+
+            cell.classList.remove('cell-holding');
+            cell.style.removeProperty('--hold-pct');
+            cell.style.removeProperty('--hold-ms');
+
+            // If held > 120ms → save duration to envelope
+            if(holdMs > 120){
+              const clampedMs=Math.max(20,Math.min(2000,holdMs));
+              if(!envelopes[track][sc]) envelopes[track][sc]={...defaultEnv()};
+              envelopes[track][sc].dur=clampedMs;
+              cell.classList.add('has-env');
+              showHoldToast(`${TNAMES[track]} step ${sc+1} → ${clampedMs}ms`);
+              // If ADSR open for this step, sync it
+              if(adsrTrack===track&&adsrStep===sc&&document.getElementById('adsrPanel').classList.contains('open')){
+                adsrP.dur=clampedMs;
+                syncAdsrSliders(); updateAdsrLabels(); drawAdsr();
+              }
+            } else {
+              // Short tap = just toggle off if was already active before
+              // (already activated on mousedown, short tap = normal toggle)
+            }
+            document.removeEventListener('mouseup',onUp);
+          }
+          document.addEventListener('mouseup',onUp);
+        });
+
+        // Right click still opens ADSR
+        cell.addEventListener('contextmenu',e=>{
+          e.preventDefault();
+          if(!grid[track][sc]){grid[track][sc]=true;cell.classList.add('active');}
+          openADSR(track,sc);
         });
         // Right click also opens ADSR
         cell.addEventListener('contextmenu',e=>{
@@ -2340,12 +2467,23 @@ function buildRulerTicks(){
   if(!ticks) return;
   ticks.innerHTML = '';
   const total = totalSteps();
-  const W = ticks.offsetWidth || 400;
-  for(let i = 0; i <= total; i++){
+  for(let i = 0; i < total; i += 4){
     const t = document.createElement('div');
-    const isBar = i % 4 === 0;
-    t.className = 'ph-tick ' + (isBar ? 'bar' : 'beat');
+    t.className = 'ph-tick-bar';
     t.style.left = (i / total * 100) + '%';
+    t.style.width = (4 / total * 100) + '%';
+    t.dataset.step = i;
+    // Bar number label
+    let barNum = 1;
+    let acc = 0;
+    for(let si=0; si<slots.length; si++){
+      if(i >= acc && i < acc+slots[si]){ barNum = Math.floor((i-acc)/4)+1; break; }
+      acc += slots[si];
+    }
+    t.innerHTML = `<span class="ph-bar-num">${i===0?'▶':barNum}</span>`;
+    t.addEventListener('click', ()=>{ setStartStep(i); });
+    t.addEventListener('mouseenter', ()=>t.classList.add('hover'));
+    t.addEventListener('mouseleave', ()=>t.classList.remove('hover'));
     ticks.appendChild(t);
   }
 }
@@ -2361,14 +2499,19 @@ function updateRulerMarker(){
   if(!ruler || !marker) return;
   const pct = (startStep / Math.max(1, totalSteps())) * 100;
   marker.style.left = pct + '%';
+  // Highlight active bar zone
+  document.querySelectorAll('.ph-tick-bar').forEach(t=>{
+    t.classList.toggle('active-start', parseInt(t.dataset.step)===startStep);
+  });
   // Update flag and step display
   const flag = document.getElementById('phMarkerFlag');
   const disp = document.getElementById('phStepDisplay');
-  if(flag) flag.textContent = startStep === 0 ? '▶' : `▶ ${startStep+1}`;
-  if(disp) disp.textContent = startStep === 0 ? 'Baştan' : `Step ${startStep+1}`;
+  const barNum = Math.floor(startStep/4)+1;
+  if(flag) flag.textContent = startStep===0 ? '▶ Baştan' : `▶ Bar ${barNum}`;
+  if(disp) disp.textContent = startStep===0 ? 'Baştan' : `Bar ${barNum}`;
   // Highlight if saved
   const saved = document.getElementById('phSaveBtn');
-  if(saved) saved.classList.toggle('saved', startStep === savedStartStep && savedStartStep > 0);
+  if(saved) saved.classList.toggle('saved', startStep===savedStartStep && savedStartStep>0);
 }
 
 function initRulerDrag(){
@@ -2379,7 +2522,10 @@ function initRulerDrag(){
     const rect = ruler.getBoundingClientRect();
     const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
     const frac = Math.max(0, Math.min(1, cx / rect.width));
-    return Math.round(frac * (totalSteps() - 1));
+    const raw = frac * (totalSteps() - 1);
+    // Snap to nearest bar (every 4 steps)
+    const snapped = Math.round(raw / 4) * 4;
+    return Math.max(0, Math.min(totalSteps()-1, snapped));
   }
 
   function onMove(e){ if(!rulerDragging) return; setStartStep(posToStep(e)); }
