@@ -1503,6 +1503,23 @@ body.erase-cursor .beat-cell.active:hover {
   </div>
 </div>
 
+<!-- ADD TRACK MODAL -->
+<div class="modal-overlay" id="addTrackModal" style="display:none;opacity:0;pointer-events:none;">
+  <div class="modal" style="max-width:340px;padding:28px;">
+    <h2 style="font-size:16px;margin-bottom:16px;">Yeni Track</h2>
+    <div style="margin-bottom:20px;">
+      <label style="font-size:10px;color:var(--text3);letter-spacing:1px;display:block;margin-bottom:6px;">TRACK ADI</label>
+      <input type="text" id="addTrackNameInput" placeholder="örn: Clap, Perc, FX..." 
+        style="width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-family:'Space Mono',monospace;font-size:13px;outline:none;box-sizing:border-box;"
+        maxlength="20"/>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" id="addTrackCancelBtn" style="flex:1;">İptal</button>
+      <button class="btn btn-primary" id="addTrackConfirmBtn" style="flex:1;">+ Ekle</button>
+    </div>
+  </div>
+</div>
+
 <!-- EXPORT MODAL -->
 <div class="modal-overlay" id="exportModal">
   <div class="modal">
@@ -2146,8 +2163,8 @@ function undoLast(){if(!history.length)return;const snap=history.pop();slots=sna
 // ═══════════════════════════════════════════════════════════════
 // UTILITIES
 // ═══════════════════════════════════════════════════════════════
-function clearAll(){saveHistory();TRACKS.forEach(t=>{grid[t].fill(false);envelopes[t]={};document.querySelectorAll(`.beat-cell[data-track='${t}']`).forEach(c=>c.classList.remove('active','has-env'));});showToast('All tracks cleared');}
-function clearTrack(){saveHistory();const t=activeTrack;grid[t].fill(false);envelopes[t]={};document.querySelectorAll(`.beat-cell[data-track='${t}']`).forEach(c=>c.classList.remove('active','has-env'));showToast(`${TNAMES[t]} cleared`);}
+function clearAll(){saveHistory();TRACKS.forEach(t=>{grid[t].fill(false);envelopes[t]={};document.querySelectorAll(`.beat-cell.${CSS.escape(t)}`).forEach(c=>c.classList.remove('active','has-env'));});showToast('All tracks cleared');}
+function clearTrack(){saveHistory();const t=activeTrack;grid[t].fill(false);envelopes[t]={};document.querySelectorAll(`.beat-cell.${CSS.escape(t)}`).forEach(c=>c.classList.remove('active','has-env'));showToast(`${TNAMES[t]} cleared`);}
 function randomize(){saveHistory();const d={kick:.25,snare:.2,hihat:.45,melody:.15,bass:.18};TRACKS.forEach(t=>{for(let i=0;i<totalSteps();i++){grid[t][i]=Math.random()<d[t];const c=document.getElementById(`cell-${t}-${i}`);if(c)c.classList.toggle('active',grid[t][i]);}});showToast('Randomized');}
 function clamp(v,mn,mx){return Math.max(mn,Math.min(mx,v));}
 function lerp(a,b,t){return a+(b-a)*t;}
@@ -4078,9 +4095,33 @@ function addGridRowForTrack(track, col) {
 }
 
 function openAddTrackModal() {
-  const name = prompt('Yeni track adı:', 'Track ' + (customTrackCounter + 1));
-  if(!name || !name.trim()) return;
-  addCustomTrack(name.trim());
+  const modal = document.getElementById('addTrackModal');
+  const input = document.getElementById('addTrackNameInput');
+  if(!modal || !input) return;
+  input.value = 'Track ' + (customTrackCounter + 1);
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+    modal.style.pointerEvents = 'all';
+    input.focus();
+    input.select();
+  });
+}
+
+function closeAddTrackModal() {
+  const modal = document.getElementById('addTrackModal');
+  if(!modal) return;
+  modal.style.opacity = '0';
+  modal.style.pointerEvents = 'none';
+  setTimeout(() => { modal.style.display = 'none'; }, 200);
+}
+
+function confirmAddTrack() {
+  const input = document.getElementById('addTrackNameInput');
+  const name = input?.value?.trim();
+  if(!name) { showToast('Bir isim gir'); return; }
+  closeAddTrackModal();
+  addCustomTrack(name);
 }
 
 // ═══════════════════════════════════════════════════════════════
