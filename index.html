@@ -406,6 +406,35 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
 ::-webkit-scrollbar{width:3px;height:3px;}
 ::-webkit-scrollbar-track{background:var(--surface);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ─── TRIM MODAL ─────────────────────────────── */
+.trim-popup{width:680px;max-width:96vw;background:var(--surface);border:1px solid var(--border2);border-radius:16px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
+.trim-body{padding:20px;display:flex;flex-direction:column;gap:14px;}
+.trim-info{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text2);}
+.trim-info span:first-child{font-weight:600;color:var(--text1);max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.trim-duration{color:var(--text3);font-size:11px;}
+.trim-canvas-wrap{position:relative;height:100px;background:var(--bg);border-radius:10px;overflow:hidden;cursor:crosshair;user-select:none;}
+#trimCanvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+.trim-region{position:absolute;top:0;height:100%;background:rgba(124,111,247,.18);border-top:1.5px solid #7c6ff7;border-bottom:1.5px solid #7c6ff7;pointer-events:none;}
+.trim-handle{position:absolute;top:0;height:100%;width:14px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;z-index:10;}
+.trim-handle::after{content:'';display:block;width:3px;height:60%;border-radius:2px;background:#7c6ff7;box-shadow:0 0 8px #7c6ff7;}
+.trim-handle-start{transform:translateX(-7px);}
+.trim-handle-end{transform:translateX(-7px);}
+.trim-playhead{position:absolute;top:0;height:100%;width:2px;background:#fff;opacity:0;pointer-events:none;transition:opacity .1s;}
+.trim-playhead.active{opacity:.8;}
+.trim-times{display:flex;gap:8px;}
+.trim-time-box{flex:1;background:var(--bg);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:3px;}
+.trim-time-box.center{align-items:center;}
+.trim-time-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);}
+.trim-time-val{font-size:14px;font-weight:700;color:var(--text1);font-family:monospace;}
+.trim-time-val.accent{color:#7c6ff7;}
+.trim-presets{display:flex;gap:6px;flex-wrap:wrap;}
+.trim-preset-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);font-size:11px;cursor:pointer;transition:all .15s;}
+.trim-preset-btn:hover{border-color:#7c6ff7;color:#7c6ff7;}
+.btn-preview{padding:9px 18px;border-radius:8px;border:1px solid var(--border2);background:var(--bg);color:var(--text1);font-size:13px;cursor:pointer;transition:all .15s;}
+.btn-preview:hover{border-color:#7c6ff7;color:#7c6ff7;}
+.btn-preview.playing{background:#7c6ff730;border-color:#7c6ff7;color:#7c6ff7;}
+
 </style>
 </head>
 <body>
@@ -672,6 +701,60 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
       <div class="footer-actions">
         <button class="btn-cancel" id="soundPopupCancel">Cancel</button>
         <button class="btn-confirm" id="popupConfirmBtn" disabled>✓ Use This Sound</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- TRIM MODAL -->
+<div class="popup-overlay" id="trimModal">
+  <div class="trim-popup">
+    <div class="popup-header">
+      <div class="track-badge" id="trimBadge"><div class="track-badge-dot" id="trimBadgeDot"></div><span class="track-badge-name" id="trimBadgeName">Kick</span></div>
+      <div class="popup-title">Trim Sound</div>
+      <button class="popup-close" id="trimCloseBtn">✕</button>
+    </div>
+    <div class="trim-body">
+      <div class="trim-info">
+        <span id="trimSoundName">—</span>
+        <span class="trim-duration" id="trimTotalDur">—</span>
+      </div>
+      <div class="trim-canvas-wrap">
+        <canvas id="trimCanvas"></canvas>
+        <div class="trim-region" id="trimRegion"></div>
+        <div class="trim-handle trim-handle-start" id="trimHandleStart"></div>
+        <div class="trim-handle trim-handle-end" id="trimHandleEnd"></div>
+        <div class="trim-playhead" id="trimPlayhead"></div>
+      </div>
+      <div class="trim-times">
+        <div class="trim-time-box">
+          <span class="trim-time-label">Başlangıç</span>
+          <span class="trim-time-val" id="trimStartVal">0.00s</span>
+        </div>
+        <div class="trim-time-box center">
+          <span class="trim-time-label">Seçili</span>
+          <span class="trim-time-val accent" id="trimLenVal">—</span>
+        </div>
+        <div class="trim-time-box">
+          <span class="trim-time-label">Bitiş</span>
+          <span class="trim-time-val" id="trimEndVal">—</span>
+        </div>
+      </div>
+      <div class="trim-presets">
+        <button class="trim-preset-btn" data-dur="0.1">100ms</button>
+        <button class="trim-preset-btn" data-dur="0.3">300ms</button>
+        <button class="trim-preset-btn" data-dur="0.5">500ms</button>
+        <button class="trim-preset-btn" data-dur="1.0">1s</button>
+        <button class="trim-preset-btn" data-dur="2.0">2s</button>
+        <button class="trim-preset-btn" id="trimResetBtn">Tümü</button>
+      </div>
+    </div>
+    <div class="popup-footer">
+      <button class="btn-cancel" id="trimCancelBtn">← Geri</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-preview" id="trimPreviewBtn">▶ Dinle</button>
+        <button class="btn-confirm" id="trimApplyBtn">✓ Uygula</button>
       </div>
     </div>
   </div>
@@ -1607,25 +1690,235 @@ async function confirmSound(){
   if(!sound)return;
   const btn=document.getElementById('popupConfirmBtn');
   btn.innerHTML='⏳ Yükleniyor...';btn.disabled=true;
-  // Load actual audio buffer for playback in sequencer
   const previewUrl=sound.previews?.['preview-hq-mp3']||sound.previews?.['preview-lq-mp3'];
-  if(previewUrl){
-    try{
-      const ctx=getCtx();
-      const res=await fetch(previewUrl);
-      const arr=await res.arrayBuffer();
-      const buffer=await ctx.decodeAudioData(arr);
-      loadedBuffers[popupTrack]=buffer;
-    }catch(e){console.warn('Buffer load failed',e);}
-  }
-  selectedSounds[popupTrack]={name:sound.name,id:sound.id,url:sound.previews?.['preview-hq-mp3']};
-  rebuildAll();
-  btn.innerHTML='✓ Applied!';btn.style.background='var(--accent3)';
-  setTimeout(()=>{
+  if(!previewUrl){showToast('Ses URL bulunamadi');btn.innerHTML='✓ Use This Sound';btn.disabled=false;return;}
+  try{
+    const ctx=getCtx();
+    const res=await fetch(previewUrl);
+    const arr=await res.arrayBuffer();
+    const buffer=await ctx.decodeAudioData(arr);
+    // Open trim modal with this buffer
     btn.innerHTML='✓ Use This Sound';btn.style.background='';btn.disabled=false;
-    closeSoundSearch();
-    showToast(`${TNAMES[popupTrack]}: "${sound.name}" eklendi`);
-  },1200);
+    openTrimModal(sound, buffer, popupTrack);
+  }catch(e){
+    console.warn('Buffer load failed',e);
+    showToast('Ses yuklenemedi: '+e.message);
+    btn.innerHTML='✓ Use This Sound';btn.disabled=false;
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// TRIM MODAL
+// ═══════════════════════════════════════════════════════════════
+let trimBuffer=null, trimTrack='kick', trimSound=null;
+let trimStart=0, trimEnd=1; // 0..1 normalized
+let trimDragging=null, trimDragOffX=0;
+let trimPreviewSrc=null, trimPlayheadAnim=null;
+
+function openTrimModal(sound, buffer, track){
+  trimBuffer=buffer; trimTrack=track; trimSound=sound;
+  trimStart=0; trimEnd=1;
+  document.getElementById('trimModal').classList.add('show');
+  closeSoundSearch();
+  // Badge
+  const col=TCOLORS[track];
+  const b=document.getElementById('trimBadge');
+  b.style.background=`${col}18`;b.style.borderColor=`${col}44`;
+  document.getElementById('trimBadgeDot').style.cssText=`background:${col};box-shadow:0 0 7px ${col}`;
+  document.getElementById('trimBadgeName').style.color=col;
+  document.getElementById('trimBadgeName').textContent=TNAMES[track];
+  document.getElementById('trimSoundName').textContent=sound.name;
+  document.getElementById('trimTotalDur').textContent=buffer.duration.toFixed(2)+'s toplam';
+  updateTrimUI();
+  requestAnimationFrame(()=>drawTrimWaveform());
+}
+
+function closeTrimModal(){
+  document.getElementById('trimModal').classList.remove('show');
+  stopTrimPreview();
+  trimBuffer=null;
+}
+
+function drawTrimWaveform(){
+  const canvas=document.getElementById('trimCanvas');
+  if(!canvas||!trimBuffer)return;
+  const W=canvas.offsetWidth, H=canvas.offsetHeight;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  // Background
+  ctx.fillStyle='#0d0d14';
+  ctx.fillRect(0,0,W,H);
+  // Draw waveform
+  const data=trimBuffer.getChannelData(0);
+  const step=Math.ceil(data.length/W);
+  const col=TCOLORS[trimTrack]||'#7c6ff7';
+  for(let x=0;x<W;x++){
+    let min=1,max=-1;
+    for(let j=0;j<step;j++){
+      const v=data[x*step+j]||0;
+      if(v<min)min=v;
+      if(v>max)max=v;
+    }
+    const yMin=H/2+(min*H*0.45);
+    const yMax=H/2-(max*H*0.45);
+    // Dim outside selection
+    const nx=x/W;
+    const inSel=(nx>=trimStart&&nx<=trimEnd);
+    ctx.strokeStyle=inSel?col:col+'40';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(x,yMin);
+    ctx.lineTo(x,yMax);
+    ctx.stroke();
+  }
+  updateTrimHandles();
+}
+
+function updateTrimHandles(){
+  const wrap=document.getElementById('trimCanvas').parentElement;
+  const W=wrap.offsetWidth;
+  const sx=trimStart*W, ex=trimEnd*W;
+  document.getElementById('trimRegion').style.left=sx+'px';
+  document.getElementById('trimRegion').style.width=(ex-sx)+'px';
+  document.getElementById('trimHandleStart').style.left=sx+'px';
+  document.getElementById('trimHandleEnd').style.left=ex+'px';
+}
+
+function updateTrimUI(){
+  if(!trimBuffer)return;
+  const dur=trimBuffer.duration;
+  const s=trimStart*dur, e=trimEnd*dur;
+  document.getElementById('trimStartVal').textContent=s.toFixed(2)+'s';
+  document.getElementById('trimEndVal').textContent=e.toFixed(2)+'s';
+  document.getElementById('trimLenVal').textContent=(e-s).toFixed(2)+'s';
+}
+
+// Handle dragging
+function initTrimDrag(){
+  const wrap=document.getElementById('trimCanvas').parentElement;
+  const hs=document.getElementById('trimHandleStart');
+  const he=document.getElementById('trimHandleEnd');
+
+  function onMove(e){
+    if(!trimDragging)return;
+    const rect=wrap.getBoundingClientRect();
+    const cx=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+    const nx=Math.max(0,Math.min(1,cx/rect.width));
+    if(trimDragging==='start'){
+      trimStart=Math.min(nx, trimEnd-0.01);
+    } else {
+      trimEnd=Math.max(nx, trimStart+0.01);
+    }
+    updateTrimUI();
+    drawTrimWaveform();
+  }
+
+  function onUp(){trimDragging=null;}
+
+  hs.addEventListener('mousedown',()=>trimDragging='start');
+  he.addEventListener('mousedown',()=>trimDragging='end');
+  hs.addEventListener('touchstart',()=>trimDragging='start',{passive:true});
+  he.addEventListener('touchstart',()=>trimDragging='end',{passive:true});
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('touchmove',onMove,{passive:true});
+  document.addEventListener('mouseup',onUp);
+  document.addEventListener('touchend',onUp);
+}
+
+function stopTrimPreview(){
+  if(trimPreviewSrc){try{trimPreviewSrc.stop();}catch(e){}trimPreviewSrc=null;}
+  if(trimPlayheadAnim){cancelAnimationFrame(trimPlayheadAnim);trimPlayheadAnim=null;}
+  const ph=document.getElementById('trimPlayhead');
+  if(ph){ph.classList.remove('active');}
+  const btn=document.getElementById('trimPreviewBtn');
+  if(btn){btn.textContent='▶ Dinle';btn.classList.remove('playing');}
+}
+
+function previewTrim(){
+  const btn=document.getElementById('trimPreviewBtn');
+  if(trimPreviewSrc){stopTrimPreview();return;}
+  if(!trimBuffer)return;
+  const ctx=getCtx();
+  const dur=trimBuffer.duration;
+  const startSec=trimStart*dur;
+  const endSec=trimEnd*dur;
+  const len=endSec-startSec;
+  // Create trimmed buffer
+  const frames=Math.floor(len*ctx.sampleRate);
+  const trimmed=ctx.createBuffer(trimBuffer.numberOfChannels, frames, ctx.sampleRate);
+  const startFrame=Math.floor(startSec*ctx.sampleRate);
+  for(let ch=0;ch<trimBuffer.numberOfChannels;ch++){
+    const src=trimBuffer.getChannelData(ch);
+    const dst=trimmed.getChannelData(ch);
+    for(let i=0;i<frames;i++) dst[i]=src[startFrame+i]||0;
+  }
+  const src=ctx.createBufferSource();
+  src.buffer=trimmed;
+  src.connect(ctx.destination);
+  src.start();
+  trimPreviewSrc=src;
+  btn.textContent='■ Dur';btn.classList.add('playing');
+  // Playhead animation
+  const startTime=ctx.currentTime;
+  const wrap=document.getElementById('trimCanvas').parentElement;
+  const ph=document.getElementById('trimPlayhead');
+  ph.classList.add('active');
+  function animPH(){
+    const elapsed=ctx.currentTime-startTime;
+    const frac=elapsed/len;
+    if(frac>=1){stopTrimPreview();return;}
+    const W=wrap.offsetWidth;
+    ph.style.left=(trimStart*W + frac*(trimEnd-trimStart)*W)+'px';
+    trimPlayheadAnim=requestAnimationFrame(animPH);
+  }
+  animPH();
+  src.onended=()=>stopTrimPreview();
+}
+
+function applyTrim(){
+  if(!trimBuffer)return;
+  const ctx=getCtx();
+  const dur=trimBuffer.duration;
+  const startSec=trimStart*dur;
+  const endSec=trimEnd*dur;
+  const len=endSec-startSec;
+  const frames=Math.floor(len*ctx.sampleRate);
+  const startFrame=Math.floor(startSec*ctx.sampleRate);
+  const trimmed=ctx.createBuffer(trimBuffer.numberOfChannels, frames, ctx.sampleRate);
+  for(let ch=0;ch<trimBuffer.numberOfChannels;ch++){
+    const src=trimBuffer.getChannelData(ch);
+    const dst=trimmed.getChannelData(ch);
+    for(let i=0;i<frames;i++) dst[i]=src[startFrame+i]||0;
+  }
+  loadedBuffers[trimTrack]=trimmed;
+  selectedSounds[trimTrack]={name:trimSound.name,id:trimSound.id,trimStart:startSec,trimEnd:endSec};
+  rebuildAll();
+  closeTrimModal();
+  showToast(`${TNAMES[trimTrack]}: "${trimSound.name}" (${len.toFixed(2)}s) eklendi`);
+}
+
+// Preset buttons - set end to start+dur
+function applyTrimPreset(dur){
+  if(!trimBuffer)return;
+  const maxEnd=trimStart+(dur/trimBuffer.duration);
+  trimEnd=Math.min(1, maxEnd);
+  updateTrimUI();
+  drawTrimWaveform();
+}
+
+function wireTrimEvents(){
+  document.getElementById('trimCloseBtn')?.addEventListener('click',closeTrimModal);
+  document.getElementById('trimCancelBtn')?.addEventListener('click',closeTrimModal);
+  document.getElementById('trimPreviewBtn')?.addEventListener('click',previewTrim);
+  document.getElementById('trimApplyBtn')?.addEventListener('click',applyTrim);
+  document.getElementById('trimResetBtn')?.addEventListener('click',()=>{trimStart=0;trimEnd=1;updateTrimUI();drawTrimWaveform();});
+  document.querySelectorAll('.trim-preset-btn[data-dur]').forEach(btn=>{
+    btn.addEventListener('click',()=>applyTrimPreset(parseFloat(btn.dataset.dur)));
+  });
+  initTrimDrag();
+  window.addEventListener('resize',()=>{if(trimBuffer)drawTrimWaveform();});
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1755,6 +2048,7 @@ function wireEvents(){
   document.getElementById('expWav')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'wav'));
   document.getElementById('expStems')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'stems'));
   document.getElementById('expMidi')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'midi'));
+  wireTrimEvents();
 }
 
 init();
