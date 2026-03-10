@@ -587,6 +587,17 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
 /* Override has-env dot while holding */
 .beat-cell.cell-holding.has-env::after{display:none;}
 
+
+/* ─── ERASE MODE CURSOR ─── */
+body.erase-cursor,
+body.erase-cursor .beat-cell {
+  cursor: crosshair !important;
+}
+body.erase-cursor .beat-cell.active:hover {
+  opacity: 0.5;
+  box-shadow: 0 0 0 2px #e94560 !important;
+}
+
 </style>
 </head>
 <body>
@@ -898,7 +909,8 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
     <div class="ap-footer">
       <button class="ap-preview-btn" id="apPreviewBtn">▶ Preview</button>
       <button class="ap-undo-btn" id="apUndoBtn" disabled>↩</button>
-      <button class="ap-copy-btn" id="apInvertBtn" title="Swap attack↔release, invert sustain — exact reverse of this sound">⇄ Invert</button>
+      <button class="ap-copy-btn" id="apInvertBtn" title="Tüm ADSR eğrisini tersine çevir">⇄ Invert</button>
+      <button class="ap-copy-btn" id="apCopyBtn" title="Bu envelope'u tüm aktif adımlara kopyala" style="font-size:10px;">⎘ Kopyala</button>
       <button class="ap-trim-save-btn" id="apTrimSaveBtn" title="Save trim region for sequencer playback" style="display:none;">✂ Trim</button>
       <button class="ap-apply-btn" id="apApplyBtn">✓ Apply</button>
     </div>
@@ -1461,14 +1473,40 @@ function buildGridRows(){
         let cellHoldTimer=null, cellHoldStart=0, cellHoldActive=false;
         let cellHoldSrc=null, cellHoldGain=null, cellHoldAnim=null;
 
+        // Ctrl+mouseenter for erase-drag
+        cell.addEventListener('mouseenter', ()=>{
+          if(eraseMode && grid[track][sc]){
+            grid[track][sc]=false;
+            cell.classList.remove('active','has-env','cell-holding');
+            delete envelopes[track][sc];
+            cell.style.removeProperty('--hold-pct');
+          }
+        });
+
         cell.addEventListener('mousedown', e=>{
           if(e.button!==0) return;
           e.preventDefault();
+
+          // Ctrl+click = erase mode drag
+          if(e.ctrlKey || e.metaKey){
+            eraseMode = true;
+            if(grid[track][sc]){
+              grid[track][sc]=false;
+              cell.classList.remove('active','has-env');
+              delete envelopes[track][sc];
+            }
+            document.addEventListener('mouseup', ()=>{ eraseMode=false; document.body.classList.remove('erase-cursor'); }, {once:true});
+            document.body.classList.add('erase-cursor');
+            return;
+          }
+
           cellHoldStart = performance.now();
           cellHoldActive = false;
 
-          // Activate cell immediately if not active
-          if(!grid[track][sc]){
+          // Remember if cell was already active before this mousedown
+          const cellWasActive = grid[track][sc];
+          // Activate cell immediately if not active (hold will set duration)
+          if(!cellWasActive){
             grid[track][sc]=true;
             cell.classList.add('active');
           }
@@ -1535,27 +1573,29 @@ function buildGridRows(){
               envelopes[track][sc].dur=clampedMs;
               cell.classList.add('has-env');
               showHoldToast(`${TNAMES[track]} step ${sc+1} → ${clampedMs}ms`);
-              // If ADSR open for this step, sync it
               if(adsrTrack===track&&adsrStep===sc&&document.getElementById('adsrPanel').classList.contains('open')){
                 adsrP.dur=clampedMs;
                 syncAdsrSliders(); updateAdsrLabels(); drawAdsr();
               }
             } else {
-              // Short tap = just toggle off if was already active before
-              // (already activated on mousedown, short tap = normal toggle)
+              // Short tap: toggle off if it was already active, otherwise keep it on
+              if(cellWasActive){
+                grid[track][sc]=false;
+                cell.classList.remove('active');
+                delete envelopes[track][sc];
+                cell.classList.remove('has-env');
+              }
+              // If it was off (we turned it on in mousedown), play a quick preview
+              else {
+                triggerSound(track, getCtx().currentTime, sc);
+              }
             }
             document.removeEventListener('mouseup',onUp);
           }
           document.addEventListener('mouseup',onUp);
         });
 
-        // Right click still opens ADSR
-        cell.addEventListener('contextmenu',e=>{
-          e.preventDefault();
-          if(!grid[track][sc]){grid[track][sc]=true;cell.classList.add('active');}
-          openADSR(track,sc);
-        });
-        // Right click also opens ADSR
+        // Right click: open ADSR (single listener)
         cell.addEventListener('contextmenu',e=>{
           e.preventDefault();
           if(!grid[track][sc]){grid[track][sc]=true;cell.classList.add('active');}
@@ -1960,10 +2000,20 @@ function copyAdsrToAll(){
 }
 
 // PREVIEW
+let _previewSrc=null, _previewGain=null;
+function stopPreviewSound(){
+  if(_previewSrc){try{_previewGain.gain.setValueAtTime(_previewGain.gain.value,getCtx().currentTime);_previewGain.gain.linearRampToValueAtTime(0,getCtx().currentTime+0.04);_previewSrc.stop(getCtx().currentTime+0.05);}catch(e){}  _previewSrc=null;_previewGain=null;}
+  const btn=document.getElementById('apPreviewBtn');
+  if(btn){btn.textContent='▶ Preview';btn.classList.remove('playing');}
+  const ph=document.getElementById('apTrimPh');if(ph)ph.classList.remove('on');
+}
 function previewAdsrSound(){
+  const btn=document.getElementById('apPreviewBtn');
+  // If already playing, stop it
+  if(btn.classList.contains('playing')){stopPreviewSound();return;}
   const ctx=getCtx();
   const now=ctx.currentTime;
-  const btn=document.getElementById('apPreviewBtn');btn.textContent='■';btn.classList.add('playing');
+  btn.textContent='■ Stop';btn.classList.add('playing');
   const env={...adsrP};
   // If trimmed buffer exists, play it with envelope
   const trimmed=getTrimmedBuffer();
@@ -1975,8 +2025,10 @@ function previewAdsrSound(){
     if(env.pitch) src.playbackRate.value=Math.pow(2,env.pitch/12);
     applyEnvGain(g,env,now);
     src.start(now);
+    _previewSrc=src; _previewGain=g;
     const dur=Math.min(trimmed.duration, (env.dur||300)/1000)+0.1;
     src.stop(now+dur+0.3);
+    src.onended=()=>{_previewSrc=null;};
     // Playhead animation on trim canvas
     const wrap=document.getElementById('apTrimWrap');
     const ph=document.getElementById('apTrimPh');
@@ -1994,11 +2046,11 @@ function previewAdsrSound(){
       }
       requestAnimationFrame(animPh);
     }
-    setTimeout(()=>{btn.textContent='▶ Preview';btn.classList.remove('playing');ph&&ph.classList.remove('on');},(trimmed.duration*1000)+300);
+    setTimeout(()=>{stopPreviewSound();},(trimmed.duration*1000)+300);
   } else {
     triggerSound(adsrTrack,now,adsrStep,env);
     const totalDur=(env.dur||300)/1000+0.05;
-    setTimeout(()=>{btn.textContent='▶ Preview';btn.classList.remove('playing');},(totalDur*1000)+300);
+    setTimeout(()=>{stopPreviewSound();},(totalDur*1000)+300);
   }
 }
 
@@ -2639,6 +2691,10 @@ function armTrack(track){
 // Hold bar animation state
 const holdBarAnims = {};
 
+// ─── CTRL+DRAG ERASE ──────────────────────────────
+let eraseMode = false;   // true while Ctrl+mousebutton held
+
+
 function startHoldBar(track){
   const wrap = document.getElementById(`holdbar-${track}`);
   const fill = document.getElementById(`holdbarfill-${track}`);
@@ -2789,6 +2845,7 @@ function wireEvents(){
   document.getElementById('soundPopupClose')?.addEventListener('click',closeSoundSearch);
   document.getElementById('soundPopupCancel')?.addEventListener('click',closeSoundSearch);
   document.getElementById('soundSearchBtn')?.addEventListener('click',runSoundSearch);
+  document.getElementById('soundSearchInput')?.addEventListener('keydown',(e)=>{if(e.key==='Enter')runSoundSearch();});
   document.getElementById('popupConfirmBtn')?.addEventListener('click',confirmSound);
   document.getElementById('tabKick')?.addEventListener('click',(e)=>switchPopupTrack('kick',e.currentTarget));
   document.getElementById('tabSnare')?.addEventListener('click',(e)=>switchPopupTrack('snare',e.currentTarget));
