@@ -433,27 +433,27 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
   <div class="logo"><div class="logo-dot"></div>RhythmAI</div>
   <div class="bpm-control">
     <label>BPM</label>
-    <button class="bpm-btn" onclick="changeBPM(-5)">−</button>
-    <input type="number" id="bpmInput" value="120" min="40" max="240" onchange="updateBPM()"/>
-    <button class="bpm-btn" onclick="changeBPM(5)">+</button>
+    <button class="bpm-btn" id="bpmMinus">−</button>
+    <input type="number" id="bpmInput" value="120" min="40" max="240"/>
+    <button class="bpm-btn" id="bpmPlus">+</button>
   </div>
   <div class="transport">
-    <button class="btn-stop" onclick="stopSequencer()">■</button>
-    <button class="btn-play" id="playBtn" onclick="togglePlay()">▶</button>
+    <button class="btn-stop" id="stopBtn">■</button>
+    <button class="btn-play" id="playBtn" >▶</button>
   </div>
-  <button class="btn-record" id="recBtn" onclick="toggleRecord()">
+  <button class="btn-record" id="recBtn" >
     <div class="rec-dot-btn"></div><span id="recBtnLabel">Record</span>
   </button>
   <div class="header-group">
     <span class="header-group-label">Rec Mode</span>
     <div class="toggle-pill">
-      <button class="toggle-pill-btn active" id="modeOverdub" onclick="setRecMode('overdub')">OVERDUB</button>
-      <button class="toggle-pill-btn" id="modeReplace" onclick="setRecMode('replace')">REPLACE</button>
+      <button class="toggle-pill-btn active" id="modeOverdub" >OVERDUB</button>
+      <button class="toggle-pill-btn" id="modeReplace" >REPLACE</button>
     </div>
   </div>
   <div class="header-group">
     <span class="header-group-label">Click</span>
-    <button class="metronome-btn" id="metroBtn" onclick="toggleMetronome()">🎵 <span id="metroLabel">OFF</span></button>
+    <button class="metronome-btn" id="metroBtn" >🎵 <span id="metroLabel">OFF</span></button>
   </div>
   <div class="header-spacer"></div>
   <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;">hover a lit cell → click ⊹ to edit envelope</div>
@@ -464,10 +464,10 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
   <span class="structure-label">Structure</span>
   <span class="structure-info" id="structureInfo"></span>
   <div class="structure-actions">
-    <button class="btn btn-green" onclick="applyAllSlots(-1)">− Bars (All)</button>
-    <button class="btn btn-green" onclick="applyAllSlots(1)">+ Bars (All)</button>
-    <button class="btn" onclick="removeSlot()">− Slot</button>
-    <button class="btn" onclick="addSlot()">+ Slot</button>
+    <button class="btn btn-green" id="slotMinusAll">− Bars (All)</button>
+    <button class="btn btn-green" id="slotPlusAll">+ Bars (All)</button>
+    <button class="btn" id="slotMinus">− Slot</button>
+    <button class="btn" id="slotPlus">+ Slot</button>
   </div>
 </div>
 
@@ -475,36 +475,36 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-title">Tracks</div>
-    <div class="track-item kick active" onclick="selectTrack('kick')" id="sidebar-kick">
+    <div class="track-item kick active"  id="sidebar-kick">
       <div class="track-color"></div><span class="track-name">Kick</span>
       <span class="track-key">SPC</span>
-      <button class="track-mute" onclick="toggleMute(event,'kick')" id="mute-kick">M</button>
+      <button class="track-mute"  id="mute-kick">M</button>
     </div>
-    <div class="track-sound-name" id="sound-kick" onclick="openSoundSearch('kick')">· find sound</div>
-    <div class="track-item snare" onclick="selectTrack('snare')" id="sidebar-snare">
+    <div class="track-sound-name" id="sound-kick" >· find sound</div>
+    <div class="track-item snare"  id="sidebar-snare">
       <div class="track-color"></div><span class="track-name">Snare</span>
       <span class="track-key">S</span>
-      <button class="track-mute" onclick="toggleMute(event,'snare')" id="mute-snare">M</button>
+      <button class="track-mute"  id="mute-snare">M</button>
     </div>
-    <div class="track-sound-name" id="sound-snare" onclick="openSoundSearch('snare')">· find sound</div>
-    <div class="track-item hihat" onclick="selectTrack('hihat')" id="sidebar-hihat">
+    <div class="track-sound-name" id="sound-snare" >· find sound</div>
+    <div class="track-item hihat"  id="sidebar-hihat">
       <div class="track-color"></div><span class="track-name">Hi-Hat</span>
       <span class="track-key">H</span>
-      <button class="track-mute" onclick="toggleMute(event,'hihat')" id="mute-hihat">M</button>
+      <button class="track-mute"  id="mute-hihat">M</button>
     </div>
-    <div class="track-sound-name" id="sound-hihat" onclick="openSoundSearch('hihat')">· find sound</div>
-    <div class="track-item melody" onclick="selectTrack('melody')" id="sidebar-melody">
+    <div class="track-sound-name" id="sound-hihat" >· find sound</div>
+    <div class="track-item melody"  id="sidebar-melody">
       <div class="track-color"></div><span class="track-name">Melody</span>
       <span class="track-key">M</span>
-      <button class="track-mute" onclick="toggleMute(event,'melody')" id="mute-melody">M</button>
+      <button class="track-mute"  id="mute-melody">M</button>
     </div>
-    <div class="track-sound-name" id="sound-melody" onclick="openSoundSearch('melody')">· find sound</div>
-    <div class="track-item bass" onclick="selectTrack('bass')" id="sidebar-bass">
+    <div class="track-sound-name" id="sound-melody" >· find sound</div>
+    <div class="track-item bass"  id="sidebar-bass">
       <div class="track-color"></div><span class="track-name">Bass</span>
       <span class="track-key">B</span>
-      <button class="track-mute" onclick="toggleMute(event,'bass')" id="mute-bass">M</button>
+      <button class="track-mute"  id="mute-bass">M</button>
     </div>
-    <div class="track-sound-name" id="sound-bass" onclick="openSoundSearch('bass')">· find sound</div>
+    <div class="track-sound-name" id="sound-bass" >· find sound</div>
     <div class="sidebar-divider"></div>
     <div style="padding:0 16px;">
       <div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;">Volume</div>
@@ -531,14 +531,14 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
     </div>
     <div class="bottom-toolbar">
       <div class="toolbar-left">
-        <button class="btn" onclick="clearAll()">✕ Clear All</button>
-        <button class="btn" onclick="clearTrack()">✕ Clear Track</button>
-        <button class="btn" onclick="randomize()">⚄ Randomize</button>
-        <button class="btn" id="undoBtn" onclick="undoLast()" disabled>↩ Undo</button>
+        <button class="btn" id="clearAllBtn">✕ Clear All</button>
+        <button class="btn" id="clearTrackBtn">✕ Clear Track</button>
+        <button class="btn" id="randomizeBtn">⚄ Randomize</button>
+        <button class="btn" id="undoBtn" disabled>↩ Undo</button>
       </div>
       <div class="toolbar-right">
         <div class="visualizer"><canvas class="viz-canvas" id="vizCanvas"></canvas></div>
-        <button class="btn btn-primary" onclick="openExport()">↓ Export</button>
+        <button class="btn btn-primary" id="exportBtn">↓ Export</button>
       </div>
     </div>
     <div class="status-bar">
@@ -555,15 +555,15 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
     <div class="ap-header">
       <div class="ap-badge" id="apBadge"><div class="ap-dot" id="apDot"></div><span class="ap-name" id="apName">Bass</span></div>
       <span class="ap-step" id="apStep">Step —</span>
-      <button class="ap-close" onclick="closeADSR()">✕</button>
+      <button class="ap-close" id="adsrCloseBtn">✕</button>
     </div>
     <div class="ap-mode-bar">
-      <button class="ap-mode-btn on" id="apModeHandle" onclick="setAdsrMode('handle')">⊹ Handles</button>
-      <button class="ap-mode-btn draw" id="apModeDraw" onclick="setAdsrMode('draw')">✏ Draw</button>
-      <button class="ap-mode-btn prompt" id="apModePrompt" onclick="setAdsrMode('prompt')">✦ Prompt</button>
+      <button class="ap-mode-btn on" id="apModeHandle">⊹ Handles</button>
+      <button class="ap-mode-btn draw" id="apModeDraw">✏ Draw</button>
+      <button class="ap-mode-btn prompt" id="apModePrompt">✦ Prompt</button>
       <div class="ap-blend" id="apBlend">
-        <button class="ap-blend-btn on" id="apBlendReplace" onclick="setAdsrBlend('replace')">Replace</button>
-        <button class="ap-blend-btn" id="apBlendBlend" onclick="setAdsrBlend('blend')">Blend</button>
+        <button class="ap-blend-btn on" id="apBlendReplace">Replace</button>
+        <button class="ap-blend-btn" id="apBlendBlend">Blend</button>
       </div>
     </div>
     <div class="ap-canvas-wrap" id="apCanvasWrap">
@@ -577,18 +577,18 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
       <div class="ap-pl r" id="apPlR">R</div>
     </div>
     <div class="ap-prompt-row" id="apPromptRow">
-      <input class="ap-prompt-input" id="apPromptInput" placeholder="Describe the sound shape…" onkeydown="if(event.key==='Enter')runAdsrPrompt()"/>
-      <button class="ap-prompt-go" id="apPromptGo" onclick="runAdsrPrompt()">Go</button>
+      <input class="ap-prompt-input" id="apPromptInput" placeholder="Describe the sound shape…"/>
+      <button class="ap-prompt-go" id="apPromptGo">Go</button>
     </div>
     <div class="ap-tags" id="apTags">
-      <span class="ap-tag" onclick="setAdsrPrompt('slow swell, long release')">slow swell</span>
-      <span class="ap-tag" onclick="setAdsrPrompt('hard punch, instant cut')">hard punch</span>
-      <span class="ap-tag" onclick="setAdsrPrompt('pluck, fast decay')">pluck</span>
-      <span class="ap-tag" onclick="setAdsrPrompt('long pad, full sustain')">pad</span>
-      <span class="ap-tag" onclick="setAdsrPrompt('tremolo wobble sustained')">tremolo</span>
+      <span class="ap-tag" id="ap1">slow swell</span>
+      <span class="ap-tag" id="ap2">hard punch</span>
+      <span class="ap-tag" id="ap3">pluck</span>
+      <span class="ap-tag" id="ap4">pad</span>
+      <span class="ap-tag" id="ap5">tremolo</span>
     </div>
     <div class="ap-api-row" id="apApiRow">
-      <input type="checkbox" id="apUseApi" onchange="toggleAdsrApi()"/>
+      <input type="checkbox" id="apUseApi"/>
       <label for="apUseApi">Use Claude AI (API key required)</label>
     </div>
     <div class="ap-ai-status" id="apAiStatus">
@@ -596,11 +596,11 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
       <div class="ap-ai-dots"><span></span><span></span><span></span></div>
     </div>
     <div class="ap-sliders" id="apSliders">
-      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label a"><span class="dot"></span>Attack</span><span class="ap-sl-val a" id="apVA">—</span></div><input type="range" class="ra" id="apSA" min="0" max="100" value="12" oninput="onAdsrSlider('a',+this.value)"/><div class="ap-sl-desc">Rise to peak</div></div>
-      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label d"><span class="dot"></span>Decay</span><span class="ap-sl-val d" id="apVD">—</span></div><input type="range" class="rd" id="apSD" min="0" max="100" value="60" oninput="onAdsrSlider('d',+this.value)"/><div class="ap-sl-desc">Drop to sustain level</div></div>
-      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label s"><span class="dot"></span>Sustain</span><span class="ap-sl-val s" id="apVS">—</span></div><input type="range" class="rs" id="apSS" min="0" max="100" value="70" oninput="onAdsrSlider('s',+this.value)"/><div class="ap-sl-desc">Volume while held</div></div>
-      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label r"><span class="dot"></span>Release</span><span class="ap-sl-val r" id="apVR">—</span></div><input type="range" class="rr" id="apSR" min="0" max="100" value="65" oninput="onAdsrSlider('r',+this.value)"/><div class="ap-sl-desc">Fade after note ends</div></div>
-      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label pitch"><span class="dot"></span>Pitch</span><span class="ap-sl-val pitch" id="apVPitch">—</span></div><input type="range" class="rpitch" id="apSPitch" min="0" max="24" value="0" step="1" oninput="onAdsrSlider('pitch',+this.value)"/><div class="ap-sl-desc">Semitones up from root</div></div>
+      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label a"><span class="dot"></span>Attack</span><span class="ap-sl-val a" id="apVA">—</span></div><input type="range" class="ra" id="apSA" min="0" max="100" value="12"/><div class="ap-sl-desc">Rise to peak</div></div>
+      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label d"><span class="dot"></span>Decay</span><span class="ap-sl-val d" id="apVD">—</span></div><input type="range" class="rd" id="apSD" min="0" max="100" value="60"/><div class="ap-sl-desc">Drop to sustain level</div></div>
+      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label s"><span class="dot"></span>Sustain</span><span class="ap-sl-val s" id="apVS">—</span></div><input type="range" class="rs" id="apSS" min="0" max="100" value="70"/><div class="ap-sl-desc">Volume while held</div></div>
+      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label r"><span class="dot"></span>Release</span><span class="ap-sl-val r" id="apVR">—</span></div><input type="range" class="rr" id="apSR" min="0" max="100" value="65"/><div class="ap-sl-desc">Fade after note ends</div></div>
+      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label pitch"><span class="dot"></span>Pitch</span><span class="ap-sl-val pitch" id="apVPitch">—</span></div><input type="range" class="rpitch" id="apSPitch" min="0" max="24" value="0" step="1" /><div class="ap-sl-desc">Semitones up from root</div></div>
     </div>
     <div class="ap-divider"></div>
     <!-- DURATION CONTROL — directly sets how long the sound plays, separate from envelope shape -->
@@ -614,7 +614,7 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
       </div>
       <input type="range" id="apSDur" min="20" max="2000" step="10" value="300"
         style="-webkit-appearance:none;width:100%;height:3px;border-radius:2px;background:var(--surface3);outline:none;cursor:pointer;"
-        oninput="onDurSlider(+this.value)"/>
+        />
       <style>#apSDur::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#ff9500;box-shadow:0 0 6px rgba(255,149,0,.5);cursor:pointer;}</style>
       <div style="display:flex;justify-content:space-between;margin-top:3px;">
         <span style="font-size:8px;color:var(--text3);font-family:'Space Mono',monospace;">20ms</span>
@@ -625,19 +625,19 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
     <div class="ap-divider"></div>
     <div class="ap-presets">
       <span class="ap-preset-label">Presets</span>
-      <button class="ap-preset" onclick="applyAdsrPreset('pluck',this)">Pluck</button>
-      <button class="ap-preset" onclick="applyAdsrPreset('bass',this)">Long Bass</button>
-      <button class="ap-preset" onclick="applyAdsrPreset('pad',this)">Pad</button>
-      <button class="ap-preset" onclick="applyAdsrPreset('punch',this)">Punch</button>
-      <button class="ap-preset" onclick="applyAdsrPreset('stab',this)">Stab</button>
+      <button class="ap-preset" id="presetPluck">Pluck</button>
+      <button class="ap-preset" id="presetBass">Long Bass</button>
+      <button class="ap-preset" id="presetPad">Pad</button>
+      <button class="ap-preset" id="presetPunch">Punch</button>
+      <button class="ap-preset" id="presetStab">Stab</button>
     </div>
     <div class="ap-divider"></div>
     <div class="ap-footer">
-      <button class="ap-preview-btn" id="apPreviewBtn" onclick="previewAdsrSound()">▶ Preview</button>
-      <button class="ap-undo-btn" id="apUndoBtn" onclick="undoAdsr()" disabled>↩</button>
-      <button class="ap-copy-btn" onclick="invertAdsr()" title="Swap attack↔release, invert sustain — exact reverse of this sound">⇄ Invert</button>
-      <button class="ap-copy-btn" onclick="copyAdsrToAll()">Copy → All</button>
-      <button class="ap-apply-btn" id="apApplyBtn" onclick="applyAdsr()">✓ Apply</button>
+      <button class="ap-preview-btn" id="apPreviewBtn">▶ Preview</button>
+      <button class="ap-undo-btn" id="apUndoBtn" disabled>↩</button>
+      <button class="ap-copy-btn" id="apInvertBtn" title="Swap attack↔release, invert sustain — exact reverse of this sound">⇄ Invert</button>
+      <button class="ap-copy-btn" id="apCopyBtn">Copy → All</button>
+      <button class="ap-apply-btn" id="apApplyBtn">✓ Apply</button>
     </div>
   </div>
 </div>
@@ -648,19 +648,19 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
     <div class="popup-header">
       <div class="track-badge" id="popupBadge"><div class="track-badge-dot" id="popupBadgeDot"></div><span class="track-badge-name" id="popupBadgeName">Kick</span></div>
       <div class="popup-title">Find a Sound</div>
-      <button class="popup-close" onclick="closeSoundSearch()">✕</button>
+      <button class="popup-close" id="soundPopupClose">✕</button>
     </div>
     <div class="track-tabs" id="popupTabs">
-      <button class="track-tab kick active" onclick="switchPopupTrack('kick',this)">Kick</button>
-      <button class="track-tab snare" onclick="switchPopupTrack('snare',this)">Snare</button>
-      <button class="track-tab hihat" onclick="switchPopupTrack('hihat',this)">Hi-Hat</button>
-      <button class="track-tab melody" onclick="switchPopupTrack('melody',this)">Melody</button>
-      <button class="track-tab bass" onclick="switchPopupTrack('bass',this)">Bass</button>
+      <button class="track-tab kick active" id="tabKick">Kick</button>
+      <button class="track-tab snare" id="tabSnare">Snare</button>
+      <button class="track-tab hihat" id="tabHihat">Hi-Hat</button>
+      <button class="track-tab melody" id="tabMelody">Melody</button>
+      <button class="track-tab bass" id="tabBass">Bass</button>
     </div>
     <div class="search-area">
       <div class="search-row">
         <div class="search-input-wrap"><span class="search-icon">🔍</span><input class="search-input" id="soundSearchInput" placeholder="Describe the sound you want…"/></div>
-        <button class="search-btn" onclick="runSoundSearch()">Search</button>
+        <button class="search-btn" id="soundSearchBtn">Search</button>
       </div>
       <div class="quick-tags" id="popupQuickTags"></div>
       <div class="ai-bar" id="popupAiBar" style="display:none;"><span>✦</span><span class="ai-text" id="popupAiText"></span></div>
@@ -670,8 +670,8 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
     <div class="popup-footer">
       <div class="footer-info">Source: <span>Freesound.org</span> · Free · CC Licensed</div>
       <div class="footer-actions">
-        <button class="btn-cancel" onclick="closeSoundSearch()">Cancel</button>
-        <button class="btn-confirm" id="popupConfirmBtn" disabled onclick="confirmSound()">✓ Use This Sound</button>
+        <button class="btn-cancel" id="soundPopupCancel">Cancel</button>
+        <button class="btn-confirm" id="popupConfirmBtn" disabled>✓ Use This Sound</button>
       </div>
     </div>
   </div>
@@ -683,14 +683,14 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
     <h2>Export Your Track</h2>
     <p>Stems let you drag each layer separately into FL Studio or Ableton.</p>
     <div class="export-options">
-      <div class="export-opt selected" onclick="selectExport(this,'mp3')"><div class="export-opt-icon">🎵</div><div class="export-opt-name">MP3 Mix</div><div class="export-opt-desc">Full mix, ready to share</div></div>
-      <div class="export-opt" onclick="selectExport(this,'wav')"><div class="export-opt-icon">🎚️</div><div class="export-opt-name">WAV Mix</div><div class="export-opt-desc">High quality, lossless</div></div>
-      <div class="export-opt" onclick="selectExport(this,'stems')"><div class="export-opt-icon">🎛️</div><div class="export-opt-name">Stems</div><div class="export-opt-desc">Each layer for FL Studio / Ableton</div></div>
-      <div class="export-opt" onclick="selectExport(this,'midi')"><div class="export-opt-icon">🎹</div><div class="export-opt-name">MIDI</div><div class="export-opt-desc">Import into any DAW</div></div>
+      <div class="export-opt selected" id="expMp3"><div class="export-opt-icon">🎵</div><div class="export-opt-name">MP3 Mix</div><div class="export-opt-desc">Full mix, ready to share</div></div>
+      <div class="export-opt" id="expWav"><div class="export-opt-icon">🎚️</div><div class="export-opt-name">WAV Mix</div><div class="export-opt-desc">High quality, lossless</div></div>
+      <div class="export-opt" id="expStems"><div class="export-opt-icon">🎛️</div><div class="export-opt-name">Stems</div><div class="export-opt-desc">Each layer for FL Studio / Ableton</div></div>
+      <div class="export-opt" id="expMidi"><div class="export-opt-icon">🎹</div><div class="export-opt-name">MIDI</div><div class="export-opt-desc">Import into any DAW</div></div>
     </div>
     <div class="modal-actions">
-      <button class="btn" onclick="closeExport()">Cancel</button>
-      <button class="btn btn-primary" onclick="doExport()">Export ↓</button>
+      <button class="btn" id="exportCloseBtn">Cancel</button>
+      <button class="btn btn-primary" id="doExportBtn">Export ↓</button>
     </div>
   </div>
 </div>
@@ -989,7 +989,8 @@ function buildGridRows(){
     const row=document.createElement('div');row.className='track-row';
     const lbl=document.createElement('div');lbl.className='track-label';
     const sn=selectedSounds[track];
-    lbl.innerHTML=`<div class="track-label-name">${TNAMES[track]}</div><div class="track-label-sound${sn?'':' default'}" onclick="openSoundSearch('${track}')">${sn?sn.name:'· find sound'}</div>`;
+    lbl.innerHTML=`<div class="track-label-name">${TNAMES[track]}</div><div class="track-label-sound${sn?'':' default'}" data-track="${track}">${sn?sn.name:'· find sound'}</div>`;
+    lbl.querySelector('.track-label-sound').addEventListener('click',()=>openSoundSearch(track));
     const sw=document.createElement('div');sw.className='track-slots';
     let gs=0;
     slots.forEach((bc,si)=>{
@@ -1034,7 +1035,7 @@ function buildGridRows(){
 
 function buildVolControls(){
   const c=document.getElementById('volControls');c.innerHTML='';
-  TRACKS.forEach(t=>{const w=document.createElement('div');w.style.cssText='display:flex;align-items:center;gap:6px;';w.innerHTML=`<span style="font-size:9px;color:var(--text3);width:32px;">${TNAMES[t]}</span><input type="range" min="0" max="1" step="0.05" value="${volumes[t]}" style="flex:1;accent-color:var(--${t});height:2px;" oninput="volumes['${t}']=parseFloat(this.value)"/>`;c.appendChild(w);});
+  TRACKS.forEach(t=>{const w=document.createElement('div');w.style.cssText='display:flex;align-items:center;gap:6px;';w.innerHTML=`<span style="font-size:9px;color:var(--text3);width:32px;">${TNAMES[t]}</span><input type="range" min="0" max="1" step="0.05" value="${volumes[t]}" style="flex:1;accent-color:var(--${t});height:2px;" data-track="${t}"/>`;const inp=w.querySelector('input');inp.addEventListener('input',()=>{volumes[t]=parseFloat(inp.value);});c.appendChild(w);});
 }
 
 function selectTrack(track){activeTrack=track;TRACKS.forEach(t=>document.getElementById(`sidebar-${t}`).classList.toggle('active',t===track));document.getElementById('recDot').className=`rec-dot ${track}`;document.getElementById('activeTrackName').textContent=TNAMES[track];}
@@ -1102,7 +1103,7 @@ function openADSR(track,step){
   document.getElementById('adsrStatus').textContent=`Editing: ${TNAMES[track]} step ${step+1}`;
   syncAdsrSliders();updateAdsrLabels();
   // Reflect inverted state on button
-  const invBtn=document.querySelector('.ap-copy-btn[onclick="invertAdsr()"]');
+  const invBtn=document.querySelector('.ap-copy-btn[class="ap-invert-inline"]');
   if(invBtn) invBtn.classList.toggle('on', !!adsrP.inverted);
   // Wait for panel CSS transition to paint before measuring canvas size
   // Two rAF calls ensure the browser has fully laid out the panel
@@ -1400,8 +1401,9 @@ function invertAdsr(){
   adsrP.inverted = !adsrP.inverted;
   adsrFreehand = null;
   drawAdsr();
-  const btn=document.querySelector('.ap-copy-btn[onclick="invertAdsr()"]');
+  const btn=document.querySelector('.ap-copy-btn[class="ap-invert-inline"]');
   if(btn) btn.classList.toggle('on', adsrP.inverted);
+  document.querySelectorAll('.ap-invert-inline').forEach(b=>b.addEventListener('click',invertAdsr));
   showToast(adsrP.inverted ? 'Inverted — playing envelope backwards' : 'Invert off — normal envelope');
 }
 function applyAdsr(){
@@ -1498,7 +1500,8 @@ function openSoundSearch(track){
   document.getElementById('soundSearchInput').value = SDEFS[track];
   document.getElementById('popupAiBar').style.display='flex';
   document.getElementById('popupAiText').textContent = 'Freesound.org — 500,000+ gerçek ses';
-  document.getElementById('popupQuickTags').innerHTML = QTAGS[track].map(t=>`<span class="tag" onclick="document.getElementById('soundSearchInput').value='${t}';runSoundSearch()">${t}</span>`).join('');
+  const qt1=document.getElementById('popupQuickTags');qt1.innerHTML=QTAGS[track].map(t=>`<span class="tag" data-q="${t}">${t}</span>`).join('');
+  qt1.querySelectorAll('.tag').forEach(el=>el.addEventListener('click',()=>{document.getElementById('soundSearchInput').value=el.dataset.q;runSoundSearch();}));
   document.getElementById('popupConfirmBtn').disabled=true;
   runSoundSearch();
 }
@@ -1516,7 +1519,8 @@ function switchPopupTrack(track,el){
   updatePopupBadge(track);
   document.getElementById('soundSearchInput').value=SDEFS[track];
   document.getElementById('popupAiText').textContent='Freesound.org — 500,000+ gerçek ses';
-  document.getElementById('popupQuickTags').innerHTML=QTAGS[track].map(t=>`<span class="tag" onclick="document.getElementById('soundSearchInput').value='${t}';runSoundSearch()">${t}</span>`).join('');
+  const qt2=document.getElementById('popupQuickTags');qt2.innerHTML=QTAGS[track].map(t=>`<span class="tag" data-q="${t}">${t}</span>`).join('');
+  qt2.querySelectorAll('.tag').forEach(el=>el.addEventListener('click',()=>{document.getElementById('soundSearchInput').value=el.dataset.q;runSoundSearch();}));
   document.getElementById('popupConfirmBtn').disabled=true;
   runSoundSearch();
 }
@@ -1555,8 +1559,11 @@ function renderSoundResults(track){
         <div class="sound-meta">${tags}<span class="sound-duration">${dur}</span></div>
         <svg class="waveform-svg" viewBox="0 0 200 22" preserveAspectRatio="none">${svg}</svg>
       </div>
-      <button class="play-btn" id="ppbtn-${i}" onclick="previewPopupSound(event,${i})">▶</button>
+      <button class="play-btn" id="ppbtn-${i}" data-si="${i}">▶</button>
       <button class="use-btn">Use</button>`;
+    const pb=card.querySelector('.play-btn');
+    if(pb)pb.addEventListener('click',(e)=>previewPopupSound(e,i));
+    card.querySelector('.use-btn')?.addEventListener('click',()=>{selectSoundCard(i);});
     list.appendChild(card);
     card.style.opacity='0';card.style.transform='translateY(5px)';
     setTimeout(()=>{card.style.transition='opacity .2s,transform .2s';card.style.opacity='1';card.style.transform='none';},i*50);
@@ -1673,7 +1680,89 @@ function init(){
   rebuildAll();drawViz();
   window.addEventListener('resize',()=>{if(document.getElementById('adsrPanel').classList.contains('open'))resizeAdsrCanvas();});
   showToast('Hover any lit cell and click ⊹ to open the envelope editor');
+  wireEvents();
 }
+
+function wireEvents(){
+  // BPM
+  document.getElementById('bpmMinus')?.addEventListener('click',()=>changeBPM(-5));
+  document.getElementById('bpmPlus')?.addEventListener('click',()=>changeBPM(5));
+  document.getElementById('bpmInput')?.addEventListener('change',updateBPM);
+  // Transport
+  document.getElementById('stopBtn')?.addEventListener('click',stopSequencer);
+  document.getElementById('playBtn')?.addEventListener('click',togglePlay);
+  document.getElementById('recBtn')?.addEventListener('click',toggleRecord);
+  document.getElementById('modeOverdub')?.addEventListener('click',()=>setRecMode('overdub'));
+  document.getElementById('modeReplace')?.addEventListener('click',()=>setRecMode('replace'));
+  document.getElementById('metroBtn')?.addEventListener('click',toggleMetronome);
+  // Structure
+  document.getElementById('slotMinusAll')?.addEventListener('click',()=>applyAllSlots(-1));
+  document.getElementById('slotPlusAll')?.addEventListener('click',()=>applyAllSlots(1));
+  document.getElementById('slotMinus')?.addEventListener('click',removeSlot);
+  document.getElementById('slotPlus')?.addEventListener('click',addSlot);
+  // Sidebar tracks
+  ['kick','snare','hihat','melody','bass'].forEach(t=>{
+    document.getElementById(`sidebar-${t}`)?.addEventListener('click',()=>selectTrack(t));
+    document.getElementById(`mute-${t}`)?.addEventListener('click',(e)=>toggleMute(e,t));
+    document.getElementById(`sound-${t}`)?.addEventListener('click',()=>openSoundSearch(t));
+  });
+  // Bottom bar
+  document.getElementById('clearAllBtn')?.addEventListener('click',clearAll);
+  document.getElementById('clearTrackBtn')?.addEventListener('click',clearTrack);
+  document.getElementById('randomizeBtn')?.addEventListener('click',randomize);
+  document.getElementById('undoBtn')?.addEventListener('click',undoLast);
+  document.getElementById('exportBtn')?.addEventListener('click',openExport);
+  // ADSR panel
+  document.getElementById('adsrCloseBtn')?.addEventListener('click',closeADSR);
+  document.getElementById('apModeHandle')?.addEventListener('click',()=>setAdsrMode('handle'));
+  document.getElementById('apModeDraw')?.addEventListener('click',()=>setAdsrMode('draw'));
+  document.getElementById('apModePrompt')?.addEventListener('click',()=>setAdsrMode('prompt'));
+  document.getElementById('apBlendReplace')?.addEventListener('click',()=>setAdsrBlend('replace'));
+  document.getElementById('apBlendBlend')?.addEventListener('click',()=>setAdsrBlend('blend'));
+  document.getElementById('apPromptInput')?.addEventListener('keydown',(e)=>{if(e.key==='Enter')runAdsrPrompt();});
+  document.getElementById('apPromptGo')?.addEventListener('click',runAdsrPrompt);
+  document.getElementById('ap1')?.addEventListener('click',()=>setAdsrPrompt('slow swell, long release'));
+  document.getElementById('ap2')?.addEventListener('click',()=>setAdsrPrompt('hard punch, instant cut'));
+  document.getElementById('ap3')?.addEventListener('click',()=>setAdsrPrompt('pluck, fast decay'));
+  document.getElementById('ap4')?.addEventListener('click',()=>setAdsrPrompt('long pad, full sustain'));
+  document.getElementById('ap5')?.addEventListener('click',()=>setAdsrPrompt('tremolo wobble sustained'));
+  document.getElementById('apUseApi')?.addEventListener('change',toggleAdsrApi);
+  document.getElementById('apSA')?.addEventListener('input',(e)=>onAdsrSlider('a',+e.target.value));
+  document.getElementById('apSD')?.addEventListener('input',(e)=>onAdsrSlider('d',+e.target.value));
+  document.getElementById('apSS')?.addEventListener('input',(e)=>onAdsrSlider('s',+e.target.value));
+  document.getElementById('apSR')?.addEventListener('input',(e)=>onAdsrSlider('r',+e.target.value));
+  document.getElementById('apSPitch')?.addEventListener('input',(e)=>onAdsrSlider('pitch',+e.target.value));
+  document.getElementById('apSDur')?.addEventListener('input',(e)=>onDurSlider(+e.target.value));
+  document.getElementById('apPreviewBtn')?.addEventListener('click',previewAdsrSound);
+  document.getElementById('apUndoBtn')?.addEventListener('click',undoAdsr);
+  document.getElementById('apInvertBtn')?.addEventListener('click',invertAdsr);
+  document.getElementById('apCopyBtn')?.addEventListener('click',copyAdsrToAll);
+  document.getElementById('apApplyBtn')?.addEventListener('click',applyAdsr);
+  // Preset buttons
+  document.getElementById('presetPluck')?.addEventListener('click',(e)=>applyAdsrPreset('pluck',e.target));
+  document.getElementById('presetBass')?.addEventListener('click',(e)=>applyAdsrPreset('bass',e.target));
+  document.getElementById('presetPad')?.addEventListener('click',(e)=>applyAdsrPreset('pad',e.target));
+  document.getElementById('presetPunch')?.addEventListener('click',(e)=>applyAdsrPreset('punch',e.target));
+  document.getElementById('presetStab')?.addEventListener('click',(e)=>applyAdsrPreset('stab',e.target));
+  // Sound search popup
+  document.getElementById('soundPopupClose')?.addEventListener('click',closeSoundSearch);
+  document.getElementById('soundPopupCancel')?.addEventListener('click',closeSoundSearch);
+  document.getElementById('soundSearchBtn')?.addEventListener('click',runSoundSearch);
+  document.getElementById('popupConfirmBtn')?.addEventListener('click',confirmSound);
+  document.getElementById('tabKick')?.addEventListener('click',(e)=>switchPopupTrack('kick',e.currentTarget));
+  document.getElementById('tabSnare')?.addEventListener('click',(e)=>switchPopupTrack('snare',e.currentTarget));
+  document.getElementById('tabHihat')?.addEventListener('click',(e)=>switchPopupTrack('hihat',e.currentTarget));
+  document.getElementById('tabMelody')?.addEventListener('click',(e)=>switchPopupTrack('melody',e.currentTarget));
+  document.getElementById('tabBass')?.addEventListener('click',(e)=>switchPopupTrack('bass',e.currentTarget));
+  // Export modal
+  document.getElementById('exportCloseBtn')?.addEventListener('click',closeExport);
+  document.getElementById('doExportBtn')?.addEventListener('click',doExport);
+  document.getElementById('expMp3')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'mp3'));
+  document.getElementById('expWav')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'wav'));
+  document.getElementById('expStems')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'stems'));
+  document.getElementById('expMidi')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'midi'));
+}
+
 init();
 </script>
 </body>
