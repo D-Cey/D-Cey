@@ -471,6 +471,19 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
 .ap-fade-handle:hover{filter:brightness(1.4);}
 .ap-fade-handle:hover svg polygon{opacity:1;}
 
+
+/* ─── APPLY SCOPE BAR ──────────────────────────── */
+.ap-apply-scope{display:flex;align-items:center;gap:5px;padding:6px 12px 10px;border-top:1px solid var(--border);}
+.ap-scope-label{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.06em;flex-shrink:0;}
+.ap-scope-btn{flex:1;padding:5px 0;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text3);font-size:10px;font-weight:700;font-family:"Syne",sans-serif;cursor:pointer;transition:all .15s;}
+.ap-scope-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(58,159,245,.08);}
+.ap-scope-btn.fired{border-color:#4ade80;color:#4ade80;background:rgba(74,222,128,.1);}
+/* ─── NO SOUND HINT ─────────────────────────────── */
+.ap-trim-no-sound{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:rgba(124,111,247,.07);border:1px dashed rgba(124,111,247,.25);border-radius:8px;margin:4px 12px;}
+.ap-trim-no-sound span{font-size:10px;color:var(--text3);}
+.ap-trim-find-btn{font-size:10px;padding:4px 10px;border-radius:7px;border:1px solid rgba(124,111,247,.4);background:rgba(124,111,247,.1);color:#7c6ff7;cursor:pointer;font-weight:700;transition:all .15s;}
+.ap-trim-find-btn:hover{background:rgba(124,111,247,.2);}
+
 </style>
 </head>
 <body>
@@ -690,6 +703,10 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
     </div>
     <div class="ap-divider"></div>
     <!-- WAVEFORM TRIM — shown only when a real buffer is loaded -->
+    <div class="ap-trim-no-sound" id="apTrimNoSound" style="display:none;">
+      <span>🎵 Bu track için ses yüklemek ister misin?</span>
+      <button class="ap-trim-find-btn" id="apTrimFindBtn">+ Ses Bul</button>
+    </div>
     <div class="ap-trim-section" id="apTrimSection" style="display:none;">
       <div class="ap-trim-header">
         <span class="ap-trim-title">✂ Trim</span>
@@ -736,9 +753,14 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
       <button class="ap-preview-btn" id="apPreviewBtn">▶ Preview</button>
       <button class="ap-undo-btn" id="apUndoBtn" disabled>↩</button>
       <button class="ap-copy-btn" id="apInvertBtn" title="Swap attack↔release, invert sustain — exact reverse of this sound">⇄ Invert</button>
-      <button class="ap-copy-btn" id="apCopyBtn">Copy → All</button>
       <button class="ap-trim-save-btn" id="apTrimSaveBtn" title="Save trim region for sequencer playback" style="display:none;">✂ Trim</button>
       <button class="ap-apply-btn" id="apApplyBtn">✓ Apply</button>
+    </div>
+    <div class="ap-apply-scope" id="apApplyScope">
+      <span class="ap-scope-label">Uygula →</span>
+      <button class="ap-scope-btn" id="apScopeSlot" title="Bu slot içindeki tüm aktif adımlara uygula">Bu Slot</button>
+      <button class="ap-scope-btn" id="apScopeVisible" title="Ekrandaki tüm aktif adımlara uygula">Görünen Tümü</button>
+      <button class="ap-scope-btn" id="apScopeAll" title="Projedeki tüm Kick/Snare/vb. aktif adımlara uygula">Tüm Track</button>
     </div>
   </div>
 </div>
@@ -1860,11 +1882,14 @@ function showTrimSection(){
   const buf=loadedBuffers[adsrTrack];
   const sec=document.getElementById('apTrimSection');
   const saveBtn=document.getElementById('apTrimSaveBtn');
+  const noSound=document.getElementById('apTrimNoSound');
   if(!buf){
     sec.style.display='none';
     if(saveBtn) saveBtn.style.display='none';
+    if(noSound) noSound.style.display='flex';
     return;
   }
+  if(noSound) noSound.style.display='none';
   sec.style.display='block';
   if(saveBtn) saveBtn.style.display='inline-flex';
   // Restore existing trim if any
@@ -2087,6 +2112,65 @@ function getTrimmedBuffer(){
   return out;
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+// APPLY SCOPE — apply envelope to slot / visible / all steps
+// ═══════════════════════════════════════════════════════════════
+function applyScopeFlash(btn){
+  btn.classList.add('fired');
+  setTimeout(()=>btn.classList.remove('fired'),800);
+}
+
+function applyToSlot(){
+  // Find which slot the current step belongs to
+  let acc=0;
+  for(let si=0;si<slots.length;si++){
+    const sz=slots[si];
+    if(adsrStep>=acc && adsrStep<acc+sz){
+      // Apply to all active steps in this slot
+      for(let i=acc;i<acc+sz;i++){
+        if(grid[adsrTrack][i]){
+          envelopes[adsrTrack][i]={...adsrP};
+          document.getElementById(`cell-${adsrTrack}-${i}`)?.classList.add('has-env');
+        }
+      }
+      showToast(`Slot ${si+1} içindeki tüm ${TNAMES[adsrTrack]} adımlarına uygulandı`);
+      return;
+    }
+    acc+=sz;
+  }
+}
+
+function applyToVisible(){
+  // "Visible" = all steps currently rendered in the grid (all slots = all steps)
+  // We treat this the same as applyToSlot for now — all active steps across all slots
+  // could be made smarter with a scroll-aware visible range later
+  const total=totalSteps();
+  let count=0;
+  for(let i=0;i<total;i++){
+    if(grid[adsrTrack][i]){
+      envelopes[adsrTrack][i]={...adsrP};
+      document.getElementById(`cell-${adsrTrack}-${i}`)?.classList.add('has-env');
+      count++;
+    }
+  }
+  showToast(`Görünen ${count} ${TNAMES[adsrTrack]} adımına uygulandı`);
+}
+
+function applyToAll(){
+  const total=totalSteps();
+  let count=0;
+  for(let i=0;i<total;i++){
+    if(grid[adsrTrack][i]){
+      envelopes[adsrTrack][i]={...adsrP};
+      document.getElementById(`cell-${adsrTrack}-${i}`)?.classList.add('has-env');
+      count++;
+    }
+  }
+  // Also set as default for future steps of this track
+  showToast(`Tüm ${count} ${TNAMES[adsrTrack]} adımına uygulandı`);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // EXPORT
 // ═══════════════════════════════════════════════════════════════
@@ -2217,6 +2301,10 @@ function wireEvents(){
   document.getElementById('expMidi')?.addEventListener('click',(e)=>selectExport(e.currentTarget,'midi'));
   // Trim section events
   document.getElementById('apTrimReset')?.addEventListener('click',resetTrim);
+  document.getElementById('apTrimFindBtn')?.addEventListener('click',()=>openSoundSearch(adsrTrack));
+  document.getElementById('apScopeSlot')?.addEventListener('click',(e)=>{applyToSlot();applyScopeFlash(e.currentTarget);});
+  document.getElementById('apScopeVisible')?.addEventListener('click',(e)=>{applyToVisible();applyScopeFlash(e.currentTarget);});
+  document.getElementById('apScopeAll')?.addEventListener('click',(e)=>{applyToAll();applyScopeFlash(e.currentTarget);});
   document.getElementById('apTrimSaveBtn')?.addEventListener('click',applyTrimToSound);
   document.querySelectorAll('.ap-tpbtn').forEach(btn=>{
     btn.addEventListener('click',()=>applyTrimPreset(parseFloat(btn.dataset.dur)));
