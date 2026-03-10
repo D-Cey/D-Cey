@@ -1451,26 +1451,20 @@ const QTAGS={kick:['808 kick','punchy kick','deep kick','trap kick'],snare:['cri
 let popupTrack='kick', popupSelected=-1, popupPlaying=-1, playTimers=[];
 let freesoundResults=[], previewAudioEl=null, loadedBuffers={};
 
-const TRACK_FILTERS={
-  kick:'duration:[0.1 TO 2] ac_single_event:true',
-  snare:'duration:[0.05 TO 1.5] ac_single_event:true',
-  hihat:'duration:[0.02 TO 0.8] ac_single_event:true',
-  melody:'duration:[0.2 TO 5]',
-  bass:'duration:[0.2 TO 4]'
-};
-
 async function fetchFreesound(query, track){
-  const filter = TRACK_FILTERS[track]||'';
-  // Direct fetch — Freesound supports CORS from https origins
-  const apiUrl = `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(query)}&filter=${encodeURIComponent(filter)}&fields=id,name,tags,duration,previews&page_size=10&token=${FREESOUND_KEY}`;
+  const apiUrl = `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(query)}&fields=id,name,tags,duration,previews&page_size=10&token=${FREESOUND_KEY}`;
   try {
     const res = await fetch(apiUrl);
-    if(!res.ok) throw new Error(`API error ${res.status}`);
+    if(!res.ok){
+      const txt = await res.text();
+      console.error('Freesound raw error:', txt);
+      throw new Error('API error ' + res.status);
+    }
     const data = await res.json();
     return data.results || [];
   } catch(e) {
     console.error('Freesound error:', e);
-    showToast('Arama hatası — ' + e.message);
+    showToast('Arama hatasi: ' + e.message);
     return [];
   }
 }
