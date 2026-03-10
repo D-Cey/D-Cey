@@ -1479,7 +1479,7 @@ async function runSoundSearch(){
   const query = document.getElementById('soundSearchInput').value.trim();
   if(!query) return;
   const list = document.getElementById('popupResultsList');
-  list.innerHTML = '<div style="color:var(--text3);text-align:center;padding:24px;font-size:12px;">🔍 Freesound'da aranıyor...</div>';
+  list.innerHTML = '<div style="color:var(--text3);text-align:center;padding:24px;font-size:12px;">Freesound aranıyor...</div>';
   document.getElementById('popupResultsCount').textContent = 'aranıyor...';
   try {
     const results = await fetchFreesound(query, popupTrack);
