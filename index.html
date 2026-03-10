@@ -265,7 +265,7 @@ header{display:flex;align-items:center;padding:11px 22px;border-bottom:1px solid
 @keyframes dot{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
 
 /* SLIDERS */
-.ap-sliders{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding:8px 12px 6px;flex-shrink:0;}
+.ap-sliders{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding:8px 12px 6px;flex-shrink:0;position:relative;z-index:2;}
 .ap-sl{display:flex;flex-direction:column;gap:4px;}
 .ap-sl-top{display:flex;align-items:center;justify-content:space-between;}
 .ap-sl-label{font-size:10px;font-weight:700;display:flex;align-items:center;gap:3px;}
@@ -463,7 +463,7 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
 .ap-trim-save-btn:hover{background:#7c6ff730;}
 
 
-.rvol{-webkit-appearance:none;width:100%;height:3px;border-radius:2px;background:var(--surface3);outline:none;cursor:pointer;}
+.rvol{-webkit-appearance:none;width:100%;height:3px;border-radius:2px;background:var(--surface3);outline:none;cursor:pointer;pointer-events:all;position:relative;z-index:3;}
 .rvol::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.5);cursor:pointer;}
 
 </style>
@@ -661,7 +661,7 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
       <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label s"><span class="dot"></span>Sustain</span><span class="ap-sl-val s" id="apVS">—</span></div><input type="range" class="rs" id="apSS" min="0" max="100" value="70"/><div class="ap-sl-desc">Volume while held</div></div>
       <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label r"><span class="dot"></span>Release</span><span class="ap-sl-val r" id="apVR">—</span></div><input type="range" class="rr" id="apSR" min="0" max="100" value="65"/><div class="ap-sl-desc">Fade after note ends</div></div>
       <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label pitch"><span class="dot"></span>Pitch</span><span class="ap-sl-val pitch" id="apVPitch">—</span></div><input type="range" class="rpitch" id="apSPitch" min="0" max="24" value="0" step="1" /><div class="ap-sl-desc">Semitones up from root</div></div>
-      <div class="ap-sl"><div class="ap-sl-top"><span class="ap-sl-label" style="color:#4ade80;display:flex;align-items:center;gap:4px;"><span class="dot" style="background:#4ade80;"></span>Volume</span><span class="ap-sl-val" style="color:#4ade80;" id="apVVol">—</span></div><input type="range" class="rvol" id="apSVol" min="0" max="150" value="100" step="1"/><div class="ap-sl-desc">Bu adımın ses seviyesi (100 = normal)</div></div>
+      <div class="ap-sl" style="grid-column:1/-1;"><div class="ap-sl-top"><span class="ap-sl-label" style="color:#4ade80;display:flex;align-items:center;gap:4px;"><span class="dot" style="background:#4ade80;"></span>Volume</span><span class="ap-sl-val" style="color:#4ade80;" id="apVVol">—</span></div><input type="range" class="rvol" id="apSVol" min="0" max="150" value="100" step="1"/><div class="ap-sl-desc">Bu adımın ses seviyesi (100 = normal)</div></div>
     </div>
     <div class="ap-divider"></div>
     <!-- DURATION CONTROL — directly sets how long the sound plays, separate from envelope shape -->
@@ -1504,7 +1504,7 @@ function extractAdsrFromFreehand(){
 }
 
 // ADSR SLIDERS & LABELS
-function onAdsrSlider(param,val){adsrSaveUndo();adsrP[param]=val;if(['a','d','s','r'].includes(param))adsrFreehand=null;updateAdsrLabels();drawAdsr();}
+function onAdsrSlider(param,val){adsrSaveUndo();adsrP[param]=val;if(['a','d','s','r'].includes(param)){adsrFreehand=null;drawAdsr();}updateAdsrLabels();}
 function onDurSlider(val){
   adsrSaveUndo();
   adsrP.dur=val;
