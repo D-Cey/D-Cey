@@ -632,7 +632,7 @@ body.erase-cursor .beat-cell.active:hover {
 /* Full-screen overlay */
 .stage-overlay{
   position:fixed;inset:0;z-index:900;
-  background:#02010a;
+  background:#000000;
   display:flex;align-items:stretch;
   opacity:0;pointer-events:none;
   transition:opacity .4s;
@@ -644,10 +644,11 @@ body.erase-cursor .beat-cell.active:hover {
 .stage-smoke{
   position:absolute;inset:0;pointer-events:none;z-index:1;
   background:
-    radial-gradient(ellipse 110% 55% at 50% 105%, rgba(60,10,90,1) 0%, transparent 60%),
-    radial-gradient(ellipse 80% 50% at 15% 95%, rgba(10,30,90,.8) 0%, transparent 50%),
-    radial-gradient(ellipse 80% 50% at 85% 95%, rgba(50,5,80,.8) 0%, transparent 50%),
-    linear-gradient(to top, rgba(8,3,18,1) 0%, rgba(4,1,12,.8) 25%, transparent 55%);
+    radial-gradient(ellipse 120% 45% at 50% 108%, rgba(50,5,80,1) 0%, rgba(20,2,35,.9) 40%, transparent 65%),
+    radial-gradient(ellipse 90% 40% at 10% 100%, rgba(8,20,80,.9) 0%, transparent 50%),
+    radial-gradient(ellipse 90% 40% at 90% 100%, rgba(40,5,70,.9) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 25% at 50% 100%, rgba(80,20,120,.8) 0%, transparent 50%),
+    linear-gradient(to top, #000 0%, rgba(2,0,6,.97) 20%, rgba(3,1,10,.6) 40%, transparent 60%);
 }
 /* Animated smoke particles */
 .smoke-particle{
@@ -792,7 +793,7 @@ body.erase-cursor .beat-cell.active:hover {
 /* Hit ring flash */
 .stage-hit-ring{
   position:absolute;
-  width:320px;height:320px;
+  width:400px;height:400px;
   border-radius:50%;
   border:2px solid transparent;
   pointer-events:none;
@@ -871,6 +872,13 @@ body.erase-cursor .beat-cell.active:hover {
   background:rgba(0,212,170,.25);border-color:#00d4aa;
   box-shadow:0 0 14px rgba(0,212,170,.5);
 }
+.stage-topbar-pill{
+  padding:5px 10px;border-radius:20px;
+  background:rgba(233,69,96,.08);border:1px solid rgba(233,69,96,.25);
+  color:rgba(233,69,96,.6);font-size:9px;font-family:"Space Mono",monospace;
+  cursor:pointer;transition:all .18s;pointer-events:all;letter-spacing:1px;
+}
+.stage-topbar-pill:hover{background:rgba(233,69,96,.2);border-color:#e94560;color:#e94560;}
 
 /* ── Inline rec button (bottom center above label) ── */
 .stage-inline-rec{
@@ -1513,7 +1521,10 @@ body.erase-cursor .beat-cell.active:hover {
   <div class="stage-topbar">
     <div class="stage-bpm-pill" id="stageBpmPill">♩ <span id="stageBpmVal">120</span> BPM</div>
     <div class="stage-status" id="stageStatus">Basılı tut → enstrüman seç</div>
-    <div class="stage-listen-pill" id="stageListenPill" title="Dinle / Kayda dön">👂</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="stage-topbar-pill" id="stageClearBtn" title="Aktif track'i temizle">✕ Clear</button>
+      <div class="stage-listen-pill" id="stageListenPill" title="Dinle / Kayda dön">👂</div>
+    </div>
   </div>
 
   <!-- Full canvas area -->
@@ -3427,58 +3438,73 @@ function initRadialListeners() {
   const main = document.getElementById('stageMain');
   if (!main) return;
 
-  // ── Mouse long press ──
-  main.addEventListener('mousedown', (e) => {
-    if (radialOpen) return;
-    if (e.target.closest('button')) return;
-    radialOriginX = e.clientX;
-    radialOriginY = e.clientY;
-    radialLongPressTimer = setTimeout(() => {
-      openRadial(radialOriginX, radialOriginY);
-    }, 450);
-  });
-  main.addEventListener('mouseup', () => clearTimeout(radialLongPressTimer));
-  main.addEventListener('mousemove', (e) => {
-    // Cancel if moved too much
-    if(Math.abs(e.clientX-radialOriginX)+Math.abs(e.clientY-radialOriginY) > 12)
-      clearTimeout(radialLongPressTimer);
-  });
+  let pressStartTime = 0;
+  let pressActive = false;
 
-  // ── Touch long press ──
-  main.addEventListener('touchstart', (e) => {
+  function onPressStart(clientX, clientY, fromButton) {
     if (radialOpen) return;
-    if (e.target.closest('button')) return;
-    const t = e.touches[0];
-    radialOriginX = t.clientX;
-    radialOriginY = t.clientY;
+    if (fromButton) return;
+    pressActive = true;
+    pressStartTime = Date.now();
+    radialOriginX = clientX;
+    radialOriginY = clientY;
     radialLongPressTimer = setTimeout(() => {
-      openRadial(radialOriginX, radialOriginY);
-    }, 450);
-  }, {passive:true});
-  main.addEventListener('touchend', () => clearTimeout(radialLongPressTimer));
-  main.addEventListener('touchmove', (e) => {
-    if (radialOpen) {
-      // Touch drag over radial items
-      const t = e.touches[0];
-      document.querySelectorAll('.stage-radial-item').forEach(el => {
-        const r = el.getBoundingClientRect();
-        const inside = t.clientX >= r.left && t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom;
-        el.classList.toggle('hover', inside);
-        if (inside) radialHovered = el.dataset.track;
-      });
-    } else {
-      const t = e.touches[0];
-      if(Math.abs(t.clientX-radialOriginX)+Math.abs(t.clientY-radialOriginY) > 12)
-        clearTimeout(radialLongPressTimer);
-    }
-  }, {passive:true});
-  main.addEventListener('touchend', (e) => {
+      pressActive = false;
+      openRadial(clientX, clientY);
+    }, 430);
+  }
+
+  function onPressEnd(clientX, clientY) {
+    const held = Date.now() - pressStartTime;
     clearTimeout(radialLongPressTimer);
+    if (pressActive && held < 430 && !radialOpen) {
+      // Kısa tıklama → ses çal
+      stageHitTrack(stageTrack);
+    }
+    pressActive = false;
+    // Radial açıkken bırakınca seç
     if (radialOpen && radialHovered) {
       closeRadial(radialHovered);
       radialHovered = null;
     }
+  }
+
+  function onPressMove(clientX, clientY) {
+    if (Math.abs(clientX - radialOriginX) + Math.abs(clientY - radialOriginY) > 14) {
+      clearTimeout(radialLongPressTimer);
+      pressActive = false;
+    }
+    if (radialOpen) {
+      document.querySelectorAll('.stage-radial-item').forEach(el => {
+        const r = el.getBoundingClientRect();
+        const inside = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
+        el.classList.toggle('hover', inside);
+        if (inside) radialHovered = el.dataset.track;
+      });
+    }
+  }
+
+  // ── Mouse ──
+  main.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    onPressStart(e.clientX, e.clientY, !!e.target.closest('button'));
   });
+  main.addEventListener('mouseup', (e) => onPressEnd(e.clientX, e.clientY));
+  main.addEventListener('mousemove', (e) => onPressMove(e.clientX, e.clientY));
+
+  // ── Touch ──
+  main.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    onPressStart(t.clientX, t.clientY, !!e.target.closest('button'));
+  }, {passive:true});
+  main.addEventListener('touchend', (e) => {
+    const t = e.changedTouches[0];
+    onPressEnd(t.clientX, t.clientY);
+  });
+  main.addEventListener('touchmove', (e) => {
+    const t = e.touches[0];
+    onPressMove(t.clientX, t.clientY);
+  }, {passive:true});
 
   // Backdrop click = cancel
   document.getElementById('stageRadialBackdrop')?.addEventListener('click', () => closeRadial(null));
@@ -3529,7 +3555,7 @@ function drawSpeaker(canvas, track, push) {
   const col = sc.col;
 
   // ── Siyah zemin ──
-  ctx.fillStyle = '#02010a';
+  ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, W, H);
 
   // ── Derin arka plan glow — push olunca çok parlak ──
@@ -3552,11 +3578,11 @@ function drawSpeaker(canvas, track, push) {
   // Kabinin gölgesi / derinliği
   ctx.beginPath();
   ctx.arc(cx, cy, outerR + 4, 0, Math.PI*2);
-  ctx.fillStyle = '#060610';
+  ctx.fillStyle = '#020208';
   ctx.fill();
   ctx.beginPath();
   ctx.arc(cx, cy, outerR, 0, Math.PI*2);
-  ctx.fillStyle = '#0c0c18';
+  ctx.fillStyle = '#050510';
   ctx.fill();
 
   // Outer rim metalik görünüm
@@ -3860,6 +3886,9 @@ function toggleStageRec(track) {
     stageRecording[track] = false;
     updateStageStatus();
     showStageStoppedFlash();
+    // Başka aktif kayıt veya dinleme yoksa durdur
+    const anyStillRec = TRACKS.some(t => stageRecording[t]);
+    if (!anyStillRec && !stageListenMode && isPlaying) pauseSequencer();
     showToast(`⏹ ${TNAMES[track]} durduruldu — ${grid[track].filter(Boolean).length} adım`);
   } else {
     // BAŞLAT — önce geri say, sonra aç
@@ -3867,6 +3896,7 @@ function toggleStageRec(track) {
     showStageCountdown(track, () => {
       stageRecording[track] = true;
       selectStageTrack(track);
+      if (!isPlaying) startSequencer();
       updateStageStatus();
       showToast(`● ${TNAMES[track]} kaydediliyor`);
     });
@@ -3897,9 +3927,13 @@ function toggleStageListenMode() {
   if (stageListenMode) {
     TRACKS.forEach(t => { stageRecording[t] = false; });
     if (pill) pill.classList.add('active');
+    if (!isPlaying) startSequencer();
     showToast('👂 Dinleme modu');
   } else {
     if (pill) pill.classList.remove('active');
+    // Dinlemeden çıkınca kayıt yoksa durdur
+    const anyRec = TRACKS.some(t => stageRecording[t]);
+    if (!anyRec && isPlaying) pauseSequencer();
     showToast('● Kayıt moduna dönüldü');
   }
   updateStageStatus();
@@ -3951,22 +3985,23 @@ function spawnSmokeParticles() {
     'rgba(30,60,120,.25)', 'rgba(100,30,80,.3)', 'rgba(60,20,120,.22)'
   ];
 
-  for (let i = 0; i < 22; i++) {
+  for (let i = 0; i < 30; i++) {
     const p = document.createElement('div');
     p.className = 'smoke-particle';
-    const size = 120 + Math.random() * 280;
-    const left = -10 + Math.random() * 120;
-    const bottom = -30 + Math.random() * 50;
-    const delay = Math.random() * 12;
-    const dur = 7 + Math.random() * 11;
+    const size = 150 + Math.random() * 350;
+    const left = -15 + Math.random() * 130;
+    // Çoğu altta, bazıları ortada
+    const bottom = i < 20 ? -40 + Math.random() * 60 : 20 + Math.random() * 40;
+    const delay = Math.random() * 14;
+    const dur = 8 + Math.random() * 14;
     const col = smokeColors[i % smokeColors.length];
     p.style.cssText = `
       width:${size}px;height:${size}px;
       left:${left}%;bottom:${bottom}%;
-      background:radial-gradient(circle, ${col} 0%, transparent 70%);
+      background:radial-gradient(circle, ${col} 0%, transparent 65%);
       animation-duration:${dur}s;
       animation-delay:-${delay}s;
-      opacity:${0.4 + Math.random() * 0.3};
+      opacity:${0.5 + Math.random() * 0.35};
     `;
     smoke.appendChild(p);
   }
@@ -3996,8 +4031,8 @@ function openStage() {
   const bv = document.getElementById('stageBpmVal');
   if (bv) bv.textContent = bpm;
 
-  // Start sequencer if not already playing (so we hear existing tracks)
-  if (!isPlaying) startSequencer();
+  // Stage açılınca sequencer DURUR — sadece kayıt/dinle aktifken çalacak
+  if (isPlaying) pauseSequencer();
 
   // Start animation loop
   if (stageAnimFrame) cancelAnimationFrame(stageAnimFrame);
@@ -4011,6 +4046,15 @@ function openStage() {
   // Wire new inline controls
   const listenPill = document.getElementById('stageListenPill');
   if (listenPill) { listenPill.onclick = toggleStageListenMode; listenPill.classList.remove('active'); }
+  const clearBtn = document.getElementById('stageClearBtn');
+  if (clearBtn) { clearBtn.onclick = () => {
+    const t = stageTrack;
+    grid[t].fill(false);
+    envelopes[t] = {};
+    document.querySelectorAll(`.beat-cell.${CSS.escape(t)}`).forEach(c => c.classList.remove('active','has-env'));
+    showToast(`✕ ${TNAMES[t]} temizlendi`);
+    showStageStoppedFlash();
+  };}
   const inlineRec = document.getElementById('stageInlineRec');
   if (inlineRec) { inlineRec.onclick = () => toggleStageRec(stageTrack); inlineRec.classList.remove('recording'); }
   // Init radial listeners (once)
@@ -4396,6 +4440,18 @@ function wireEvents(){
 
   // Stage + ekle butonu
   document.getElementById('stageAddBtn')?.addEventListener('click', openStageAddTrack);
+
+  // ── Add Track modal ──
+  document.getElementById('addTrackBtn')?.addEventListener('click', openAddTrackModal);
+  document.getElementById('addTrackConfirmBtn')?.addEventListener('click', confirmAddTrack);
+  document.getElementById('addTrackCancelBtn')?.addEventListener('click', closeAddTrackModal);
+  document.getElementById('addTrackNameInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmAddTrack();
+    if (e.key === 'Escape') closeAddTrackModal();
+  });
+  document.getElementById('addTrackModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('addTrackModal')) closeAddTrackModal();
+  });
 
   // Stage playback butonları
   document.getElementById('stagePbPlay')?.addEventListener('click', stagePbToggle);
