@@ -102,6 +102,24 @@ header{display:flex;align-items:center;padding:11px 22px;border-bottom:1px solid
 .track-sound-name:hover{color:var(--accent);}
 .track-item.key-flash{background:rgba(255,255,255,.06)!important;}
 .sidebar-divider{height:1px;background:var(--border);margin:8px 16px;}
+.add-track-btn{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  margin:4px 12px;padding:7px 10px;
+  background:rgba(124,111,247,.08);
+  border:1px dashed rgba(124,111,247,.3);
+  border-radius:7px;color:rgba(124,111,247,.7);
+  font-size:10px;font-family:"Syne",sans-serif;font-weight:700;
+  cursor:pointer;transition:all .2s;width:calc(100% - 24px);
+}
+.add-track-btn:hover{background:rgba(124,111,247,.18);border-color:rgba(124,111,247,.6);color:#a09af5;}
+.track-remove-btn{
+  width:16px;height:16px;border-radius:50%;flex-shrink:0;
+  border:1px solid rgba(233,69,96,.3);background:transparent;
+  color:rgba(233,69,96,.4);font-size:9px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;padding:0;
+}
+.track-remove-btn:hover{border-color:#e94560;color:#e94560;background:rgba(233,69,96,.15);}
 
 /* ── STUDIO ── */
 .studio{display:flex;flex-direction:column;overflow:hidden;}
@@ -626,20 +644,24 @@ body.erase-cursor .beat-cell.active:hover {
 .stage-smoke{
   position:absolute;inset:0;pointer-events:none;z-index:1;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(60,20,80,.7) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 30% 80%, rgba(20,40,80,.5) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 70% 80%, rgba(40,10,60,.5) 0%, transparent 60%);
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(80,20,110,.85) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 45% at 20% 90%, rgba(20,50,110,.6) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 45% at 80% 90%, rgba(60,10,90,.6) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 30% at 50% 110%, rgba(120,40,160,.4) 0%, transparent 60%),
+    linear-gradient(to top, rgba(30,10,50,.9) 0%, transparent 40%);
 }
 /* Animated smoke particles */
 .smoke-particle{
   position:absolute;border-radius:50%;
-  background:radial-gradient(circle, rgba(120,80,160,.15) 0%, transparent 70%);
+  background:radial-gradient(circle, rgba(90,50,130,.25) 0%, transparent 70%);
   animation:smokeRise linear infinite;
   pointer-events:none;
+  filter:blur(8px);
 }
 @keyframes smokeRise{
-  0%{transform:translateY(0) scale(1);opacity:.4;}
-  100%{transform:translateY(-120px) scale(2.5);opacity:0;}
+  0%{transform:translateY(0) scale(1) rotate(0deg);opacity:.55;}
+  50%{transform:translateY(-70px) scale(1.8) rotate(15deg);opacity:.3;}
+  100%{transform:translateY(-180px) scale(3) rotate(30deg);opacity:0;}
 }
 
 /* Close button */
@@ -675,9 +697,26 @@ body.erase-cursor .beat-cell.active:hover {
   color:rgba(255,255,255,.3);padding:6px 18px 0;line-height:1.5;
 }
 .stage-hint{
-  margin-top:auto;padding:0 18px;
+  margin-top:auto;padding:0 18px 8px;
   font-size:9px;color:rgba(255,255,255,.18);
   font-family:"Space Mono",monospace;line-height:1.8;
+}
+.stage-transport{
+  display:flex;gap:6px;padding:0 14px 10px;
+  margin-top:auto;
+}
+.stage-transport-btn{
+  flex:1;padding:7px 4px;border-radius:7px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.5);font-size:10px;cursor:pointer;transition:all .18s;
+  font-family:"Space Mono",monospace;
+}
+.stage-transport-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
+.stage-transport-btn.listen-btn{border-color:rgba(0,212,170,.3);color:rgba(0,212,170,.6);}
+.stage-transport-btn.listen-btn:hover{background:rgba(0,212,170,.12);color:#00d4aa;}
+.stage-transport-btn.listen-btn.active{
+  background:rgba(0,212,170,.2);border-color:#00d4aa;color:#00d4aa;
+  box-shadow:0 0 10px rgba(0,212,170,.4);
 }
 
 /* Instrument rows */
@@ -802,6 +841,133 @@ body.erase-cursor .beat-cell.active:hover {
   pointer-events:none;z-index:9;letter-spacing:2px;
 }
 
+/* ── Top bar ── */
+.stage-topbar{
+  position:absolute;top:0;left:0;right:0;z-index:15;
+  display:flex;align-items:center;gap:12px;
+  padding:14px 56px 14px 20px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.6) 0%,transparent 100%);
+  pointer-events:none;
+}
+.stage-bpm-pill{
+  font-family:"Space Mono",monospace;font-size:10px;
+  color:rgba(255,255,255,.3);letter-spacing:2px;
+  pointer-events:all;
+}
+.stage-topbar .stage-status{
+  flex:1;text-align:center;
+  font-size:10px;font-family:"Space Mono",monospace;
+  color:rgba(255,255,255,.2);position:static;padding:0;background:none;
+  pointer-events:none;
+}
+.stage-listen-pill{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;cursor:pointer;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  transition:all .2s;pointer-events:all;
+}
+.stage-listen-pill:hover{background:rgba(0,212,170,.2);border-color:#00d4aa;}
+.stage-listen-pill.active{
+  background:rgba(0,212,170,.25);border-color:#00d4aa;
+  box-shadow:0 0 14px rgba(0,212,170,.5);
+}
+
+/* ── Inline rec button (bottom center above label) ── */
+.stage-inline-rec{
+  position:absolute;bottom:105px;left:50%;transform:translateX(-50%);
+  width:36px;height:36px;border-radius:50%;z-index:9;
+  border:1.5px solid rgba(233,69,96,.35);background:rgba(233,69,96,.08);
+  color:rgba(233,69,96,.5);font-size:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.stage-inline-rec:hover{border-color:#e94560;color:#e94560;background:rgba(233,69,96,.2);}
+.stage-inline-rec.recording{
+  border-color:#ff2244;color:#ff2244;background:rgba(255,34,68,.25);
+  box-shadow:0 0 18px rgba(255,34,68,.6);
+  animation:recpulse .6s ease-in-out infinite alternate;
+}
+
+/* ── Ghost hint ── */
+.stage-ghost-hint{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,140px);
+  font-size:10px;font-family:"Space Mono",monospace;
+  color:rgba(255,255,255,.1);pointer-events:none;z-index:9;
+  letter-spacing:2px;text-transform:uppercase;transition:opacity .5s;
+}
+.stage-ghost-hint.hidden{opacity:0;}
+
+/* ── Radial backdrop ── */
+.stage-radial-backdrop{
+  position:fixed;inset:0;z-index:50;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;
+  transition:opacity .25s;
+}
+.stage-radial-backdrop.show{opacity:1;pointer-events:all;}
+
+/* ── Radial container ── */
+.stage-radial{
+  position:fixed;z-index:51;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;opacity:0;
+  transition:opacity .2s;
+  /* centered by JS */
+}
+.stage-radial.show{opacity:1;pointer-events:all;}
+.stage-radial-inner{
+  position:relative;
+  width:320px;height:320px;
+}
+.stage-radial-cancel{
+  margin-top:16px;
+  font-size:9px;font-family:"Space Mono",monospace;
+  color:rgba(255,255,255,.2);letter-spacing:2px;text-transform:uppercase;
+}
+
+/* ── Radial items ── */
+.stage-radial-item{
+  position:absolute;
+  width:72px;height:72px;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  cursor:pointer;
+  background:rgba(10,8,20,.9);
+  border:2px solid var(--ri-col);
+  box-shadow:0 0 20px var(--ri-col-glow), inset 0 0 15px rgba(0,0,0,.5);
+  transform:translate(-50%,-50%) scale(0);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .15s;
+  user-select:none;
+}
+.stage-radial-item.bloom{
+  transform:translate(-50%,-50%) scale(1);
+}
+.stage-radial-item:hover, .stage-radial-item.hover{
+  transform:translate(-50%,-50%) scale(1.2)!important;
+  box-shadow:0 0 35px var(--ri-col-glow), inset 0 0 20px rgba(0,0,0,.3);
+  z-index:2;
+}
+.stage-radial-item.selected-track{
+  border-width:3px;
+  box-shadow:0 0 40px var(--ri-col-glow), 0 0 80px var(--ri-col-glow);
+}
+.stage-radial-item .ri-emoji{font-size:20px;line-height:1;}
+.stage-radial-item .ri-name{
+  font-size:8px;font-family:"Syne",sans-serif;font-weight:800;
+  color:var(--ri-col);letter-spacing:1px;text-transform:uppercase;
+}
+/* Center circle in radial */
+.stage-radial-center{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:48px;height:48px;border-radius:50%;
+  background:rgba(10,8,20,.95);
+  border:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:rgba(255,255,255,.3);font-family:"Space Mono",monospace;
+  letter-spacing:1px;
+}
+
 /* Hit particles */
 .stage-particle{
   position:absolute;border-radius:50%;pointer-events:none;
@@ -811,6 +977,61 @@ body.erase-cursor .beat-cell.active:hover {
   0%{transform:translate(-50%,-50%) scale(1);opacity:.9;}
   100%{transform:translate(var(--px),var(--py)) scale(0);opacity:0;}
 }
+
+
+/* ─── STAGE + ADD BUTTON ──────────────────────── */
+.stage-add-btn{
+  margin:4px 14px 2px;
+  padding:8px 0;
+  background:rgba(255,255,255,.04);
+  border:1px dashed rgba(255,255,255,.15);
+  border-radius:8px;
+  color:rgba(255,255,255,.35);
+  font-family:"Syne",sans-serif;font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.stage-add-btn:hover{
+  background:rgba(124,111,247,.12);
+  border-color:rgba(124,111,247,.4);
+  color:#a09af5;
+}
+
+/* ─── STAGE PLAYBACK ──────────────────────────── */
+.stage-playback{padding:0 14px;}
+.stage-playback-title{
+  font-size:8px;letter-spacing:2.5px;color:rgba(255,255,255,.2);
+  text-transform:uppercase;margin-bottom:8px;
+}
+.stage-playback-controls{display:flex;gap:6px;margin-bottom:8px;}
+.stage-pb-btn{
+  flex:1;padding:7px 0;border-radius:6px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;
+  transition:all .2s;
+}
+.stage-pb-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
+.stage-pb-play{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.25);color:#4ade80;}
+.stage-pb-play:hover{background:rgba(74,222,128,.2);color:#4ade80;}
+.stage-pb-play.playing{
+  background:rgba(245,166,35,.12);border-color:rgba(245,166,35,.3);color:#f5a623;
+}
+.stage-pb-progress{
+  height:3px;background:rgba(255,255,255,.08);border-radius:2px;
+  overflow:hidden;margin-bottom:5px;
+}
+.stage-pb-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#4ade80,#00d4aa);
+  border-radius:2px;transition:width .1s linear;
+}
+.stage-pb-info{
+  font-family:"Space Mono",monospace;font-size:8px;
+  color:rgba(255,255,255,.2);
+}
+
+/* ─── STAGE EXTRA TRACK COLORS ───────────────── */
+.stage-instr-item.extra{--instr-col:#c084fc;}
 
 </style>
 </head>
@@ -937,6 +1158,10 @@ body.erase-cursor .beat-cell.active:hover {
       <span class="track-hold-ms" id="holdbarms-bass">0ms</span>
     </div>
     <div class="track-sound-name" id="sound-bass" >· find sound</div>
+    <!-- Custom tracks container -->
+    <div id="customTracksContainer"></div>
+    <!-- Add track button -->
+    <button class="add-track-btn" id="addTrackBtn" title="Yeni track ekle">+ Track Ekle</button>
     <div class="sidebar-divider"></div>
     <div style="padding:0 16px;">
       <div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;">Volume</div>
@@ -1233,44 +1458,48 @@ body.erase-cursor .beat-cell.active:hover {
 ════════════════════════════════════════════════════════ -->
 <div class="stage-overlay" id="stageOverlay">
 
-  <!-- Smoke particles (CSS animated) -->
+  <!-- Smoke -->
   <div class="stage-smoke" id="stageSmoke"></div>
 
-  <!-- Close button -->
+  <!-- Close -->
   <button class="stage-close" id="stageClose" title="Kapat (Esc)">✕</button>
 
-  <!-- Left panel — instrument selector -->
-  <div class="stage-panel" id="stagePanel">
-    <div class="stage-panel-title">TRACKS</div>
-    <div class="stage-instruments" id="stageInstruments"></div>
-    <div class="stage-panel-divider"></div>
-    <div class="stage-bpm-row">
-      <span class="stage-bpm-label">BPM</span>
-      <span class="stage-bpm-val" id="stageBpmVal">120</span>
-    </div>
-    <div class="stage-status" id="stageStatus">Çalmaya hazır</div>
-    <div class="stage-hint">SPACE = aktif enstrüman<br>1-5 = enstrüman seç<br>İsme tıkla = ses değiştir<br>● = kayıt başlat/durdur<br>F / ESC = kapat</div>
+  <!-- Top minimal bar -->
+  <div class="stage-topbar">
+    <div class="stage-bpm-pill" id="stageBpmPill">♩ <span id="stageBpmVal">120</span> BPM</div>
+    <div class="stage-status" id="stageStatus">Basılı tut → enstrüman seç</div>
+    <div class="stage-listen-pill" id="stageListenPill" title="Dinle / Kayda dön">👂</div>
   </div>
 
-  <!-- Main canvas area -->
-  <div class="stage-main">
-    <!-- Speaker canvas -->
+  <!-- Full canvas area -->
+  <div class="stage-main" id="stageMain">
     <canvas class="stage-canvas" id="stageCanvas"></canvas>
-
-    <!-- Hit flash ring -->
     <div class="stage-hit-ring" id="stageHitRing"></div>
 
-    <!-- Center instrument name -->
-    <div class="stage-center-label" id="stageCenterLabel">KICK</div>
-
-    <!-- Record indicator -->
+    <!-- Rec indicator (top center) -->
     <div class="stage-rec-badge" id="stageRecBadge">
       <span class="stage-rec-dot"></span>
       <span id="stageRecText">REC</span>
     </div>
 
+    <!-- Active instrument name (bottom center) -->
+    <div class="stage-center-label" id="stageCenterLabel">KICK</div>
+
+    <!-- Rec toggle for active track -->
+    <button class="stage-inline-rec" id="stageInlineRec" title="Bu enstrüman için kayıt aç/kapat">●</button>
+
     <!-- Step counter -->
     <div class="stage-step-counter" id="stageStepCounter">—</div>
+
+    <!-- Hint ghost text -->
+    <div class="stage-ghost-hint" id="stageGhostHint">basılı tut → enstrüman seç</div>
+  </div>
+
+  <!-- Radial instrument picker — shown on long press -->
+  <div class="stage-radial-backdrop" id="stageRadialBackdrop"></div>
+  <div class="stage-radial" id="stageRadial">
+    <div class="stage-radial-inner" id="stageRadialInner"></div>
+    <div class="stage-radial-cancel">bırak → iptal</div>
   </div>
 </div>
 
@@ -1493,8 +1722,17 @@ function playLoadedBuffer(track,t,v,env){
 // ═══════════════════════════════════════════════════════════════
 const LOOKAHEAD=.1,SCHED_MS=25;
 let nextNoteTime=0,schedTimer=null,startTime=0,elapsedSecs=0;
+const liveTriggered = new Set(); // "track-step" keys set in real-time by keydown
+
 function scheduleStep(step,time){
-  TRACKS.forEach(t=>{if(!muted[t]&&grid[t][step])triggerSound(t,time,step);});
+  TRACKS.forEach(t=>{
+    const key = `${t}-${step}`;
+    if(liveTriggered.has(key)){
+      liveTriggered.delete(key); // bu adım canlı çalındı, tekrar çalma
+      return;
+    }
+    if(!muted[t]&&grid[t][step])triggerSound(t,time,step);
+  });
   if(metronomeOn){let acc=0,down=false;for(let si=0;si<slots.length;si++){if(step===acc){down=true;break;}acc+=slots[si];}playMetronome(time,down);}
   const delay=(time-getCtx().currentTime)*1000;
   setTimeout(()=>{highlightStep(step);document.getElementById('stepStatus').textContent=`Step: ${step+1}/${totalSteps()}`;},Math.max(0,delay));
@@ -1527,7 +1765,7 @@ function startCountIn(){
 }
 function beginRecording(){
   isCounting=false;isRecording=true;
-  if(recMode==='replace'){saveHistory();TRACKS.forEach(t=>{grid[t].fill(false);for(let i=0;i<totalSteps();i++){const c=document.getElementById(`cell-${t}-${i}`);if(c)c.classList.remove('active');}});}
+  if(recMode==='replace'){saveHistory();TRACKS.forEach(t=>{grid[t].fill(false);envelopes[t]={};for(let i=0;i<totalSteps();i++){const c=document.getElementById(`cell-${t}-${i}`);if(c)c.classList.remove('active','has-env');}});}
   document.getElementById('recBtn').classList.remove('counting');document.getElementById('recBtn').classList.add('recording');document.getElementById('recBtnLabel').textContent='Stop Rec';
   document.getElementById('recBanner').classList.add('show');document.getElementById('recBannerSub').textContent=recMode==='overdub'?'OVERDUB — adding hits':'REPLACE — recording fresh';
   showToast('● Recording — press keys on the beat');
@@ -1572,38 +1810,41 @@ document.addEventListener('keydown', e => {
   // Hold indicator on key badge
   document.querySelectorAll(`.key-badge.${track}`).forEach(k => k.classList.add('holding'));
 
-  // Start a looping buffer or oscillator for hold
+  // Kayıt modunda: ses scheduler tarafından zaten çalınacak,
+  // keydown'da ikinci kez çalmayalım. Sadece grid'e yaz.
+  const justRecording = isRecording;
+
+  // Start a looping buffer or oscillator for hold (sadece kayıt modu dışında)
   let heldSrc = null, heldGain = null;
-  if(loadedBuffers[track]){
-    heldSrc = ctx.createBufferSource();
-    heldGain = ctx.createGain();
-    const ss = selectedSounds[track];
-    // Use trimmed buffer if available
-    const buf = loadedBuffers[track];
-    let playBuf = buf;
-    if(ss && ss.trimStart != null && buf.duration > 0){
-      const s = Math.floor((ss.trimStart / buf.duration) * buf.duration * ctx.sampleRate);
-      const eF = Math.floor((ss.trimEnd / buf.duration) * buf.duration * ctx.sampleRate);
-      const frames = Math.max(1, eF - s);
-      playBuf = ctx.createBuffer(buf.numberOfChannels, frames, ctx.sampleRate);
-      for(let ch = 0; ch < buf.numberOfChannels; ch++){
-        const src2 = buf.getChannelData(ch), dst = playBuf.getChannelData(ch);
-        for(let i = 0; i < frames; i++) dst[i] = src2[s+i] || 0;
+  if(!justRecording){
+    if(loadedBuffers[track]){
+      heldSrc = ctx.createBufferSource();
+      heldGain = ctx.createGain();
+      const ss = selectedSounds[track];
+      const buf = loadedBuffers[track];
+      let playBuf = buf;
+      if(ss && ss.trimStart != null && buf.duration > 0){
+        const s = Math.floor((ss.trimStart / buf.duration) * buf.duration * ctx.sampleRate);
+        const eF = Math.floor((ss.trimEnd / buf.duration) * buf.duration * ctx.sampleRate);
+        const frames = Math.max(1, eF - s);
+        playBuf = ctx.createBuffer(buf.numberOfChannels, frames, ctx.sampleRate);
+        for(let ch = 0; ch < buf.numberOfChannels; ch++){
+          const src2 = buf.getChannelData(ch), dst = playBuf.getChannelData(ch);
+          for(let i = 0; i < frames; i++) dst[i] = src2[s+i] || 0;
+        }
       }
+      heldSrc.buffer = playBuf;
+      heldSrc.loop = true;
+      heldSrc.connect(heldGain); heldGain.connect(ctx.destination);
+      heldGain.gain.value = volumes[track];
+      heldSrc.start(now);
+    } else {
+      triggerSound(track, now, step);
     }
-    heldSrc.buffer = playBuf;
-    heldSrc.loop = true;
-    heldSrc.connect(heldGain); heldGain.connect(ctx.destination);
-    heldGain.gain.value = volumes[track];
-    heldSrc.start(now);
-  } else {
-    // Fallback: just trigger once
-    triggerSound(track, now, step);
   }
 
   holdState[track] = { startTime: now, srcNode: heldSrc, gainNode: heldGain, step };
 
-  // If track is armed, start live hold bar
   if(armedTracks.has(track)){
     startHoldBar(track);
   }
@@ -1611,6 +1852,7 @@ document.addEventListener('keydown', e => {
   if(isRecording && !grid[track][step]){
     if(recMode === 'overdub') saveHistory();
     grid[track][step] = true;
+    liveTriggered.add(`${track}-${step}`); // scheduler bu adımı atlayacak
     const cell = document.getElementById(`cell-${track}-${step}`);
     if(cell){ cell.classList.add('active','just-hit'); setTimeout(()=>cell.classList.remove('just-hit'),350); }
   }
@@ -1904,8 +2146,8 @@ function undoLast(){if(!history.length)return;const snap=history.pop();slots=sna
 // ═══════════════════════════════════════════════════════════════
 // UTILITIES
 // ═══════════════════════════════════════════════════════════════
-function clearAll(){saveHistory();TRACKS.forEach(t=>{grid[t].fill(false);document.querySelectorAll(`.beat-cell.${t}`).forEach(c=>c.classList.remove('active'));});showToast('All tracks cleared');}
-function clearTrack(){saveHistory();grid[activeTrack].fill(false);document.querySelectorAll(`.beat-cell.${activeTrack}`).forEach(c=>c.classList.remove('active'));showToast(`${TNAMES[activeTrack]} cleared`);}
+function clearAll(){saveHistory();TRACKS.forEach(t=>{grid[t].fill(false);envelopes[t]={};document.querySelectorAll(`.beat-cell[data-track='${t}']`).forEach(c=>c.classList.remove('active','has-env'));});showToast('All tracks cleared');}
+function clearTrack(){saveHistory();const t=activeTrack;grid[t].fill(false);envelopes[t]={};document.querySelectorAll(`.beat-cell[data-track='${t}']`).forEach(c=>c.classList.remove('active','has-env'));showToast(`${TNAMES[t]} cleared`);}
 function randomize(){saveHistory();const d={kick:.25,snare:.2,hihat:.45,melody:.15,bass:.18};TRACKS.forEach(t=>{for(let i=0;i<totalSteps();i++){grid[t][i]=Math.random()<d[t];const c=document.getElementById(`cell-${t}-${i}`);if(c)c.classList.toggle('active',grid[t][i]);}});showToast('Randomized');}
 function clamp(v,mn,mx){return Math.max(mn,Math.min(mx,v));}
 function lerp(a,b,t){return a+(b-a)*t;}
@@ -3011,9 +3253,181 @@ function stopHoldBar(track){
 }
 
 
+
+// ═══════════════════════════════════════════════════════════════
+// RADIAL INSTRUMENT PICKER
+// ═══════════════════════════════════════════════════════════════
+let radialOpen = false;
+let radialLongPressTimer = null;
+let radialOriginX = 0, radialOriginY = 0;
+let radialHovered = null;
+
+function buildRadialItems() {
+  const inner = document.getElementById('stageRadialInner');
+  if (!inner) return;
+  inner.innerHTML = '';
+
+  // Center label
+  const center = document.createElement('div');
+  center.className = 'stage-radial-center';
+  center.textContent = 'SEÇ';
+  inner.appendChild(center);
+
+  const tracks = TRACKS;
+  const N = tracks.length;
+  const radius = 115; // px from center
+  const cx = 160, cy = 160; // inner is 320x320
+
+  tracks.forEach((track, i) => {
+    const angle = (Math.PI * 2 / N) * i - Math.PI / 2; // start top
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    const sc = STAGE_COLORS[track] || { col: '#888', glow: 'rgba(136,136,136,.4)' };
+    const emoji = TRACK_EMOJIS[track] || '🎵';
+
+    const item = document.createElement('div');
+    item.className = 'stage-radial-item' + (track === stageTrack ? ' selected-track' : '');
+    item.id = `radial-item-${track}`;
+    item.dataset.track = track;
+    item.style.cssText = `left:${x}px;top:${y}px;--ri-col:${sc.col};--ri-glow-col:${sc.glow};--ri-col-glow:${sc.glow};transition-delay:${i*35}ms;`;
+    item.innerHTML = `<span class="ri-emoji">${emoji}</span><span class="ri-name">${TNAMES[track]}</span>`;
+
+    item.addEventListener('mouseenter', () => { radialHovered = track; });
+    item.addEventListener('mouseleave', () => { if(radialHovered===track) radialHovered=null; });
+    item.addEventListener('click', (e) => { e.stopPropagation(); closeRadial(track); });
+    item.addEventListener('touchend', (e) => { e.preventDefault(); closeRadial(track); });
+
+    inner.appendChild(item);
+  });
+
+  // Bloom animation
+  requestAnimationFrame(() => {
+    inner.querySelectorAll('.stage-radial-item').forEach(el => el.classList.add('bloom'));
+  });
+}
+
+function openRadial(originX, originY) {
+  if (radialOpen) return;
+  radialOpen = true;
+
+  // Position radial centered at origin
+  const radial = document.getElementById('stageRadial');
+  const W = window.innerWidth, H = window.innerHeight;
+  const size = 320;
+  let left = originX - size / 2;
+  let top = originY - size / 2;
+  // Clamp to viewport
+  left = Math.max(8, Math.min(W - size - 8, left));
+  top = Math.max(8, Math.min(H - size - 8, top));
+  radial.style.cssText = `left:${left}px;top:${top}px;width:${size}px;height:${size}px;`;
+
+  buildRadialItems();
+  document.getElementById('stageRadialBackdrop').classList.add('show');
+  radial.classList.add('show');
+
+  // Haptic on mobile
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+
+function closeRadial(selectedTrack) {
+  if (!radialOpen) return;
+  radialOpen = false;
+
+  // Shrink items
+  document.querySelectorAll('.stage-radial-item').forEach(el => {
+    el.classList.remove('bloom');
+  });
+  document.getElementById('stageRadialBackdrop').classList.remove('show');
+  setTimeout(() => {
+    document.getElementById('stageRadial').classList.remove('show');
+  }, 200);
+
+  if (selectedTrack) {
+    selectStageTrack(selectedTrack);
+    // Flash ghost hint hidden
+    const hint = document.getElementById('stageGhostHint');
+    if (hint) hint.classList.add('hidden');
+  }
+}
+
+function initRadialListeners() {
+  const main = document.getElementById('stageMain');
+  if (!main) return;
+
+  // ── Mouse long press ──
+  main.addEventListener('mousedown', (e) => {
+    if (radialOpen) return;
+    if (e.target.closest('button')) return;
+    radialOriginX = e.clientX;
+    radialOriginY = e.clientY;
+    radialLongPressTimer = setTimeout(() => {
+      openRadial(radialOriginX, radialOriginY);
+    }, 450);
+  });
+  main.addEventListener('mouseup', () => clearTimeout(radialLongPressTimer));
+  main.addEventListener('mousemove', (e) => {
+    // Cancel if moved too much
+    if(Math.abs(e.clientX-radialOriginX)+Math.abs(e.clientY-radialOriginY) > 12)
+      clearTimeout(radialLongPressTimer);
+  });
+
+  // ── Touch long press ──
+  main.addEventListener('touchstart', (e) => {
+    if (radialOpen) return;
+    if (e.target.closest('button')) return;
+    const t = e.touches[0];
+    radialOriginX = t.clientX;
+    radialOriginY = t.clientY;
+    radialLongPressTimer = setTimeout(() => {
+      openRadial(radialOriginX, radialOriginY);
+    }, 450);
+  }, {passive:true});
+  main.addEventListener('touchend', () => clearTimeout(radialLongPressTimer));
+  main.addEventListener('touchmove', (e) => {
+    if (radialOpen) {
+      // Touch drag over radial items
+      const t = e.touches[0];
+      document.querySelectorAll('.stage-radial-item').forEach(el => {
+        const r = el.getBoundingClientRect();
+        const inside = t.clientX >= r.left && t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom;
+        el.classList.toggle('hover', inside);
+        if (inside) radialHovered = el.dataset.track;
+      });
+    } else {
+      const t = e.touches[0];
+      if(Math.abs(t.clientX-radialOriginX)+Math.abs(t.clientY-radialOriginY) > 12)
+        clearTimeout(radialLongPressTimer);
+    }
+  }, {passive:true});
+  main.addEventListener('touchend', (e) => {
+    clearTimeout(radialLongPressTimer);
+    if (radialOpen && radialHovered) {
+      closeRadial(radialHovered);
+      radialHovered = null;
+    }
+  });
+
+  // Backdrop click = cancel
+  document.getElementById('stageRadialBackdrop')?.addEventListener('click', () => closeRadial(null));
+  document.getElementById('stageRadialBackdrop')?.addEventListener('touchend', () => closeRadial(null));
+}
+
+// Keyboard 1-5 shortcut visual flash on radial item
+function radialFlashTrack(track) {
+  if (!stageOpen) return;
+  // Brief glow flash on the center label
+  const lbl = document.getElementById('stageCenterLabel');
+  if (lbl) {
+    lbl.style.animation = 'none';
+    void lbl.offsetWidth;
+    lbl.style.animation = '';
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // STAGE MODE
 // ═══════════════════════════════════════════════════════════════
+const TRACK_EMOJIS = {kick:'🥁',snare:'🔊',hihat:'🎩',melody:'🎹',bass:'🎸'};
 const STAGE_COLORS = {
   kick:   { col:'#e94560', glow:'rgba(233,69,96,.6)',  dark:'rgba(233,69,96,.08)'  },
   snare:  { col:'#f5a623', glow:'rgba(245,166,35,.6)', dark:'rgba(245,166,35,.08)' },
@@ -3039,92 +3453,141 @@ function drawSpeaker(canvas, track, push) {
 
   const cx = W/2, cy = H/2;
   const sc = STAGE_COLORS[track];
+  const col = sc.col;
 
-  // Background glow
-  const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300);
-  bgGrad.addColorStop(0, sc.dark);
+  // ── Derin arka plan glow ──
+  const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W,H)*0.7);
+  bgGrad.addColorStop(0, col + (push > 0.1 ? '28' : '14'));
+  bgGrad.addColorStop(0.5, col + '08');
   bgGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // Speaker outer ring (cabinet)
-  const outerR = 130 + push * 8;
+  // ── Zemin yansıması (neon puddle) ──
+  const floorGrad = ctx.createRadialGradient(cx, H * 0.85, 0, cx, H * 0.85, W * 0.5);
+  floorGrad.addColorStop(0, col + (push > 0.05 ? '20' : '0c'));
+  floorGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = floorGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Hoparlör kabini (büyük outer disk) ──
+  const outerR = 190 + push * 12;
+  // Kabinin gölgesi / derinliği
   ctx.beginPath();
-  ctx.arc(cx, cy, outerR, 0, Math.PI*2);
-  ctx.fillStyle = '#0d0d14';
+  ctx.arc(cx, cy, outerR + 4, 0, Math.PI*2);
+  ctx.fillStyle = '#060610';
   ctx.fill();
-  ctx.strokeStyle = sc.col + '44';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Neon outer ring glow
-  ctx.shadowColor = sc.col;
-  ctx.shadowBlur = 20 + push * 30;
   ctx.beginPath();
   ctx.arc(cx, cy, outerR, 0, Math.PI*2);
-  ctx.strokeStyle = sc.col + (push > 0.05 ? 'cc' : '44');
-  ctx.lineWidth = push > 0.05 ? 2.5 : 1.5;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#0c0c18';
+  ctx.fill();
 
-  // Speaker surround rings
-  for (let i = 0; i < 3; i++) {
-    const r = outerR - 18 - i * 18 - push * (i+1) * 6;
-    const alpha = 0.12 + i * 0.08;
+  // Outer rim metalik görünüm
+  const rimGrad = ctx.createLinearGradient(cx - outerR, cy - outerR, cx + outerR, cy + outerR);
+  rimGrad.addColorStop(0, '#1a1a28');
+  rimGrad.addColorStop(0.5, '#0e0e1c');
+  rimGrad.addColorStop(1, '#1a1a28');
+  ctx.beginPath();
+  ctx.arc(cx, cy, outerR, 0, Math.PI*2);
+  ctx.strokeStyle = rimGrad;
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  // ── Neon outer ring (ana parlama) ──
+  const glowLayers = push > 0.1 ? 4 : 2;
+  for (let g = 0; g < glowLayers; g++) {
     ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI*2);
-    ctx.strokeStyle = sc.col + Math.floor(alpha * 255).toString(16).padStart(2,'0');
-    ctx.lineWidth = 1;
+    ctx.arc(cx, cy, outerR + g*0.5, 0, Math.PI*2);
+    ctx.shadowColor = col;
+    ctx.shadowBlur = (15 + push * 45) / (g + 1);
+    ctx.strokeStyle = col + (push > 0.05 ? Math.floor(220 / (g+1)).toString(16).padStart(2,'0') : '55');
+    ctx.lineWidth = push > 0.05 ? 2.5 : 1.5;
     ctx.stroke();
   }
+  ctx.shadowBlur = 0;
 
-  // Speaker cone (filled circle that pushes)
-  const coneR = 58 + push * 18;
-  const coneGrad = ctx.createRadialGradient(cx - 12, cy - 12, 0, cx, cy, coneR);
-  coneGrad.addColorStop(0, '#2a2a3a');
-  coneGrad.addColorStop(0.6, '#141420');
-  coneGrad.addColorStop(1, '#0a0a14');
+  // ── Surround rings (concentric grooves) ──
+  for (let i = 0; i < 4; i++) {
+    const r = outerR - 20 - i * 22 - push * (i + 1) * 7;
+    if (r <= 0) continue;
+    const a = Math.floor((0.08 + i * 0.06 + push * 0.12) * 255).toString(16).padStart(2,'0');
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = col + a;
+    ctx.lineWidth = push > 0.2 ? 1.5 : 1;
+    ctx.shadowColor = col;
+    ctx.shadowBlur = push * 8;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // ── Speaker cone (merkez) ──
+  const coneR = 88 + push * 24;
+  const coneGrad = ctx.createRadialGradient(cx - 18, cy - 18, 0, cx, cy, coneR);
+  coneGrad.addColorStop(0, '#2e2e42');
+  coneGrad.addColorStop(0.5, '#161625');
+  coneGrad.addColorStop(1, '#080812');
   ctx.beginPath();
   ctx.arc(cx, cy, coneR, 0, Math.PI*2);
   ctx.fillStyle = coneGrad;
   ctx.fill();
-  // Cone glow edge
-  ctx.shadowColor = sc.col;
-  ctx.shadowBlur = push * 25;
-  ctx.strokeStyle = sc.col + (push > 0.1 ? '88' : '22');
-  ctx.lineWidth = 1.5;
+  // Cone neon edge
+  ctx.shadowColor = col;
+  ctx.shadowBlur = 6 + push * 35;
+  ctx.strokeStyle = col + (push > 0.1 ? 'bb' : '33');
+  ctx.lineWidth = 2;
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // Dust cap (center circle)
-  const capR = 16 + push * 6;
-  const capGrad = ctx.createRadialGradient(cx - 4, cy - 4, 0, cx, cy, capR);
-  capGrad.addColorStop(0, '#3a3a4a');
-  capGrad.addColorStop(1, '#1a1a24');
+  // ── Cone inner radial lines (texture) ──
+  ctx.save();
+  ctx.globalAlpha = 0.06 + push * 0.08;
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 0.5;
+  for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * 28, cy + Math.sin(a) * 28);
+    ctx.lineTo(cx + Math.cos(a) * (coneR - 4), cy + Math.sin(a) * (coneR - 4));
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // ── Dust cap (merkez daire) ──
+  const capR = 24 + push * 9;
+  const capGrad = ctx.createRadialGradient(cx - 6, cy - 6, 0, cx, cy, capR);
+  capGrad.addColorStop(0, '#3c3c52');
+  capGrad.addColorStop(1, '#18182a');
   ctx.beginPath();
   ctx.arc(cx, cy, capR, 0, Math.PI*2);
   ctx.fillStyle = capGrad;
   ctx.fill();
-  ctx.strokeStyle = sc.col + (push > 0.1 ? 'aa' : '33');
-  ctx.lineWidth = 1;
-  ctx.shadowColor = sc.col;
-  ctx.shadowBlur = push * 20;
+  ctx.shadowColor = col;
+  ctx.shadowBlur = 4 + push * 28;
+  ctx.strokeStyle = col + (push > 0.1 ? 'cc' : '44');
+  ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // Center dot
+  // ── Center pulse dot ──
+  const dotR = 5 + push * 5;
+  const dotGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, dotR);
+  dotGrad.addColorStop(0, push > 0.15 ? col : '#555566');
+  dotGrad.addColorStop(1, 'transparent');
   ctx.beginPath();
-  ctx.arc(cx, cy, 3 + push*2, 0, Math.PI*2);
-  ctx.fillStyle = push > 0.1 ? sc.col : '#333';
+  ctx.arc(cx, cy, dotR, 0, Math.PI*2);
+  ctx.fillStyle = dotGrad;
+  ctx.shadowColor = col;
+  ctx.shadowBlur = push * 30;
   ctx.fill();
+  ctx.shadowBlur = 0;
 
-  // Neon scan lines (atmosphere)
+  // ── Neon scan lines ──
   ctx.save();
-  ctx.globalAlpha = 0.03 + push * 0.04;
-  for (let y = 0; y < H; y += 4) {
+  ctx.globalAlpha = 0.025 + push * 0.05;
+  for (let y = 0; y < H; y += 3) {
     ctx.beginPath();
     ctx.moveTo(0, y); ctx.lineTo(W, y);
-    ctx.strokeStyle = sc.col;
+    ctx.strokeStyle = col;
     ctx.lineWidth = 1;
     ctx.stroke();
   }
@@ -3202,7 +3665,8 @@ function stageLoop() {
 const stageRecording = {}; // track -> boolean
 TRACKS.forEach(t => stageRecording[t] = false);
 
-function buildStageInstruments() {
+function buildStageInstruments() { /* replaced by radial picker */ }
+function _oldBuildStageInstruments_disabled() {
   const container = document.getElementById('stageInstruments');
   if (!container) return;
   container.innerHTML = '';
@@ -3249,7 +3713,7 @@ function buildStageInstruments() {
 
     container.appendChild(item);
   });
-}
+} // end _oldBuildStageInstruments_disabled
 
 function toggleStageRec(track) {
   const wasRec = stageRecording[track];
@@ -3269,14 +3733,47 @@ function toggleStageRec(track) {
   updateStageStatus();
 }
 
+let stageListenMode = false;
+
 function updateStageStatus() {
   const recTracks = TRACKS.filter(t => stageRecording[t]);
   const status = document.getElementById('stageStatus');
   if (!status) return;
-  if (recTracks.length === 0) {
-    status.textContent = 'Kayıt yok — ● bas';
+  if (stageListenMode) {
+    status.textContent = '👂 dinleme modu';
+  } else if (recTracks.length === 0) {
+    status.textContent = 'basılı tut → enstrüman seç';
   } else {
-    status.textContent = recTracks.map(t => TNAMES[t]).join(', ') + ' kaydediyor';
+    status.textContent = recTracks.map(t => `● ${TNAMES[t]}`).join('  ');
+  }
+  // Also update inline rec button
+  const inlineRec = document.getElementById('stageInlineRec');
+  if (inlineRec) inlineRec.classList.toggle('recording', stageRecording[stageTrack]);
+}
+
+function toggleStageListenMode() {
+  stageListenMode = !stageListenMode;
+  const pill = document.getElementById('stageListenPill');
+  if (stageListenMode) {
+    TRACKS.forEach(t => { stageRecording[t] = false; });
+    if (pill) pill.classList.add('active');
+    showToast('👂 Dinleme modu');
+  } else {
+    if (pill) pill.classList.remove('active');
+    showToast('● Kayıt moduna dönüldü');
+  }
+  updateStageStatus();
+}
+
+function toggleStagePlay() {
+  if (isPlaying) {
+    pauseSequencer();
+    const btn = document.getElementById('stagePlayPauseBtn');
+    if (btn) btn.textContent = '▶';
+  } else {
+    startSequencer();
+    const btn = document.getElementById('stagePlayPauseBtn');
+    if (btn) btn.textContent = '⏸';
   }
 }
 
@@ -3300,27 +3797,36 @@ function selectStageTrack(track) {
   // Pulse speaker immediately
   stageSpeakerPush = 0.4;
   stageHitEffect(track);
+  // Update inline rec button
+  updateStageStatus();
 }
 
 function spawnSmokeParticles() {
   const smoke = document.getElementById('stageSmoke');
   if (!smoke) return;
-  // Clear old dynamic particles
   smoke.querySelectorAll('.smoke-particle').forEach(p => p.remove());
 
-  for (let i = 0; i < 12; i++) {
+  const smokeColors = [
+    'rgba(90,30,140,.3)', 'rgba(40,20,100,.25)', 'rgba(120,50,160,.2)',
+    'rgba(30,60,120,.25)', 'rgba(100,30,80,.3)', 'rgba(60,20,120,.22)'
+  ];
+
+  for (let i = 0; i < 22; i++) {
     const p = document.createElement('div');
     p.className = 'smoke-particle';
-    const size = 80 + Math.random() * 160;
-    const left = 20 + Math.random() * 60;
-    const bottom = -20 + Math.random() * 40;
-    const delay = Math.random() * 8;
-    const dur = 6 + Math.random() * 8;
+    const size = 120 + Math.random() * 280;
+    const left = -10 + Math.random() * 120;
+    const bottom = -30 + Math.random() * 50;
+    const delay = Math.random() * 12;
+    const dur = 7 + Math.random() * 11;
+    const col = smokeColors[i % smokeColors.length];
     p.style.cssText = `
       width:${size}px;height:${size}px;
       left:${left}%;bottom:${bottom}%;
+      background:radial-gradient(circle, ${col} 0%, transparent 70%);
       animation-duration:${dur}s;
-      animation-delay:${delay}s;
+      animation-delay:-${delay}s;
+      opacity:${0.4 + Math.random() * 0.3};
     `;
     smoke.appendChild(p);
   }
@@ -3333,7 +3839,7 @@ function openStage() {
 
   // Resize canvas
   const canvas = document.getElementById('stageCanvas');
-  const main = document.querySelector('.stage-main');
+  const main = document.getElementById('stageMain');
   if (canvas && main) {
     canvas.width = main.offsetWidth;
     canvas.height = main.offsetHeight;
@@ -3354,11 +3860,21 @@ function openStage() {
   if (stageAnimFrame) cancelAnimationFrame(stageAnimFrame);
   stageLoop();
 
-  // Reset all per-track rec states
+  // Reset states
   TRACKS.forEach(t => { stageRecording[t] = false; });
+  stageListenMode = false;
   updateStageStatus();
-  // Hide main rec badge (it's per-track now)
   document.getElementById('stageRecBadge').classList.remove('show');
+  // Wire new inline controls
+  const listenPill = document.getElementById('stageListenPill');
+  if (listenPill) { listenPill.onclick = toggleStageListenMode; listenPill.classList.remove('active'); }
+  const inlineRec = document.getElementById('stageInlineRec');
+  if (inlineRec) { inlineRec.onclick = () => toggleStageRec(stageTrack); inlineRec.classList.remove('recording'); }
+  // Init radial listeners (once)
+  if (!main._radialInited) { main._radialInited = true; initRadialListeners(); }
+  // Show ghost hint briefly
+  const hint = document.getElementById('stageGhostHint');
+  if (hint) { hint.classList.remove('hidden'); }
 }
 
 function closeStage() {
@@ -3375,7 +3891,11 @@ function stageKeyHandler(e) {
 
   // Number keys 1-5: switch instrument
   const numMap = {'1':'kick','2':'snare','3':'hihat','4':'melody','5':'bass'};
-  if (numMap[e.key]) { selectStageTrack(numMap[e.key]); return; }
+  if (numMap[e.key]) {
+    if (radialOpen) closeRadial(numMap[e.key]);
+    else selectStageTrack(numMap[e.key]);
+    return;
+  }
 
   if (e.key === ' ' || KEY_MAP[e.key.toLowerCase()]) {
     e.preventDefault();
@@ -3389,14 +3909,17 @@ function stageKeyHandler(e) {
 
 function stageHitTrack(track) {
   const ctx = getCtx();
-  const step = currentStep;
+  // Kayıt sırasında lastHL kullan (gerçek çalan adım)
+  const step = (isPlaying && lastHL >= 0) ? lastHL : currentStep;
 
-  // Always play sound (hear it)
+  const isRec = stageRecording[track];
+  // Her zaman sesi anlık çal (kullanıcı duymalı)
   triggerSound(track, ctx.currentTime, step);
 
   // Record to grid ONLY if this track's rec is ON
-  if (stageRecording[track] && !grid[track][step]) {
+  if (isRec && !grid[track][step]) {
     grid[track][step] = true;
+    liveTriggered.add(`${track}-${step}`); // scheduler bu turda tekrar çalmasın
     const cell = document.getElementById(`cell-${track}-${step}`);
     if (cell) { cell.classList.add('active'); }
   }
@@ -3426,12 +3949,139 @@ function stageHitTrack(track) {
 window.addEventListener('resize', () => {
   if (!stageOpen) return;
   const canvas = document.getElementById('stageCanvas');
-  const main = document.querySelector('.stage-main');
+  const main = document.getElementById('stageMain');
   if (canvas && main) {
     canvas.width = main.offsetWidth;
     canvas.height = main.offsetHeight;
   }
 });
+
+
+// ═══════════════════════════════════════════════════════════════
+// CUSTOM TRACKS
+// ═══════════════════════════════════════════════════════════════
+const CUSTOM_TRACK_COLORS = [
+  '#ff6b9d','#c084fc','#34d399','#fbbf24','#60a5fa',
+  '#f472b6','#a3e635','#fb923c','#38bdf8','#e879f9'
+];
+let customTrackCounter = 0;
+
+function addCustomTrack(name) {
+  const id = 'custom_' + (++customTrackCounter);
+  const col = CUSTOM_TRACK_COLORS[(customTrackCounter - 1) % CUSTOM_TRACK_COLORS.length];
+  
+  // Register in TRACKS
+  TRACKS.push(id);
+  TNAMES[id] = name;
+  TCOLORS[id] = col;
+  
+  // Init state
+  const total = totalSteps();
+  grid[id] = Array(total).fill(false);
+  envelopes[id] = {};
+  muted[id] = false;
+  volumes[id] = 0.8;
+  selectedSounds[id] = null;
+  loadedBuffers[id] = null;
+  stageRecording[id] = false;
+  
+  // Also add to STAGE_COLORS
+  STAGE_COLORS[id] = { col, glow: col + '99', dark: col + '14' };
+
+  // Build sidebar entry
+  const container = document.getElementById('customTracksContainer');
+  const wrap = document.createElement('div');
+  wrap.id = `custom-track-wrap-${id}`;
+
+  wrap.innerHTML = `
+    <div class="track-item" id="sidebar-${id}" style="--track-col:${col}">
+      <div class="track-color" style="background:${col}"></div>
+      <span class="track-name">${name}</span>
+      <span class="track-key" style="color:rgba(255,255,255,.2)">—</span>
+      <button class="track-rec-btn" id="trec-${id}" title="${name} kayıt">●</button>
+      <button class="track-mute" id="mute-${id}">M</button>
+      <button class="track-remove-btn" id="remove-${id}" title="Track sil">✕</button>
+    </div>
+    <div class="track-hold-bar-wrap" id="holdbar-${id}" style="display:none;"></div>
+    <div class="track-sound-name" id="sound-${id}">· find sound</div>
+  `;
+  container.appendChild(wrap);
+
+  // Wire mute
+  document.getElementById(`mute-${id}`).addEventListener('click', () => {
+    muted[id] = !muted[id];
+    document.getElementById(`mute-${id}`).classList.toggle('muted', muted[id]);
+  });
+  // Wire sidebar click (select)
+  document.getElementById(`sidebar-${id}`).addEventListener('click', (e) => {
+    if(e.target.closest('button')) return;
+    selectTrack(id);
+  });
+  // Wire remove
+  document.getElementById(`remove-${id}`).addEventListener('click', () => {
+    if(!confirm(`"${name}" track silinsin mi? Bu işlem geri alınamaz.`)) return;
+    removeCustomTrack(id);
+  });
+  // Wire sound search (click on sound name)
+  document.getElementById(`sound-${id}`).addEventListener('click', () => openSoundSearch(id));
+
+  // Add to grid rows
+  addGridRowForTrack(id, col);
+  
+  // Add volume control
+  buildVolControls();
+
+  showToast(`"${name}" track eklendi`);
+  return id;
+}
+
+function removeCustomTrack(id) {
+  const idx = TRACKS.indexOf(id);
+  if(idx === -1) return;
+  TRACKS.splice(idx, 1);
+  delete TNAMES[id]; delete TCOLORS[id]; delete grid[id];
+  delete envelopes[id]; delete muted[id]; delete volumes[id];
+  delete selectedSounds[id]; delete loadedBuffers[id];
+  // Remove sidebar
+  const wrap = document.getElementById(`custom-track-wrap-${id}`);
+  if(wrap) wrap.remove();
+  // Remove grid row
+  const row = document.getElementById(`grid-row-${id}`);
+  if(row) row.remove();
+  buildVolControls();
+  showToast(`Track silindi`);
+}
+
+function addGridRowForTrack(track, col) {
+  // Find the grid container and add a new row
+  const gridEl = document.querySelector('.grid-rows');
+  if(!gridEl) return;
+  const total = totalSteps();
+  const row = document.createElement('div');
+  row.className = 'grid-row';
+  row.id = `grid-row-${track}`;
+  row.style.setProperty('--track-col', col);
+  // Build cells
+  for(let s = 0; s < total; s++) {
+    const cell = document.createElement('div');
+    cell.className = 'beat-cell';
+    cell.id = `cell-${track}-${s}`;
+    cell.dataset.track = track;
+    cell.dataset.step = s;
+    // Wire click/mouse events same as buildGridRows
+    cell.addEventListener('click', () => { /* handled by global delegation */ });
+    row.appendChild(cell);
+  }
+  gridEl.appendChild(row);
+  // Re-init cell interactions via rebuildAll is too heavy; wire manually via event delegation
+  rebuildAll();
+}
+
+function openAddTrackModal() {
+  const name = prompt('Yeni track adı:', 'Track ' + (customTrackCounter + 1));
+  if(!name || !name.trim()) return;
+  addCustomTrack(name.trim());
+}
 
 // ═══════════════════════════════════════════════════════════════
 // EXPORT
@@ -3581,7 +4231,428 @@ function wireEvents(){
   document.getElementById('stageOpenBtn')?.addEventListener('click', openStage);
   document.getElementById('stageClose')?.addEventListener('click', closeStage);
   document.addEventListener('keydown', stageKeyHandler);
+
+  // Stage + ekle butonu
+  document.getElementById('stageAddBtn')?.addEventListener('click', openStageAddTrack);
+
+  // Stage playback butonları
+  document.getElementById('stagePbPlay')?.addEventListener('click', stagePbToggle);
+  document.getElementById('stagePbStop')?.addEventListener('click', stagePbStop);
 }
+
+// ═══════════════════════════════════════════════════════════════
+// STAGE — EXTRA TRACKS (+ Ses Ekle)
+// ═══════════════════════════════════════════════════════════════
+const EXTRA_COLORS = [
+  '#c084fc','#f472b6','#fb923c','#a3e635','#22d3ee',
+  '#818cf8','#f87171','#34d399','#fbbf24','#60a5fa'
+];
+let stageExtraTracks = []; // [{id, name, buffer, sound, grid, rec, color}]
+let stageExtraIdCounter = 0;
+
+function openStageAddTrack() {
+  // Küçük inline modal: isim sor → ses ara
+  const existing = document.getElementById('stageAddModal');
+  if (existing) { existing.remove(); return; }
+
+  const modal = document.createElement('div');
+  modal.id = 'stageAddModal';
+  modal.style.cssText = `
+    position:absolute;left:190px;top:60px;z-index:50;
+    background:#12111a;border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;padding:18px;width:240px;
+    box-shadow:0 8px 32px rgba(0,0,0,.7);
+  `;
+  modal.innerHTML = `
+    <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.3);margin-bottom:12px;">YENİ TRACK</div>
+    <input id="stageAddName" placeholder="Track adı (ör: Tabla)" style="
+      width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);border-radius:6px;
+      padding:8px 10px;color:#fff;font-size:12px;font-family:'Syne',sans-serif;
+      outline:none;margin-bottom:10px;
+    ">
+    <div style="font-size:9px;color:rgba(255,255,255,.25);margin-bottom:8px;">Ses ara (opsiyonel):</div>
+    <input id="stageAddSearch" placeholder="ör: tabla hit, shaker, cowbell..." style="
+      width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);border-radius:6px;
+      padding:8px 10px;color:#fff;font-size:12px;font-family:'Syne',sans-serif;
+      outline:none;margin-bottom:12px;
+    ">
+    <div style="display:flex;gap:8px;">
+      <button id="stageAddConfirm" style="
+        flex:1;padding:8px;border-radius:6px;
+        background:rgba(124,111,247,.2);border:1px solid rgba(124,111,247,.4);
+        color:#a09af5;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;
+      ">Ekle</button>
+      <button id="stageAddCancel" style="
+        flex:1;padding:8px;border-radius:6px;
+        background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+        color:rgba(255,255,255,.4);font-size:11px;cursor:pointer;
+      ">İptal</button>
+    </div>
+  `;
+
+  document.getElementById('stageOverlay').appendChild(modal);
+  document.getElementById('stageAddName').focus();
+
+  document.getElementById('stageAddCancel').onclick = () => modal.remove();
+  document.getElementById('stageAddConfirm').onclick = () => confirmAddExtraTrack(modal);
+  document.getElementById('stageAddName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.stopPropagation(); confirmAddExtraTrack(modal); }
+    if (e.key === 'Escape') { e.stopPropagation(); modal.remove(); }
+  });
+  document.getElementById('stageAddSearch').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.stopPropagation(); confirmAddExtraTrack(modal); }
+    if (e.key === 'Escape') { e.stopPropagation(); modal.remove(); }
+  });
+}
+
+async function confirmAddExtraTrack(modal) {
+  const name = document.getElementById('stageAddName').value.trim() || `Track ${stageExtraIdCounter + 1}`;
+  const searchQ = document.getElementById('stageAddSearch').value.trim();
+  modal.remove();
+
+  const id = 'extra_' + (stageExtraIdCounter++);
+  const color = EXTRA_COLORS[(stageExtraIdCounter - 1) % EXTRA_COLORS.length];
+  const total = totalSteps();
+
+  const track = { id, name, buffer: null, sound: null, grid: Array(total).fill(false), rec: false, color };
+  stageExtraTracks.push(track);
+  stageRecording[id] = false;
+
+  // Eğer arama terimi varsa Freesound'dan ses bul
+  if (searchQ) {
+    showToast(`"${name}" için ses aranıyor…`);
+    try {
+      const res = await fetch(
+        `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(searchQ)}&fields=id,name,previews,duration&filter=duration:[0.1 TO 4]&page_size=1&token=z7b5u8NuPhyEZ0sRodt82pW00VelwaGSwjZJGWLM`
+      );
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        const s = data.results[0];
+        track.sound = s;
+        const audioRes = await fetch(s.previews['preview-hq-mp3']);
+        const ab = await audioRes.arrayBuffer();
+        track.buffer = await getCtx().decodeAudioData(ab);
+        showToast(`"${name}": ${s.name} yüklendi`);
+      }
+    } catch(err) {
+      showToast(`Ses bulunamadı, varsayılan kullanılacak`);
+    }
+  }
+
+  buildStageInstruments();
+  selectStageTrack(id);
+}
+
+function removeExtraTrack(id) {
+  stageExtraTracks = stageExtraTracks.filter(t => t.id !== id);
+  delete stageRecording[id];
+  if (stageTrack === id) stageTrack = 'kick';
+  buildStageInstruments();
+  selectStageTrack(stageTrack);
+  showToast('Track silindi');
+}
+
+function triggerExtraTrack(id, t) {
+  const et = stageExtraTracks.find(x => x.id === id);
+  if (!et) return;
+  const ctx = getCtx();
+  if (et.buffer) {
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    src.buffer = et.buffer;
+    src.connect(g); g.connect(ctx.destination);
+    g.gain.value = 0.8;
+    src.start(t);
+  } else {
+    // fallback: hihat benzeri beyaz gürültü
+    playHihat(t, 0.6, null, 0.8);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STAGE — PLAYBACK CONTROLS (Dinle alanı)
+// ═══════════════════════════════════════════════════════════════
+let stagePbPlaying = false;
+let stagePbInterval = null;
+
+function stagePbToggle() {
+  if (isPlaying) {
+    // Duraklat
+    pauseSequencer();
+    stagePbPlaying = false;
+    document.getElementById('stagePbPlay').textContent = '▶';
+    document.getElementById('stagePbPlay').classList.remove('playing');
+    clearInterval(stagePbInterval);
+    document.getElementById('stagePbInfo').textContent = 'Duraklatıldı';
+  } else {
+    // Çal
+    startSequencer();
+    stagePbPlaying = true;
+    document.getElementById('stagePbPlay').textContent = '⏸';
+    document.getElementById('stagePbPlay').classList.add('playing');
+    stagePbStartProgress();
+    document.getElementById('stagePbInfo').textContent = 'Çalıyor…';
+  }
+}
+
+function stagePbStop() {
+  stopSequencer();
+  stagePbPlaying = false;
+  document.getElementById('stagePbPlay').textContent = '▶';
+  document.getElementById('stagePbPlay').classList.remove('playing');
+  clearInterval(stagePbInterval);
+  document.getElementById('stagePbBar').style.width = '0%';
+  document.getElementById('stagePbInfo').textContent = '—';
+}
+
+function stagePbStartProgress() {
+  clearInterval(stagePbInterval);
+  stagePbInterval = setInterval(() => {
+    if (!isPlaying) {
+      clearInterval(stagePbInterval);
+      document.getElementById('stagePbPlay').textContent = '▶';
+      document.getElementById('stagePbPlay').classList.remove('playing');
+      return;
+    }
+    const total = totalSteps();
+    const pct = total > 0 ? ((lastHL >= 0 ? lastHL : 0) / total) * 100 : 0;
+    const bar = document.getElementById('stagePbBar');
+    const info = document.getElementById('stagePbInfo');
+    const bv = document.getElementById('stageBpmVal');
+    if (bar) bar.style.width = pct + '%';
+    if (info) {
+      const barN = Math.floor((lastHL >= 0 ? lastHL : 0) / 4) + 1;
+      const beat = ((lastHL >= 0 ? lastHL : 0) % 4) + 1;
+      info.textContent = `Bar ${barN}  Beat ${beat}`;
+    }
+    if (bv) bv.textContent = bpm;
+  }, 80);
+}
+
+// Extra track'ler buildStageInstruments'e entegre
+const _origBuildStageInstruments = buildStageInstruments;
+buildStageInstruments = function() {
+  _origBuildStageInstruments();
+
+  // Extra tracks ekle
+  const container = document.getElementById('stageInstruments');
+  if (!container) return;
+
+  stageExtraTracks.forEach(et => {
+    const item = document.createElement('div');
+    item.className = 'stage-instr-item extra' + (stageTrack === et.id ? ' active' : '');
+    item.style.setProperty('--instr-col', et.color);
+    item.id = `stage-instr-${et.id}`;
+
+    const stepCount = et.grid.filter(Boolean).length;
+    item.innerHTML = `
+      <div class="stage-instr-dot" style="background:${et.color};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div class="stage-instr-name" id="stage-instr-name-${et.id}" title="Sesi değiştir" style="color:${et.color};">${et.name}</div>
+        <div class="stage-instr-sound" id="stage-instr-sound-${et.id}">${et.sound ? et.sound.name : '· varsayılan'}</div>
+        <div class="stage-track-rec-bar" id="stage-rec-bar-${et.id}"></div>
+      </div>
+      <div class="stage-instr-steps" id="stage-instr-steps-${et.id}">${stepCount > 0 ? stepCount+'✓' : ''}</div>
+      <button class="stage-rec-btn ${et.rec ? 'recording' : ''}" id="stage-rec-btn-${et.id}" title="Kayıt">●</button>
+      <button style="
+        width:18px;height:18px;border-radius:50%;background:transparent;
+        border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.2);
+        font-size:9px;cursor:pointer;flex-shrink:0;padding:0;
+        display:flex;align-items:center;justify-content:center;
+        transition:all .15s;
+      " title="Track'i sil" id="stage-del-${et.id}">✕</button>
+    `;
+
+    // Satıra tıkla → seç
+    item.addEventListener('click', e => {
+      if (e.target.id === `stage-rec-btn-${et.id}`) return;
+      if (e.target.id === `stage-del-${et.id}`) return;
+      if (e.target.id === `stage-instr-name-${et.id}`) return;
+      selectStageTrack(et.id);
+    });
+
+    // İsme tıkla → ses değiştir
+    item.querySelector(`#stage-instr-name-${et.id}`).addEventListener('click', e => {
+      e.stopPropagation();
+      // Basit yeniden arama
+      const q = prompt(`"${et.name}" için yeni ses ara:`);
+      if (!q) return;
+      showToast('Ses aranıyor…');
+      fetch(`https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(q)}&fields=id,name,previews,duration&filter=duration:[0.1 TO 4]&page_size=1&token=z7b5u8NuPhyEZ0sRodt82pW00VelwaGSwjZJGWLM`)
+        .then(r => r.json()).then(async data => {
+          if (data.results && data.results.length) {
+            const s = data.results[0];
+            et.sound = s;
+            const ab = await (await fetch(s.previews['preview-hq-mp3'])).arrayBuffer();
+            et.buffer = await getCtx().decodeAudioData(ab);
+            document.getElementById(`stage-instr-sound-${et.id}`).textContent = s.name;
+            showToast(`"${et.name}": ${s.name}`);
+          }
+        }).catch(() => showToast('Ses bulunamadı'));
+    });
+
+    // Rec butonu
+    item.querySelector(`#stage-rec-btn-${et.id}`).addEventListener('click', e => {
+      e.stopPropagation();
+      et.rec = !et.rec;
+      stageRecording[et.id] = et.rec;
+      const btn = document.getElementById(`stage-rec-btn-${et.id}`);
+      if (btn) {
+        btn.classList.toggle('recording', et.rec);
+      }
+      if (et.rec) {
+        selectStageTrack(et.id);
+        showToast(`${et.name} kaydediyor`);
+      }
+      updateStageStatus();
+    });
+
+    // Sil butonu
+    item.querySelector(`#stage-del-${et.id}`).addEventListener('click', e => {
+      e.stopPropagation();
+      removeExtraTrack(et.id);
+    });
+
+    container.appendChild(item);
+  });
+};
+
+// selectStageTrack — extra track desteği
+const _origSelectStageTrack = selectStageTrack;
+selectStageTrack = function(track) {
+  const isExtra = track.startsWith('extra_');
+  if (!isExtra) {
+    _origSelectStageTrack(track);
+  } else {
+    stageTrack = track;
+    const et = stageExtraTracks.find(x => x.id === track);
+    if (!et) return;
+
+    // Tüm satırların active durumunu güncelle
+    TRACKS.forEach(t => {
+      const el = document.getElementById(`stage-instr-${t}`);
+      if (el) { el.classList.remove('active'); }
+    });
+    stageExtraTracks.forEach(x => {
+      const el = document.getElementById(`stage-instr-${x.id}`);
+      if (el) el.classList.toggle('active', x.id === track);
+    });
+
+    // Center label güncelle
+    const lbl = document.getElementById('stageCenterLabel');
+    if (lbl) lbl.textContent = et.name.toUpperCase();
+
+    // Speaker pulse
+    stageSpeakerPush = 0.4;
+    // Hit ring extra rengiyle
+    const ring = document.getElementById('stageHitRing');
+    if (ring) ring.style.setProperty('--ring-col', et.color);
+  }
+};
+
+// stageHitTrack — extra track desteği
+const _origStageHitTrack = stageHitTrack;
+stageHitTrack = function(track) {
+  if (!track.startsWith('extra_')) {
+    _origStageHitTrack(track);
+    return;
+  }
+  const et = stageExtraTracks.find(x => x.id === track);
+  if (!et) return;
+
+  const step = (isPlaying && lastHL >= 0) ? lastHL : currentStep;
+  const isRec = et.rec;
+
+  if (!isRec) {
+    triggerExtraTrack(track, getCtx().currentTime);
+  }
+
+  if (isRec && !et.grid[step]) {
+    et.grid[step] = true;
+    const stepsEl = document.getElementById(`stage-instr-steps-${track}`);
+    if (stepsEl) stepsEl.textContent = et.grid.filter(Boolean).length + '✓';
+  }
+
+  stageSpeakerPush = 1.0;
+  stageHitEffect(track, et.color);
+
+  const el = document.getElementById(`stage-instr-${track}`);
+  if (el) {
+    el.style.background = 'rgba(192,132,252,.1)';
+    setTimeout(() => { el.style.background = ''; }, 120);
+  }
+};
+
+// stageHitEffect — opsiyonel renk parametresi
+const _origStageHitEffect = stageHitEffect;
+stageHitEffect = function(track, overrideColor) {
+  const col = overrideColor || (STAGE_COLORS[track] ? STAGE_COLORS[track].col : '#a09af5');
+  const ring = document.getElementById('stageHitRing');
+  if (ring) {
+    ring.style.setProperty('--ring-col', col);
+    ring.classList.remove('flash');
+    void ring.offsetWidth;
+    ring.classList.add('flash');
+  }
+  // Parçacıklar
+  const main = document.querySelector('.stage-main');
+  if (!main) return;
+  const Cy = main.offsetHeight / 2;
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('div');
+    p.className = 'stage-particle';
+    const angle = (Math.PI*2/10)*i + Math.random()*0.4;
+    const dist = 80 + Math.random()*100;
+    p.style.cssText = `left:50%;top:${Cy}px;
+      width:${4+Math.random()*6}px;height:${4+Math.random()*6}px;
+      background:${col};box-shadow:0 0 8px ${col};
+      --px:${Math.cos(angle)*dist}px;--py:${Math.sin(angle)*dist - 40}px;
+      animation-duration:${0.4+Math.random()*0.4}s;`;
+    main.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+  }
+  const lbl = document.getElementById('stageCenterLabel');
+  if (lbl) {
+    lbl.style.setProperty('--label-col', col);
+    lbl.classList.add('active');
+    clearTimeout(lbl._t);
+    lbl._t = setTimeout(() => lbl.classList.remove('active'), 400);
+  }
+};
+
+// Extra track sequencer entegrasyonu — scheduleStep'i wrap et
+const _origScheduleStep = scheduleStep;
+scheduleStep = function(step, time) {
+  _origScheduleStep(step, time);
+  // Extra track'leri de çal
+  stageExtraTracks.forEach(et => {
+    if (et.grid[step]) {
+      triggerExtraTrack(et.id, time);
+    }
+  });
+};
+
+// openStage'de playback butonlarını senkronize et
+const _origOpenStage = openStage;
+openStage = function() {
+  _origOpenStage();
+  // Extra track gridlerini totalSteps ile hizala
+  const total = totalSteps();
+  stageExtraTracks.forEach(et => {
+    if (et.grid.length !== total) {
+      et.grid = Array(total).fill(false).map((_, i) => et.grid[i] || false);
+    }
+  });
+  // Playback buton durumu
+  const pbPlay = document.getElementById('stagePbPlay');
+  if (pbPlay) {
+    pbPlay.textContent = isPlaying ? '⏸' : '▶';
+    pbPlay.classList.toggle('playing', isPlaying);
+  }
+  if (isPlaying) stagePbStartProgress();
+};
 
 init();
 </script>
