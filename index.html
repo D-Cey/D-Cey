@@ -484,6 +484,73 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
 .ap-trim-find-btn{font-size:10px;padding:4px 10px;border-radius:7px;border:1px solid rgba(124,111,247,.4);background:rgba(124,111,247,.1);color:#7c6ff7;cursor:pointer;font-weight:700;transition:all .15s;}
 .ap-trim-find-btn:hover{background:rgba(124,111,247,.2);}
 
+
+/* ─── PLAYHEAD RULER ─────────────────────────────── */
+.ph-ruler-wrap{display:flex;align-items:center;gap:8px;padding:4px 14px 2px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;height:28px;}
+.ph-ruler-label{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.06em;white-space:nowrap;flex-shrink:0;width:72px;}
+.ph-ruler{flex:1;position:relative;height:18px;cursor:pointer;user-select:none;}
+.ph-ruler-ticks{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+.ph-marker{position:absolute;top:0;height:100%;display:flex;flex-direction:column;align-items:center;z-index:5;cursor:ew-resize;transform:translateX(-50%);}
+.ph-marker-flag{font-size:9px;color:#4ade80;line-height:1;margin-bottom:1px;pointer-events:none;white-space:nowrap;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);border-radius:3px;padding:0 3px;}
+.ph-marker-line{width:2px;flex:1;background:#4ade80;border-radius:1px;box-shadow:0 0 6px rgba(74,222,128,.5);}
+.ph-save-btn,.ph-clear-btn{font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;flex-shrink:0;transition:all .15s;font-family:"Syne",sans-serif;font-weight:700;}
+.ph-save-btn:hover{border-color:#4ade80;color:#4ade80;}
+.ph-save-btn.saved{border-color:#4ade80;color:#4ade80;background:rgba(74,222,128,.1);}
+.ph-clear-btn:hover{border-color:#e94560;color:#e94560;}
+.ph-tick{position:absolute;bottom:0;width:1px;background:var(--border);pointer-events:none;}
+.ph-tick.bar{height:8px;background:var(--text3);opacity:.4;}
+.ph-tick.beat{height:4px;opacity:.25;}
+
+
+/* ─── HOLD KEY INDICATOR ─────────────────────────── */
+.key-badge.holding{box-shadow:0 0 0 2px currentColor;animation:holdpulse .4s ease-in-out infinite alternate;}
+@keyframes holdpulse{from{opacity:.7;}to{opacity:1;}}
+.hold-dur-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:6px 16px;font-size:11px;font-family:"Space Mono",monospace;color:var(--text);pointer-events:none;z-index:9999;opacity:0;transition:opacity .2s;}
+.hold-dur-toast.show{opacity:1;}
+
+
+.ph-step-display{font-size:9px;font-family:"Space Mono",monospace;color:#4ade80;font-weight:700;flex-shrink:0;min-width:52px;text-align:right;}
+.ph-ruler-wrap{border-bottom:2px solid rgba(74,222,128,.2)!important;}
+.ph-ruler{background:var(--surface2);border-radius:4px;border:1px solid var(--border);}
+.ph-tick.bar{background:#4ade8055;height:10px;position:absolute;top:50%;transform:translateY(-50%);width:1px;}
+.ph-tick.beat{background:#4ade8022;height:6px;position:absolute;top:50%;transform:translateY(-50%);width:1px;}
+.hold-hint{opacity:.7;}
+
+
+/* ─── PER-TRACK REC BUTTON ──────────────────────── */
+.track-rec-btn{
+  margin-left:auto;width:16px;height:16px;border-radius:50%;
+  border:1.5px solid rgba(233,69,96,.4);background:transparent;
+  color:rgba(233,69,96,.5);font-size:8px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;padding:0;line-height:1;
+}
+.track-rec-btn:hover{border-color:#e94560;color:#e94560;background:rgba(233,69,96,.1);}
+.track-rec-btn.armed{border-color:#e94560;color:#e94560;background:rgba(233,69,96,.15);
+  box-shadow:0 0 8px rgba(233,69,96,.4);animation:recpulse .6s ease-in-out infinite alternate;}
+.track-rec-btn.recording{border-color:#ff2244;color:#ff2244;background:rgba(255,34,68,.2);
+  box-shadow:0 0 12px rgba(255,34,68,.6);}
+@keyframes recpulse{from{box-shadow:0 0 4px rgba(233,69,96,.3);}to{box-shadow:0 0 10px rgba(233,69,96,.7);}}
+
+/* ─── HOLD BAR ───────────────────────────────────── */
+.track-hold-bar-wrap{
+  height:0;overflow:hidden;transition:height .15s;
+  position:relative;background:rgba(74,222,128,.05);
+  border-bottom:1px solid transparent;
+  margin:0;
+}
+.track-hold-bar-wrap.active{height:14px;border-color:rgba(74,222,128,.2);}
+.track-hold-bar{
+  position:absolute;top:0;left:0;height:100%;width:0%;
+  background:linear-gradient(90deg,rgba(74,222,128,.4),rgba(74,222,128,.8));
+  border-radius:0 2px 2px 0;transition:width .05s linear;
+}
+.track-hold-ms{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  font-size:8px;font-family:"Space Mono",monospace;color:#4ade80;
+  font-weight:700;pointer-events:none;
+}
+
 </style>
 </head>
 <body>
@@ -556,31 +623,56 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
     <div class="track-item kick active"  id="sidebar-kick">
       <div class="track-color"></div><span class="track-name">Kick</span>
       <span class="track-key">SPC</span>
+      <button class="track-rec-btn" id="trec-kick" title="Kick için basılı tut kaydı">●</button>
       <button class="track-mute"  id="mute-kick">M</button>
+    </div>
+    <div class="track-hold-bar-wrap" id="holdbar-kick">
+      <div class="track-hold-bar" id="holdbarfill-kick"></div>
+      <span class="track-hold-ms" id="holdbarms-kick">0ms</span>
     </div>
     <div class="track-sound-name" id="sound-kick" >· find sound</div>
     <div class="track-item snare"  id="sidebar-snare">
       <div class="track-color"></div><span class="track-name">Snare</span>
       <span class="track-key">S</span>
+      <button class="track-rec-btn" id="trec-snare" title="Snare için basılı tut kaydı">●</button>
       <button class="track-mute"  id="mute-snare">M</button>
+    </div>
+    <div class="track-hold-bar-wrap" id="holdbar-snare">
+      <div class="track-hold-bar" id="holdbarfill-snare"></div>
+      <span class="track-hold-ms" id="holdbarms-snare">0ms</span>
     </div>
     <div class="track-sound-name" id="sound-snare" >· find sound</div>
     <div class="track-item hihat"  id="sidebar-hihat">
       <div class="track-color"></div><span class="track-name">Hi-Hat</span>
       <span class="track-key">H</span>
+      <button class="track-rec-btn" id="trec-hihat" title="Hi-Hat için basılı tut kaydı">●</button>
       <button class="track-mute"  id="mute-hihat">M</button>
+    </div>
+    <div class="track-hold-bar-wrap" id="holdbar-hihat">
+      <div class="track-hold-bar" id="holdbarfill-hihat"></div>
+      <span class="track-hold-ms" id="holdbarms-hihat">0ms</span>
     </div>
     <div class="track-sound-name" id="sound-hihat" >· find sound</div>
     <div class="track-item melody"  id="sidebar-melody">
       <div class="track-color"></div><span class="track-name">Melody</span>
       <span class="track-key">M</span>
+      <button class="track-rec-btn" id="trec-melody" title="Melody için basılı tut kaydı">●</button>
       <button class="track-mute"  id="mute-melody">M</button>
+    </div>
+    <div class="track-hold-bar-wrap" id="holdbar-melody">
+      <div class="track-hold-bar" id="holdbarfill-melody"></div>
+      <span class="track-hold-ms" id="holdbarms-melody">0ms</span>
     </div>
     <div class="track-sound-name" id="sound-melody" >· find sound</div>
     <div class="track-item bass"  id="sidebar-bass">
       <div class="track-color"></div><span class="track-name">Bass</span>
       <span class="track-key">B</span>
+      <button class="track-rec-btn" id="trec-bass" title="Bass için basılı tut kaydı">●</button>
       <button class="track-mute"  id="mute-bass">M</button>
+    </div>
+    <div class="track-hold-bar-wrap" id="holdbar-bass">
+      <div class="track-hold-bar" id="holdbarfill-bass"></div>
+      <span class="track-hold-ms" id="holdbarms-bass">0ms</span>
     </div>
     <div class="track-sound-name" id="sound-bass" >· find sound</div>
     <div class="sidebar-divider"></div>
@@ -592,6 +684,20 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
 
   <!-- STUDIO -->
   <div class="studio">
+    <!-- PLAYHEAD RULER -->
+    <div class="ph-ruler-wrap" id="phRulerWrap">
+      <div class="ph-ruler-label" title="Sürükle → başlangıç noktasını ayarla">▶ Başlangıç</div>
+      <div class="ph-ruler" id="phRuler">
+        <div class="ph-marker" id="phMarker">
+          <div class="ph-marker-flag" id="phMarkerFlag">▶ 1</div>
+          <div class="ph-marker-line"></div>
+        </div>
+        <div class="ph-ruler-ticks" id="phRulerTicks"></div>
+      </div>
+      <span class="ph-step-display" id="phStepDisplay">Step 1</span>
+      <button class="ph-save-btn" id="phSaveBtn" title="Bu başlangıç noktasını kaydet">⚑ Kaydet</button>
+      <button class="ph-clear-btn" id="phClearBtn" title="Başlangıç noktasını sıfırla">✕</button>
+    </div>
     <div class="grid-area" id="gridArea"></div>
     <div class="recorder-bar">
       <div class="recorder-label">Active</div>
@@ -605,6 +711,10 @@ input[type=range].rpitch::-webkit-slider-thumb{-webkit-appearance:none;width:12p
         <div class="key-hint"><span class="key-badge hihat">H</span>Hi-Hat</div>
         <div class="key-hint"><span class="key-badge melody">M</span>Melody</div>
         <div class="key-hint"><span class="key-badge bass">B</span>Bass</div>
+        <div class="key-hint hold-hint" title="Tuşu basılı tut → ses o kadar çalar, süre otomatik kaydedilir">
+          <span class="key-badge" style="border-color:#a78bfa;color:#a78bfa;">⏸ Tut</span>
+          <span style="color:#a78bfa;">= Süre</span>
+        </div>
       </div>
     </div>
     <div class="bottom-toolbar">
@@ -1083,9 +1193,9 @@ function highlightStep(step){
   lastHL=step;
 }
 function togglePlay(){getCtx();isPlaying?pauseSequencer():startSequencer();}
-function startSequencer(){isPlaying=true;nextNoteTime=getCtx().currentTime;startTime=getCtx().currentTime-elapsedSecs;scheduler();document.getElementById('playBtn').textContent='⏸';document.getElementById('playBtn').classList.add('playing');startTimer();}
+function startSequencer(){isPlaying=true;currentStep=startStep;nextNoteTime=getCtx().currentTime;startTime=getCtx().currentTime-elapsedSecs;scheduler();document.getElementById('playBtn').textContent='⏸';document.getElementById('playBtn').classList.add('playing');startTimer();}
 function pauseSequencer(){isPlaying=false;elapsedSecs=getCtx().currentTime-startTime;clearTimeout(schedTimer);document.getElementById('playBtn').textContent='▶';document.getElementById('playBtn').classList.remove('playing');stopTimer();if(isRecording)endRecording();}
-function stopSequencer(){if(isRecording)endRecording();isPlaying=false;currentStep=0;lastHL=-1;elapsedSecs=0;clearTimeout(schedTimer);document.querySelectorAll('.beat-cell').forEach(c=>c.classList.remove('playing-col'));document.getElementById('playBtn').textContent='▶';document.getElementById('playBtn').classList.remove('playing');document.getElementById('stepStatus').textContent='Step: —';document.getElementById('timeStatus').textContent='0:00';stopTimer();}
+function stopSequencer(){if(isRecording)endRecording();isPlaying=false;currentStep=startStep;lastHL=-1;elapsedSecs=0;clearTimeout(schedTimer);document.querySelectorAll('.beat-cell').forEach(c=>c.classList.remove('playing-col'));document.getElementById('playBtn').textContent='▶';document.getElementById('playBtn').classList.remove('playing');document.getElementById('stepStatus').textContent='Step: —';document.getElementById('timeStatus').textContent='0:00';stopTimer();}
 let timerInt=null;
 function startTimer(){timerInt=setInterval(()=>{const s=Math.floor(getCtx().currentTime-startTime+elapsedSecs),m=Math.floor(s/60);document.getElementById('timeStatus').textContent=`${m}:${(s%60).toString().padStart(2,'0')}`;},500);}
 function stopTimer(){clearInterval(timerInt);}
@@ -1116,18 +1226,122 @@ function endRecording(){
 // ═══════════════════════════════════════════════════════════════
 // KEYBOARD
 // ═══════════════════════════════════════════════════════════════
-document.addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT') return;if(e.repeat) return;
-  const track=KEY_MAP[e.key.toLowerCase()]||KEY_MAP[e.key];if(!track) return;
-  e.preventDefault();getCtx();
-  triggerSound(track,getCtx().currentTime,currentStep);selectTrack(track);
-  const sb=document.getElementById(`sidebar-${track}`);sb.classList.add('key-flash');setTimeout(()=>sb.classList.remove('key-flash'),100);
-  if(isRecording&&!grid[track][currentStep]){
-    if(recMode==='overdub')saveHistory();
-    grid[track][currentStep]=true;
-    const cell=document.getElementById(`cell-${track}-${currentStep}`);
-    if(cell){cell.classList.add('active','just-hit');setTimeout(()=>cell.classList.remove('just-hit'),350);}
+// ── HOLD-TO-PLAY ──────────────────────────────────────────
+// keydown → start sound + record hold start time
+// keyup   → stop sound → duration = hold length → write to step envelope
+const holdState = {};  // track → {startTime, srcNode, gainNode, step}
+
+function showHoldToast(text){
+  let t = document.getElementById('holdDurToast');
+  if(!t){t=document.createElement('div');t.id='holdDurToast';t.className='hold-dur-toast';document.body.appendChild(t);}
+  t.textContent = text; t.classList.add('show');
+  clearTimeout(t._to); t._to = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+document.addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT') return;
+  if(e.repeat) return;
+  const track = KEY_MAP[e.key.toLowerCase()] || KEY_MAP[e.key];
+  if(!track) return;
+  e.preventDefault(); getCtx();
+  selectTrack(track);
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const step = currentStep;
+
+  // Visual flash
+  const sb = document.getElementById(`sidebar-${track}`);
+  sb.classList.add('key-flash');
+  // Hold indicator on key badge
+  document.querySelectorAll(`.key-badge.${track}`).forEach(k => k.classList.add('holding'));
+
+  // Start a looping buffer or oscillator for hold
+  let heldSrc = null, heldGain = null;
+  if(loadedBuffers[track]){
+    heldSrc = ctx.createBufferSource();
+    heldGain = ctx.createGain();
+    const ss = selectedSounds[track];
+    // Use trimmed buffer if available
+    const buf = loadedBuffers[track];
+    let playBuf = buf;
+    if(ss && ss.trimStart != null && buf.duration > 0){
+      const s = Math.floor((ss.trimStart / buf.duration) * buf.duration * ctx.sampleRate);
+      const eF = Math.floor((ss.trimEnd / buf.duration) * buf.duration * ctx.sampleRate);
+      const frames = Math.max(1, eF - s);
+      playBuf = ctx.createBuffer(buf.numberOfChannels, frames, ctx.sampleRate);
+      for(let ch = 0; ch < buf.numberOfChannels; ch++){
+        const src2 = buf.getChannelData(ch), dst = playBuf.getChannelData(ch);
+        for(let i = 0; i < frames; i++) dst[i] = src2[s+i] || 0;
+      }
+    }
+    heldSrc.buffer = playBuf;
+    heldSrc.loop = true;
+    heldSrc.connect(heldGain); heldGain.connect(ctx.destination);
+    heldGain.gain.value = volumes[track];
+    heldSrc.start(now);
+  } else {
+    // Fallback: just trigger once
+    triggerSound(track, now, step);
   }
+
+  holdState[track] = { startTime: now, srcNode: heldSrc, gainNode: heldGain, step };
+
+  // If track is armed, start live hold bar
+  if(armedTracks.has(track)){
+    startHoldBar(track);
+  }
+
+  if(isRecording && !grid[track][step]){
+    if(recMode === 'overdub') saveHistory();
+    grid[track][step] = true;
+    const cell = document.getElementById(`cell-${track}-${step}`);
+    if(cell){ cell.classList.add('active','just-hit'); setTimeout(()=>cell.classList.remove('just-hit'),350); }
+  }
+});
+
+document.addEventListener('keyup', e => {
+  if(e.target.tagName === 'INPUT') return;
+  const track = KEY_MAP[e.key.toLowerCase()] || KEY_MAP[e.key];
+  if(!track) return;
+  const hs = holdState[track];
+  if(!hs) return;
+
+  const ctx = getCtx();
+  const holdMs = Math.round((ctx.currentTime - hs.startTime) * 1000);
+
+  // Stop held sound with quick fade
+  if(hs.srcNode && hs.gainNode){
+    hs.gainNode.gain.setValueAtTime(hs.gainNode.gain.value, ctx.currentTime);
+    hs.gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.04);
+    hs.srcNode.stop(ctx.currentTime + 0.05);
+  }
+
+  // Visual cleanup
+  document.querySelectorAll(`.key-badge.${track}`).forEach(k => k.classList.remove('holding'));
+  document.getElementById(`sidebar-${track}`)?.classList.remove('key-flash');
+
+  // If track armed, stop bar and save duration
+  if(armedTracks.has(track)){
+    stopHoldBar(track);
+    if(holdMs > 30){
+      const clampedMs = Math.max(20, Math.min(2000, holdMs));
+      const step = hs.step;
+      if(!envelopes[track][step]) envelopes[track][step] = {...defaultEnv()};
+      envelopes[track][step].dur = clampedMs;
+      document.getElementById(`cell-${track}-${step}`)?.classList.add('has-env');
+      showHoldToast(`${TNAMES[track]} → ${clampedMs}ms ✓`);
+    }
+  } else if(holdMs > 80){
+    // Non-armed: also save duration (existing behaviour)
+    const clampedMs = Math.max(20, Math.min(2000, holdMs));
+    const step = hs.step;
+    if(!envelopes[track][step]) envelopes[track][step] = {...defaultEnv()};
+    envelopes[track][step].dur = clampedMs;
+    document.getElementById(`cell-${track}-${step}`)?.classList.add('has-env');
+    showHoldToast(`${TNAMES[track]} → ${clampedMs}ms`);
+  }
+
+  delete holdState[track];
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -1150,7 +1364,7 @@ function applyAllSlots(delta){const nv=slots.map(s=>s+delta);if(nv.some(v=>v<1||
 // ═══════════════════════════════════════════════════════════════
 // GRID UI
 // ═══════════════════════════════════════════════════════════════
-function rebuildAll(){updateStructInfo();buildSlotControls();buildGridRows();buildVolControls();}
+function rebuildAll(){updateStructInfo();buildSlotControls();buildGridRows();buildVolControls();requestAnimationFrame(()=>{buildRulerTicks();updateRulerMarker();});}
 function updateStructInfo(){document.getElementById('structureInfo').textContent=`${slots.length} slots  ·  ${slots.join(' + ')}  =  ${totalSteps()} steps`;document.getElementById('structStatus').textContent=`${totalSteps()} steps`;}
 
 function buildSlotControls(){
@@ -2113,6 +2327,93 @@ function getTrimmedBuffer(){
 }
 
 
+
+// ═══════════════════════════════════════════════════════════════
+// PLAYHEAD RULER — drag to set start position
+// ═══════════════════════════════════════════════════════════════
+let startStep = 0;        // where playback begins
+let savedStartStep = 0;   // persisted start
+let rulerDragging = false;
+
+function buildRulerTicks(){
+  const ticks = document.getElementById('phRulerTicks');
+  if(!ticks) return;
+  ticks.innerHTML = '';
+  const total = totalSteps();
+  const W = ticks.offsetWidth || 400;
+  for(let i = 0; i <= total; i++){
+    const t = document.createElement('div');
+    const isBar = i % 4 === 0;
+    t.className = 'ph-tick ' + (isBar ? 'bar' : 'beat');
+    t.style.left = (i / total * 100) + '%';
+    ticks.appendChild(t);
+  }
+}
+
+function setStartStep(step){
+  startStep = Math.max(0, Math.min(totalSteps() - 1, Math.round(step)));
+  updateRulerMarker();
+}
+
+function updateRulerMarker(){
+  const ruler = document.getElementById('phRuler');
+  const marker = document.getElementById('phMarker');
+  if(!ruler || !marker) return;
+  const pct = (startStep / Math.max(1, totalSteps())) * 100;
+  marker.style.left = pct + '%';
+  // Update flag and step display
+  const flag = document.getElementById('phMarkerFlag');
+  const disp = document.getElementById('phStepDisplay');
+  if(flag) flag.textContent = startStep === 0 ? '▶' : `▶ ${startStep+1}`;
+  if(disp) disp.textContent = startStep === 0 ? 'Baştan' : `Step ${startStep+1}`;
+  // Highlight if saved
+  const saved = document.getElementById('phSaveBtn');
+  if(saved) saved.classList.toggle('saved', startStep === savedStartStep && savedStartStep > 0);
+}
+
+function initRulerDrag(){
+  const ruler = document.getElementById('phRuler');
+  if(!ruler) return;
+
+  function posToStep(e){
+    const rect = ruler.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const frac = Math.max(0, Math.min(1, cx / rect.width));
+    return Math.round(frac * (totalSteps() - 1));
+  }
+
+  function onMove(e){ if(!rulerDragging) return; setStartStep(posToStep(e)); }
+  function onUp(){ rulerDragging = false; }
+
+  ruler.addEventListener('mousedown', e => {
+    rulerDragging = true;
+    setStartStep(posToStep(e));
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', () => {
+      rulerDragging = false;
+      document.removeEventListener('mousemove', onMove);
+    }, {once:true});
+  });
+  ruler.addEventListener('touchstart', e => {
+    rulerDragging = true;
+    setStartStep(posToStep(e));
+  }, {passive:true});
+  ruler.addEventListener('touchmove', e => { if(rulerDragging) setStartStep(posToStep(e)); }, {passive:true});
+  ruler.addEventListener('touchend', () => { rulerDragging = false; }, {passive:true});
+}
+
+function saveStartPoint(){
+  savedStartStep = startStep;
+  updateRulerMarker();
+  showToast(`Başlangıç noktası kaydedildi → Step ${startStep + 1}`);
+}
+
+function clearStartPoint(){
+  startStep = 0; savedStartStep = 0;
+  updateRulerMarker();
+  showToast('Başlangıç noktası sıfırlandı');
+}
+
 // ═══════════════════════════════════════════════════════════════
 // APPLY SCOPE — apply envelope to slot / visible / all steps
 // ═══════════════════════════════════════════════════════════════
@@ -2169,6 +2470,61 @@ function applyToAll(){
   }
   // Also set as default for future steps of this track
   showToast(`Tüm ${count} ${TNAMES[adsrTrack]} adımına uygulandı`);
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// PER-TRACK REC — arm track, hold key to record with live bar
+// ═══════════════════════════════════════════════════════════════
+const armedTracks = new Set();  // tracks currently armed for hold-rec
+
+function armTrack(track){
+  if(armedTracks.has(track)){
+    armedTracks.delete(track);
+    document.getElementById(`trec-${track}`)?.classList.remove('armed','recording');
+    showToast(`${TNAMES[track]} rec kapatıldı`);
+  } else {
+    armedTracks.add(track);
+    document.getElementById(`trec-${track}`)?.classList.add('armed');
+    showToast(`${TNAMES[track]} armed — tuşu basılı tut → süre kaydedilir`);
+  }
+}
+
+// Hold bar animation state
+const holdBarAnims = {};
+
+function startHoldBar(track){
+  const wrap = document.getElementById(`holdbar-${track}`);
+  const fill = document.getElementById(`holdbarfill-${track}`);
+  const ms   = document.getElementById(`holdbarms-${track}`);
+  if(!wrap||!fill||!ms) return;
+  wrap.classList.add('active');
+  fill.style.width = '0%';
+  ms.textContent = '0ms';
+  document.getElementById(`trec-${track}`)?.classList.add('recording');
+
+  const startT = performance.now();
+  const MAX_MS = 2000;
+
+  function tick(){
+    const elapsed = performance.now() - startT;
+    const pct = Math.min(100, (elapsed / MAX_MS) * 100);
+    fill.style.width = pct + '%';
+    ms.textContent = Math.round(elapsed) + 'ms';
+    if(holdBarAnims[track]) holdBarAnims[track] = requestAnimationFrame(tick);
+  }
+  holdBarAnims[track] = requestAnimationFrame(tick);
+}
+
+function stopHoldBar(track){
+  if(holdBarAnims[track]){
+    cancelAnimationFrame(holdBarAnims[track]);
+    holdBarAnims[track] = null;
+  }
+  const wrap = document.getElementById(`holdbar-${track}`);
+  const fill = document.getElementById(`holdbarfill-${track}`);
+  if(wrap) setTimeout(()=>{wrap.classList.remove('active');if(fill)fill.style.width='0%';}, 800);
+  document.getElementById(`trec-${track}`)?.classList.remove('recording');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2242,6 +2598,7 @@ function wireEvents(){
     document.getElementById(`sidebar-${t}`)?.addEventListener('click',()=>selectTrack(t));
     document.getElementById(`mute-${t}`)?.addEventListener('click',(e)=>toggleMute(e,t));
     document.getElementById(`sound-${t}`)?.addEventListener('click',()=>openSoundSearch(t));
+    document.getElementById(`trec-${t}`)?.addEventListener('click',()=>armTrack(t));
   });
   // Bottom bar
   document.getElementById('clearAllBtn')?.addEventListener('click',clearAll);
@@ -2302,6 +2659,9 @@ function wireEvents(){
   // Trim section events
   document.getElementById('apTrimReset')?.addEventListener('click',resetTrim);
   document.getElementById('apTrimFindBtn')?.addEventListener('click',()=>openSoundSearch(adsrTrack));
+  document.getElementById('phSaveBtn')?.addEventListener('click', saveStartPoint);
+  document.getElementById('phClearBtn')?.addEventListener('click', clearStartPoint);
+  initRulerDrag();
   document.getElementById('apScopeSlot')?.addEventListener('click',(e)=>{applyToSlot();applyScopeFlash(e.currentTarget);});
   document.getElementById('apScopeVisible')?.addEventListener('click',(e)=>{applyToVisible();applyScopeFlash(e.currentTarget);});
   document.getElementById('apScopeAll')?.addEventListener('click',(e)=>{applyToAll();applyScopeFlash(e.currentTarget);});
