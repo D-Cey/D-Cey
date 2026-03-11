@@ -966,8 +966,8 @@ body.erase-cursor .beat-cell.active:hover {
 
 /* ── Inline rec button (bottom center above label) ── */
 .stage-inline-rec{
-  position:absolute;bottom:105px;left:50%;transform:translateX(-50%);
-  width:36px;height:36px;border-radius:50%;z-index:9;
+  position:absolute;bottom:192px;left:50%;transform:translateX(-50%);
+  width:40px;height:40px;border-radius:50%;z-index:25;
   border:1.5px solid rgba(233,69,96,.35);background:rgba(233,69,96,.08);
   color:rgba(233,69,96,.5);font-size:12px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
@@ -1633,7 +1633,7 @@ body.erase-cursor .beat-cell.active:hover {
   <div id="stageHitArea" style="position:absolute;border-radius:50%;z-index:8;cursor:pointer;touch-action:none;"></div>
 
   <!-- Arc selector canvas — bottom -->
-  <canvas id="stageArcCanvas" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:15;touch-action:none;cursor:grab;width:620px;height:180px;"></canvas>
+  <canvas id="stageArcCanvas" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:15;touch-action:none;cursor:grab;width:620px;height:180px;background:transparent;"></canvas>
 
   <!-- Rec button -->
   <button class="stage-inline-rec" id="stageInlineRec">●</button>
@@ -3853,7 +3853,7 @@ function initStageCanvases(){
   const nc2=document.getElementById('stageNebulaCanvas');
   const ac3=document.getElementById('stageArcCanvas');
   if(nc2){ nc2.width=W; nc2.height=H; nc2.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;'; }
-  if(ac3){ ac3.width=620; ac3.height=180; ac3.style.cssText='position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:620px;height:180px;z-index:15;touch-action:none;cursor:grab;'; }
+  if(ac3){ ac3.width=620; ac3.height=180; ac3.style.cssText='position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:620px;height:180px;z-index:15;touch-action:none;cursor:grab;background:transparent;'; }
   STAGE_CX=W/2;
   STAGE_CY=H*0.42;
   STAGE_SR=Math.min(W,H)*0.155;
