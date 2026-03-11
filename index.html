@@ -1693,6 +1693,14 @@ body.erase-cursor .beat-cell.active:hover {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
 const TRACKS=['kick','snare','hihat','melody','bass'];
+const STAGE_COLORS = {
+  kick:   { col:'#e94560', glow:'rgba(233,69,96,.6)',  dark:'rgba(233,69,96,.08)',  rgb:[233,69,96]   },
+  snare:  { col:'#f5a623', glow:'rgba(245,166,35,.6)', dark:'rgba(245,166,35,.08)', rgb:[245,166,35]  },
+  hihat:  { col:'#00d4aa', glow:'rgba(0,212,170,.6)',  dark:'rgba(0,212,170,.08)',  rgb:[0,212,170]   },
+  melody: { col:'#7c6ff7', glow:'rgba(124,111,247,.6)',dark:'rgba(124,111,247,.08)',rgb:[124,111,247] },
+  bass:   { col:'#3a9ff5', glow:'rgba(58,159,245,.6)', dark:'rgba(58,159,245,.08)', rgb:[58,159,245]  }
+};
+
 let stageTrack       = 'kick';
 let stageOpen        = false;
 let stageListenMode  = false;
