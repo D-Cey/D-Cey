@@ -3482,6 +3482,7 @@ function stageUpdateCloud(cl, dt, charge) {
 // ── Nebula draw ──
 function stageDrawNebula(nc, nctx, ts) {
   const W = nc.width, H = nc.height;
+  if (!W || !H) return;
   nctx.clearRect(0, 0, W, H);
   const track = TRACKS[stageSafeIdx(stageArcPosition)];
   const _sc = STAGE_COLORS[track] || STAGE_COLORS['kick'];
@@ -3594,6 +3595,7 @@ function stageDrawNebula(nc, nctx, ts) {
 // ── Arc draw ──
 function stageDrawArc(ac2, actx2) {
   const AW = ac2.width, AH = ac2.height;
+  if (!AW || !AH) return;
   const N2 = TRACKS.length;
   actx2.clearRect(0, 0, AW, AH);
 
@@ -3749,6 +3751,8 @@ function stageLoop2(ts){
 
   const nc2=document.getElementById('stageNebulaCanvas');
   const ac3=document.getElementById('stageArcCanvas');
+  // Re-init canvas if size is 0 (transition not yet complete)
+  if(nc2 && (nc2.width===0 || nc2.height===0)) initStageCanvases();
   if(nc2&&nc2.getContext){
     const nctx2=nc2.getContext('2d');
     stageDrawNebula(nc2,nctx2,ts);
@@ -3762,13 +3766,14 @@ function stageLoop2(ts){
 }
 
 function initStageCanvases(){
+  const W = window.innerWidth, H = window.innerHeight;
   const nc2=document.getElementById('stageNebulaCanvas');
   const ac3=document.getElementById('stageArcCanvas');
-  if(nc2){ nc2.width=window.innerWidth; nc2.height=window.innerHeight; }
-  if(ac3){ ac3.width=window.innerWidth; ac3.height=130; }
-  STAGE_CX=window.innerWidth/2;
-  STAGE_CY=window.innerHeight*0.38;
-  STAGE_SR=Math.min(window.innerWidth,window.innerHeight)*0.155;
+  if(nc2){ nc2.width=W; nc2.height=H; nc2.style.width=W+'px'; nc2.style.height=H+'px'; }
+  if(ac3){ ac3.width=W; ac3.height=130; ac3.style.width=W+'px'; ac3.style.height='130px'; }
+  STAGE_CX=W/2;
+  STAGE_CY=H*0.38;
+  STAGE_SR=Math.min(W,H)*0.155;
 
   const ha=document.getElementById('stageHitArea');
   if(ha){
@@ -3815,8 +3820,10 @@ function openStage() {
   stageOpen = true;
   getCtx();
   document.getElementById('stageOverlay').classList.add('show');
-  setTimeout(() => { initStageCanvases(); }, 30);
+  // Canvas'ı hem hemen hem de transition sonrası init et
+  initStageCanvases();
   stageInitClouds();
+  setTimeout(() => { initStageCanvases(); }, 50);
   stageArcPosition = stageTrackIndex();
   stageArcTarget   = stageArcPosition;
   stageArcVel = 0; stageSpeakerPush = 0; stageSilhouette = 0;
@@ -3842,7 +3849,12 @@ function openStage() {
   initStageArcListeners();
   if (stageAnimFrame) cancelAnimationFrame(stageAnimFrame);
   stageLastFrameT = performance.now();
-  stageAnimFrame = requestAnimationFrame(stageLoop2);
+  // Canvas hazırlandıktan sonra loop başlat
+  requestAnimationFrame(() => {
+    initStageCanvases();
+    stageInitClouds();
+    stageAnimFrame = requestAnimationFrame(stageLoop2);
+  });
 }
 
 function closeStage() {
