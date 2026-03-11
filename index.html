@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; connect-src 'self' https://api.anthropic.com https://freesound.org https://www.freesound.org https://apiv2.freesound.org;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>RhythmAI — Studio</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
@@ -1894,6 +1895,8 @@ let nextNoteTime=0,schedTimer=null,startTime=0,elapsedSecs=0;
 const liveTriggered = new Set(); // "track-step" keys set in real-time by keydown
 
 function scheduleStep(step,time){
+  // Extra tracks
+  if(typeof stageExtraTracks !== 'undefined') stageExtraTracks.forEach(et=>{if(et.grid&&et.grid[step])triggerExtraTrack(et.id,time);});
   TRACKS.forEach(t=>{
     const key = `${t}-${step}`;
     if(liveTriggered.has(key)){
@@ -4395,159 +4398,8 @@ function stagePbStartProgress() {
   }, 80);
 }
 
-// Extra track'ler buildStageInstruments'e entegre
-const _origBuildStageInstruments = buildStageInstruments;
-buildStageInstruments = function() {
-  _origBuildStageInstruments();
 
-  // Extra tracks ekle
-  const container = document.getElementById('stageInstruments');
-  if (!container) return;
 
-  stageExtraTracks.forEach(et => {
-    const item = document.createElement('div');
-    item.className = 'stage-instr-item extra' + (stageTrack === et.id ? ' active' : '');
-    item.style.setProperty('--instr-col', et.color);
-    item.id = `stage-instr-${et.id}`;
-
-    const stepCount = et.grid.filter(Boolean).length;
-    item.innerHTML = `
-      <div class="stage-instr-dot" style="background:${et.color};flex-shrink:0;"></div>
-      <div style="flex:1;min-width:0;">
-        <div class="stage-instr-name" id="stage-instr-name-${et.id}" title="Sesi değiştir" style="color:${et.color};">${et.name}</div>
-        <div class="stage-instr-sound" id="stage-instr-sound-${et.id}">${et.sound ? et.sound.name : '· varsayılan'}</div>
-        <div class="stage-track-rec-bar" id="stage-rec-bar-${et.id}"></div>
-      </div>
-      <div class="stage-instr-steps" id="stage-instr-steps-${et.id}">${stepCount > 0 ? stepCount+'✓' : ''}</div>
-      <button class="stage-rec-btn ${et.rec ? 'recording' : ''}" id="stage-rec-btn-${et.id}" title="Kayıt">●</button>
-      <button style="
-        width:18px;height:18px;border-radius:50%;background:transparent;
-        border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.2);
-        font-size:9px;cursor:pointer;flex-shrink:0;padding:0;
-        display:flex;align-items:center;justify-content:center;
-        transition:all .15s;
-      " title="Track'i sil" id="stage-del-${et.id}">✕</button>
-    `;
-
-    // Satıra tıkla → seç
-    item.addEventListener('click', e => {
-      if (e.target.id === `stage-rec-btn-${et.id}`) return;
-      if (e.target.id === `stage-del-${et.id}`) return;
-      if (e.target.id === `stage-instr-name-${et.id}`) return;
-      selectStageTrack(et.id);
-    });
-
-    // İsme tıkla → ses değiştir
-    item.querySelector(`#stage-instr-name-${et.id}`).addEventListener('click', e => {
-      e.stopPropagation();
-      // Basit yeniden arama
-      const q = prompt(`"${et.name}" için yeni ses ara:`);
-      if (!q) return;
-      showToast('Ses aranıyor…');
-      fetch(`https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(q)}&fields=id,name,previews,duration&filter=duration:[0.1 TO 4]&page_size=1&token=z7b5u8NuPhyEZ0sRodt82pW00VelwaGSwjZJGWLM`)
-        .then(r => r.json()).then(async data => {
-          if (data.results && data.results.length) {
-            const s = data.results[0];
-            et.sound = s;
-            const ab = await (await fetch(s.previews['preview-hq-mp3'])).arrayBuffer();
-            et.buffer = await getCtx().decodeAudioData(ab);
-            document.getElementById(`stage-instr-sound-${et.id}`).textContent = s.name;
-            showToast(`"${et.name}": ${s.name}`);
-          }
-        }).catch(() => showToast('Ses bulunamadı'));
-    });
-
-    // Rec butonu
-    item.querySelector(`#stage-rec-btn-${et.id}`).addEventListener('click', e => {
-      e.stopPropagation();
-      et.rec = !et.rec;
-      stageRecording[et.id] = et.rec;
-      const btn = document.getElementById(`stage-rec-btn-${et.id}`);
-      if (btn) {
-        btn.classList.toggle('recording', et.rec);
-      }
-      if (et.rec) {
-        selectStageTrack(et.id);
-        showToast(`${et.name} kaydediyor`);
-      }
-      updateStageStatus();
-    });
-
-    // Sil butonu
-    item.querySelector(`#stage-del-${et.id}`).addEventListener('click', e => {
-      e.stopPropagation();
-      removeExtraTrack(et.id);
-    });
-
-    container.appendChild(item);
-  });
-};
-
-// selectStageTrack — extra track desteği
-const _origSelectStageTrack = selectStageTrack;
-selectStageTrack = function(track) {
-  const isExtra = track.startsWith('extra_');
-  if (!isExtra) {
-    _origSelectStageTrack(track);
-  } else {
-    stageTrack = track;
-    const et = stageExtraTracks.find(x => x.id === track);
-    if (!et) return;
-
-    // Tüm satırların active durumunu güncelle
-    TRACKS.forEach(t => {
-      const el = document.getElementById(`stage-instr-${t}`);
-      if (el) { el.classList.remove('active'); }
-    });
-    stageExtraTracks.forEach(x => {
-      const el = document.getElementById(`stage-instr-${x.id}`);
-      if (el) el.classList.toggle('active', x.id === track);
-    });
-
-    // Center label güncelle
-    const lbl = document.getElementById('stageCenterLabel');
-    if (lbl) lbl.textContent = et.name.toUpperCase();
-
-    // Speaker pulse
-    stageSpeakerPush = 0.4;
-    // Hit ring extra rengiyle
-    const ring = document.getElementById('stageHitRing');
-    if (ring) ring.style.setProperty('--ring-col', et.color);
-  }
-};
-
-// stageHitTrack — extra track desteği
-const _origStageHitTrack = stageHitTrack;
-stageHitTrack = function(track) {
-  if (!track.startsWith('extra_')) {
-    _origStageHitTrack(track);
-    return;
-  }
-  const et = stageExtraTracks.find(x => x.id === track);
-  if (!et) return;
-
-  const step = (isPlaying && lastHL >= 0) ? lastHL : currentStep;
-  const isRec = et.rec;
-
-  if (!isRec) {
-    triggerExtraTrack(track, getCtx().currentTime);
-  }
-
-  if (isRec && !et.grid[step]) {
-    et.grid[step] = true;
-    const stepsEl = document.getElementById(`stage-instr-steps-${track}`);
-    if (stepsEl) stepsEl.textContent = et.grid.filter(Boolean).length + '✓';
-  }
-
-  stageSpeakerPush = 1.0;
-  stageHitEffect(track, et.color);
-
-  const el = document.getElementById(`stage-instr-${track}`);
-  if (el) {
-    el.style.background = 'rgba(192,132,252,.1)';
-    setTimeout(() => { el.style.background = ''; }, 120);
-  }
-};
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -4626,6 +4478,22 @@ function showStageStoppedFlash() {
 }
 
 
+function selectStageTrack(track) {
+  stageTrack = track;
+  const N = TRACKS.length;
+  const ni = TRACKS.indexOf(track);
+  if (ni >= 0) {
+    let diff = ni - Math.round(stageArcPosition);
+    if (diff > N/2) diff -= N;
+    if (diff < -N/2) diff += N;
+    stageArcTarget = stageArcPosition + diff;
+  }
+  const btn = document.getElementById('stageInlineRec');
+  if (btn) btn.classList.toggle('recording', !!stageRecording[track]);
+  updateStageStatus();
+}
+
+
 // ── stageHitTrack — vuruşu grid'e yazar ──
 function stageHitTrack(track) {
   if (!stageOpen) return;
@@ -4655,76 +4523,11 @@ function stageHitEffect(track, overrideColor) {
     setTimeout(() => { cl.speed = 0.12 + Math.random() * 0.22; }, 500 + Math.random() * 500);
   });
 }
-// stageHitEffect — opsiyonel renk parametresi
-const _origStageHitEffect = stageHitEffect;
-stageHitEffect = function(track, overrideColor) {
-  const col = overrideColor || (STAGE_COLORS[track] ? STAGE_COLORS[track].col : '#a09af5');
-  const ring = document.getElementById('stageHitRing');
-  if (ring) {
-    ring.style.setProperty('--ring-col', col);
-    ring.classList.remove('flash');
-    void ring.offsetWidth;
-    ring.classList.add('flash');
-  }
-  // Parçacıklar
-  const main = document.querySelector('.stage-main');
-  if (!main) return;
-  const Cy = main.offsetHeight / 2;
-  for (let i = 0; i < 10; i++) {
-    const p = document.createElement('div');
-    p.className = 'stage-particle';
-    const angle = (Math.PI*2/10)*i + Math.random()*0.4;
-    const dist = 80 + Math.random()*100;
-    p.style.cssText = `left:50%;top:${Cy}px;
-      width:${4+Math.random()*6}px;height:${4+Math.random()*6}px;
-      background:${col};box-shadow:0 0 8px ${col};
-      --px:${Math.cos(angle)*dist}px;--py:${Math.sin(angle)*dist - 40}px;
-      animation-duration:${0.4+Math.random()*0.4}s;`;
-    main.appendChild(p);
-    setTimeout(() => p.remove(), 800);
-  }
-  const lbl = document.getElementById('stageCenterLabel');
-  if (lbl) {
-    lbl.style.setProperty('--label-col', col);
-    lbl.classList.add('active');
-    clearTimeout(lbl._t);
-    lbl._t = setTimeout(() => lbl.classList.remove('active'), 400);
-  }
-};
 
-// Extra track sequencer entegrasyonu — scheduleStep'i wrap et
-const _origScheduleStep = scheduleStep;
-scheduleStep = function(step, time) {
-  _origScheduleStep(step, time);
-  // Extra track'leri de çal
-  stageExtraTracks.forEach(et => {
-    if (et.grid[step]) {
-      triggerExtraTrack(et.id, time);
-    }
-  });
-};
+// Extra track sequencer — scheduleStep içinde çalışır (scheduleStep'e eklendi)
 
-// openStage'de playback butonlarını senkronize et
-const _origOpenStage = openStage;
-openStage = function() {
-  _origOpenStage();
-  // Extra track gridlerini totalSteps ile hizala
-  const total = totalSteps();
-  stageExtraTracks.forEach(et => {
-    if (et.grid.length !== total) {
-      et.grid = Array(total).fill(false).map((_, i) => et.grid[i] || false);
-    }
-  });
-  // Playback buton durumu
-  const pbPlay = document.getElementById('stagePbPlay');
-  if (pbPlay) {
-    pbPlay.textContent = isPlaying ? '⏸' : '▶';
-    pbPlay.classList.toggle('playing', isPlaying);
-  }
-  if (isPlaying) stagePbStartProgress();
-};
+
 
 init();
 </script>
 </body>
-</html>
