@@ -3751,15 +3751,19 @@ function stageLoop2(ts){
 
   const nc2=document.getElementById('stageNebulaCanvas');
   const ac3=document.getElementById('stageArcCanvas');
-  // Re-init canvas if size is 0 (transition not yet complete)
-  if(nc2 && (nc2.width===0 || nc2.height===0)) initStageCanvases();
+  // Canvas boyut sıfırsa reinit et
+  if(nc2 && nc2.width < 10) initStageCanvases();
   if(nc2&&nc2.getContext){
-    const nctx2=nc2.getContext('2d');
-    stageDrawNebula(nc2,nctx2,ts);
+    try {
+      const nctx2=nc2.getContext('2d');
+      stageDrawNebula(nc2,nctx2,ts);
+    } catch(err) { console.warn('nebula draw err:', err.message); }
   }
   if(ac3&&ac3.getContext){
-    const actx3=ac3.getContext('2d');
-    stageDrawArc(ac3,actx3);
+    try {
+      const actx3=ac3.getContext('2d');
+      stageDrawArc(ac3,actx3);
+    } catch(err) { console.warn('arc draw err:', err.message); }
   }
 
   stageAnimFrame=requestAnimationFrame(stageLoop2);
@@ -4057,6 +4061,27 @@ function init(){
   window.addEventListener('resize',()=>{if(document.getElementById('adsrPanel').classList.contains('open'))resizeAdsrCanvas();});
   showToast('Hover any lit cell and click ⊹ to open the envelope editor');
   wireEvents();
+}
+
+
+// ── Stage keyboard handler ──
+function stageKeyHandler(e) {
+  if (!stageOpen) return;
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'Escape') { closeStage(); return; }
+  if (e.key === ' ' || e.key === 'Spacebar') {
+    e.preventDefault();
+    stageStartHold();
+    const up = () => { stageReleaseHold(); document.removeEventListener('keyup', up); };
+    document.addEventListener('keyup', up);
+    return;
+  }
+  if (e.key === 'ArrowLeft') { stageArcTarget = Math.round(stageArcPosition) - 1; return; }
+  if (e.key === 'ArrowRight') { stageArcTarget = Math.round(stageArcPosition) + 1; return; }
+  const idx = parseInt(e.key);
+  if (!isNaN(idx) && idx >= 1 && idx <= TRACKS.length) {
+    selectStageTrack(TRACKS[idx - 1]);
+  }
 }
 
 function wireEvents(){
@@ -4598,26 +4623,6 @@ function showStageStoppedFlash() {
   if (!el) return;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 1200);
-}
-
-// selectStageTrack — zaten tanımlı ama state sync için
-function selectStageTrack(track) {
-  stageTrack = track;
-  // Sync arc
-  if (stageOpen) {
-    const ni = TRACKS.indexOf(track);
-    if (ni >= 0) {
-      const N2 = TRACKS.length;
-      let diff = ni - Math.round(stageArcPosition);
-      if (diff > N2/2) diff -= N2;
-      if (diff < -N2/2) diff += N2;
-      stageArcTarget = stageArcPosition + diff;
-    }
-  }
-  // Rec button sync
-  const btn = document.getElementById('stageInlineRec');
-  if (btn) btn.classList.toggle('recording', !!stageRecording[track]);
-  updateStageStatus();
 }
 
 
