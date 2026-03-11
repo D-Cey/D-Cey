@@ -4461,6 +4461,26 @@ stageHitTrack = function(track) {
 };
 
 
+// ── stageHitTrack — vuruşu grid'e yazar ──
+function stageHitTrack(track) {
+  if (!stageOpen) return;
+  const step = (isPlaying && lastHL >= 0) ? lastHL : currentStep;
+  const isRec = stageRecording[track];
+
+  // Sesi tetikle
+  if (!isRec) {
+    triggerTrack(track, getCtx().currentTime);
+  }
+
+  // Kayıt modunda grid'e yaz
+  if (isRec && !grid[track][step]) {
+    grid[track][step] = true;
+    const cell = document.getElementById(`cell-${track}-${step}`);
+    if (cell) { cell.classList.add('active', track); }
+  }
+}
+
+
 // ── stageHitEffect stub (nebula sistemine proxy) ──
 function stageHitEffect(track, overrideColor) {
   stageSpeakerPush = 1.0;
