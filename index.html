@@ -3633,8 +3633,13 @@ function stageDrawArc(ac2, actx2) {
     if (opa3<0.03) return;
 
     const ti2=(((Math.round(stageArcPosition)+drawOff)%N2)+N2)%N2;
-    const track2=TRACKS[ti2];
-    const _sc2 = STAGE_COLORS[track2] || STAGE_COLORS['kick'];
+    const track2id=TRACKS[ti2];
+    const track2 = {
+      name: TNAMES[track2id] || track2id,
+      col:  (STAGE_COLORS[track2id]||STAGE_COLORS['kick']).col,
+      emoji: null
+    };
+    const _sc2 = STAGE_COLORS[track2id] || STAGE_COLORS['kick'];
     const [r2,g2,b2] = _sc2.rgb || [180,180,180];
     const isAct=absOff<0.25;
 
