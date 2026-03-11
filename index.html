@@ -3462,9 +3462,9 @@ function stageMakeCloud(randomPhase) {
     angle, drift: (Math.random() - 0.5) * 0.008,
     r: randomPhase ? startR + Math.random() * (maxR - startR) : startR,
     startR, maxR,
-    speed:   0.12 + Math.random() * 0.22,
+    speed:   0.25 + Math.random() * 0.35,
     size0:   18 + Math.random() * 55,
-    opacity0:0.06 + Math.random() * 0.18,
+    opacity0:0.10 + Math.random() * 0.22,
     yScale:  0.55 + Math.random() * 0.35,
   };
 }
@@ -3485,8 +3485,11 @@ function stageUpdateCloud(cl, dt, charge) {
 // ── Nebula draw ──
 function stageDrawNebula(nc, nctx, ts) {
   const W = nc.width, H = nc.height;
-  if (!W || !H) return;
+  if (!W || !H || !STAGE_SR) return;
   nctx.clearRect(0, 0, W, H);
+  // Base fill to confirm canvas is rendering
+  nctx.fillStyle = 'rgba(10,5,20,0.95)';
+  nctx.fillRect(0, 0, W, H);
   const track = TRACKS[stageSafeIdx(stageArcPosition)];
   const _sc = STAGE_COLORS[track] || STAGE_COLORS['kick'];
   const [r,g,b] = _sc.rgb || [200,200,200];
@@ -3776,8 +3779,9 @@ function initStageCanvases(){
   const W = window.innerWidth, H = window.innerHeight;
   const nc2=document.getElementById('stageNebulaCanvas');
   const ac3=document.getElementById('stageArcCanvas');
-  if(nc2){ nc2.width=W; nc2.height=H; nc2.style.width=W+'px'; nc2.style.height=H+'px'; }
-  if(ac3){ ac3.width=W; ac3.height=130; ac3.style.width=W+'px'; ac3.style.height='130px'; }
+  // CSS px cinsinden boyut — canvas pixel = CSS pixel (no DPR scaling)
+  if(nc2){ nc2.width=W; nc2.height=H; nc2.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;'; }
+  if(ac3){ ac3.width=W; ac3.height=130; ac3.style.cssText='position:absolute;bottom:0;left:0;width:100%;height:130px;z-index:15;touch-action:none;cursor:grab;'; }
   STAGE_CX=W/2;
   STAGE_CY=H*0.38;
   STAGE_SR=Math.min(W,H)*0.155;
@@ -3833,7 +3837,7 @@ function openStage() {
   setTimeout(() => { initStageCanvases(); }, 50);
   stageArcPosition = stageTrackIndex();
   stageArcTarget   = stageArcPosition;
-  stageArcVel = 0; stageSpeakerPush = 0; stageSilhouette = 0;
+  stageArcVel = 0; stageSpeakerPush = 0.8; stageSilhouette = 0;
   stageHoldCharge = 0; stageHoldActive = false;
   const bv = document.getElementById('stageBpmVal');
   if (bv) bv.textContent = bpm;
