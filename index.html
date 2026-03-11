@@ -1692,6 +1692,12 @@ body.erase-cursor .beat-cell.active:hover {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
 const TRACKS=['kick','snare','hihat','melody','bass'];
+let stageTrack       = 'kick';
+let stageOpen        = false;
+let stageListenMode  = false;
+let stageAnimFrame   = null;
+let stageHitCount    = 0;
+let stageRecording   = {};   // {track: bool}
 const TNAMES={kick:'Kick',snare:'Snare',hihat:'Hi-Hat',melody:'Melody',bass:'Bass'};
 const TCOLORS={kick:'#e94560',snare:'#f5a623',hihat:'#00d4aa',melody:'#7c6ff7',bass:'#3a9ff5'};
 const KEY_MAP={' ':'kick','s':'snare','h':'hihat','m':'melody','b':'bass'};
@@ -3801,6 +3807,52 @@ window.addEventListener('resize', ()=>{
 
 
 
+
+// buildStageInstruments stub
+function buildStageInstruments() { /* arc system handles track display */ }
+
+function openStage() {
+  stageOpen = true;
+  getCtx();
+  document.getElementById('stageOverlay').classList.add('show');
+  setTimeout(() => { initStageCanvases(); }, 30);
+  stageInitClouds();
+  stageArcPosition = stageTrackIndex();
+  stageArcTarget   = stageArcPosition;
+  stageArcVel = 0; stageSpeakerPush = 0; stageSilhouette = 0;
+  stageHoldCharge = 0; stageHoldActive = false;
+  const bv = document.getElementById('stageBpmVal');
+  if (bv) bv.textContent = bpm;
+  if (isPlaying) pauseSequencer();
+  TRACKS.forEach(t => { stageRecording[t] = false; });
+  stageListenMode = false;
+  updateStageStatus();
+  const listenPill = document.getElementById('stageListenPill');
+  if (listenPill) { listenPill.onclick = toggleStageListenMode; listenPill.classList.remove('active'); }
+  const clearBtn = document.getElementById('stageClearBtn');
+  if (clearBtn) { clearBtn.onclick = () => {
+    const t = stageTrack;
+    grid[t].fill(false); envelopes[t] = {};
+    document.querySelectorAll(`.beat-cell.${CSS.escape(t)}`).forEach(c2 => c2.classList.remove('active','has-env'));
+    showToast(`✕ ${TNAMES[t]} temizlendi`);
+    showStageStoppedFlash();
+  };}
+  const inlineRec = document.getElementById('stageInlineRec');
+  if (inlineRec) { inlineRec.onclick = () => toggleStageRec(stageTrack); inlineRec.classList.remove('recording'); }
+  initStageArcListeners();
+  if (stageAnimFrame) cancelAnimationFrame(stageAnimFrame);
+  stageLastFrameT = performance.now();
+  stageAnimFrame = requestAnimationFrame(stageLoop2);
+}
+
+function closeStage() {
+  stageOpen = false;
+  document.getElementById('stageOverlay').classList.remove('show');
+  if (stageAnimFrame) { cancelAnimationFrame(stageAnimFrame); stageAnimFrame = null; }
+  stageHoldActive = false; stageHoldCharge = 0;
+  if (isPlaying) pauseSequencer();
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CUSTOM TRACKS
 // ═══════════════════════════════════════════════════════════════
@@ -4464,12 +4516,7 @@ stageHitTrack = function(track) {
 // ═══════════════════════════════════════════════════════════════
 // STAGE — CORE STATE & MISSING FUNCTIONS
 // ═══════════════════════════════════════════════════════════════
-let stageTrack       = 'kick';
-let stageOpen        = false;
-let stageListenMode  = false;
-let stageAnimFrame   = null;
-let stageHitCount    = 0;
-let stageRecording   = {};   // {track: bool}
+// stage state vars moved to top
 
 // triggerTrack — ses çal (kayıtlı buffer varsa onu, yoksa synth)
 function triggerTrack(track, t) {
