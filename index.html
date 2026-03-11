@@ -4461,6 +4461,107 @@ stageHitTrack = function(track) {
 };
 
 
+// ═══════════════════════════════════════════════════════════════
+// STAGE — CORE STATE & MISSING FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+let stageTrack       = 'kick';
+let stageOpen        = false;
+let stageListenMode  = false;
+let stageAnimFrame   = null;
+let stageHitCount    = 0;
+let stageRecording   = {};   // {track: bool}
+
+// triggerTrack — ses çal (kayıtlı buffer varsa onu, yoksa synth)
+function triggerTrack(track, t) {
+  triggerSound(track, t, currentStep);
+}
+
+// toggleStageRec — track kayıt on/off
+function toggleStageRec(track) {
+  stageRecording[track] = !stageRecording[track];
+  const btn = document.getElementById('stageInlineRec');
+  if (btn) btn.classList.toggle('recording', stageRecording[track]);
+  updateStageStatus();
+  if (stageRecording[track]) {
+    showStageCountdown(track, () => {
+      if (!isPlaying) { currentStep = startStep; startSequencer(); }
+    });
+  } else {
+    showStageStoppedFlash();
+    if (isPlaying) pauseSequencer();
+  }
+}
+
+// toggleStageListenMode
+function toggleStageListenMode() {
+  stageListenMode = !stageListenMode;
+  const pill = document.getElementById('stageListenPill');
+  if (pill) pill.classList.toggle('active', stageListenMode);
+  if (stageListenMode) {
+    if (!isPlaying) { currentStep = startStep; startSequencer(); }
+  } else {
+    if (isPlaying) pauseSequencer();
+  }
+  updateStageStatus();
+}
+
+// updateStageStatus
+function updateStageStatus() {
+  const el = document.getElementById('stageStatus');
+  if (!el) return;
+  const anyRec = Object.values(stageRecording).some(Boolean);
+  if (stageListenMode) { el.textContent = '👂 Dinleniyor'; }
+  else if (anyRec)      { el.textContent = '● Kayıt'; }
+  else                  { el.textContent = ''; }
+}
+
+// showStageCountdown
+function showStageCountdown(track, onDone) {
+  const el = document.getElementById('stageCountdown');
+  const num = document.getElementById('stageCountdownNum');
+  if (!el || !num) { onDone && onDone(); return; }
+  let count = 4;
+  el.classList.add('show');
+  num.textContent = count;
+  const interval = 60000 / bpm;
+  const tick = () => {
+    count--;
+    if (count <= 0) { el.classList.remove('show'); onDone && onDone(); return; }
+    num.textContent = count;
+    setTimeout(tick, interval);
+  };
+  setTimeout(tick, interval);
+}
+
+// showStageStoppedFlash
+function showStageStoppedFlash() {
+  const el = document.getElementById('stageStoppedFlash');
+  if (!el) return;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1200);
+}
+
+// selectStageTrack — zaten tanımlı ama state sync için
+function selectStageTrack(track) {
+  stageTrack = track;
+  // Sync arc
+  if (stageOpen) {
+    const ni = TRACKS.indexOf(track);
+    if (ni >= 0) {
+      const N2 = TRACKS.length;
+      let diff = ni - Math.round(stageArcPosition);
+      if (diff > N2/2) diff -= N2;
+      if (diff < -N2/2) diff += N2;
+      stageArcTarget = stageArcPosition + diff;
+    }
+  }
+  // Rec button sync
+  const btn = document.getElementById('stageInlineRec');
+  if (btn) btn.classList.toggle('recording', !!stageRecording[track]);
+  updateStageStatus();
+}
+
+
 // ── stageHitTrack — vuruşu grid'e yazar ──
 function stageHitTrack(track) {
   if (!stageOpen) return;
