@@ -1,12 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
 <meta charset="UTF-8"/>
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; connect-src 'self' https://api.anthropic.com https://freesound.org https://www.freesound.org https://apiv2.freesound.org;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>RhythmAI — Studio</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<title>D-Cey</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=Lexend:wght@100;200;300;900&display=swap" rel="stylesheet"/>
+
 <style>
+/* ══ SCREEN SYSTEM ══ */
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; }
+
+.screen { display:none; width:100%; height:100%; }
+.screen.active { display:block; }
+
+/* ── Nav bar (tüm ekranlarda) ── */
+#global-nav {
+  position:fixed; top:0; right:0; z-index:9999;
+  display:flex; align-items:center; gap:6px; padding:10px 16px;
+}
+.nav-pill {
+  padding:5px 13px; border-radius:16px; font-size:8px; letter-spacing:2px;
+  text-transform:uppercase; cursor:pointer; font-family:'Space Mono',monospace;
+  border:1px solid rgba(0,229,255,0.18); color:rgba(0,229,255,0.4);
+  background:rgba(0,4,14,0.75); backdrop-filter:blur(8px); transition:all .2s;
+}
+.nav-pill:hover { border-color:rgba(0,229,255,0.6); color:rgba(0,229,255,0.9); }
+.nav-pill.active { border-color:rgba(0,229,255,0.6); color:rgba(0,229,255,0.9); background:rgba(0,229,255,0.08); }
+
+/* ══ STUDIO EKRANI ══ */
+#screen-studio {
+  background:#0a0a0f;
+  font-family:'Syne',sans-serif;
+  color:#e8e8f0;
+  overflow-x:hidden;
+}
+
+
 :root{
   --bg:#0a0a0f;--surface:#111118;--surface2:#1a1a24;--surface3:#22222f;
   --border:#2a2a3a;--border2:#383850;
@@ -1186,25 +1217,14 @@ body.erase-cursor .beat-cell.active:hover {
 .stage-swipe-hint.hidden{opacity:0;}
 
 
-/* ══ SCREEN SYSTEM ══ */
-.screen-studio { display:block; }
-.screen-studio.hidden { display:none; }
-#screen-s2 { display:none; }
-#screen-s2.show { display:block; }
 
-/* Studio'ya Performance butonu */
-.goto-s2-btn {
-  padding:6px 14px; border-radius:16px; font-size:9px; letter-spacing:2px;
-  text-transform:uppercase; cursor:pointer; font-family:'Space Mono',monospace;
-  border:1px solid rgba(0,200,255,0.25); color:rgba(0,200,255,0.55);
-  background:rgba(0,8,28,0.6); transition:all .2s;
+/* ══ PERFORMANCE EKRANI ══ */
+#screen-perf {
+  background:#000;
+  font-family:'Lexend',sans-serif;
+  cursor:none;
 }
-.goto-s2-btn:hover { border-color:rgba(0,229,255,0.7); color:rgba(0,229,255,0.9); box-shadow:0 0 12px rgba(0,229,255,0.15); }
 
-/* ══ SCREEN-2 (Performance) ══ */
-#screen-s2 { position:fixed; inset:0; z-index:500; display:none; }
-#screen-s2.show { display:block; }
-#screen-s2 canvas#s2nebula { position:absolute; inset:0; z-index:1; pointer-events:none; }
 
 :root {
   --holo-cyan:   #00e5ff;
@@ -1231,10 +1251,10 @@ body.erase-cursor .beat-cell.active:hover {
 #bg { position:fixed; inset:0; z-index:0; }
 
 /* ── Layout ── */
-#screen-s2 .s2-layout { position:fixed; inset:0; z-index:10; display:grid; grid-template-columns:240px 1fr; }
+.layout { position:fixed; inset:0; z-index:10; display:grid; grid-template-columns:240px 1fr; }
 
 /* ── Left panel ── */
-#screen-s2 .left-panel {
+.left-panel {
   background: linear-gradient(180deg, rgba(0,8,22,0.55) 0%, rgba(0,4,14,0.60) 100%);
   border-right: 1px solid rgba(0,200,255,0.08);
   display:flex; flex-direction:column; padding:0;
@@ -1334,7 +1354,7 @@ body.erase-cursor .beat-cell.active:hover {
 }
 
 /* ── Center stage ── */
-#screen-s2 .center-stage {
+.center-stage {
   position:relative; display:flex; align-items:center; justify-content:center;
   overflow:hidden;
 }
@@ -1375,7 +1395,7 @@ body.erase-cursor .beat-cell.active:hover {
 }
 
 /* Bottom arc nav */
-#screen-s2 .arc-nav {
+.arc-nav {
   position:absolute; bottom:0; left:50%; transform:translateX(-50%);
   z-index:20; pointer-events:none;
 }
@@ -1559,29 +1579,1351 @@ body.erase-cursor .beat-cell.active:hover {
   bottom:195px !important; left:50%; transform:translateX(-50%) !important;
 }
 
+
 </style>
 </head>
 <body>
 
-<!-- COUNT-IN -->
-<div class="countin-overlay" id="countinOverlay">
-  <div class="countin-number" id="countinNumber">4</div>
-  <div class="countin-label" id="countinLabel">Get ready...</div>
+<!-- ── Global Nav ── -->
+<div id="global-nav">
+  <button class="nav-pill active" id="nav-perf"    onclick="showScreen('perf')">⚡ Performance</button>
+  <button class="nav-pill"        id="nav-studio"  onclick="showScreen('studio')">⊞ Studio</button>
+  <button class="nav-pill"        id="nav-stage"   onclick="showScreen('stage')">🎭 Stage</button>
 </div>
 
-<!-- REC BANNER -->
-<div class="rec-banner" id="recBanner">
-  <div class="rec-banner-dot"></div>
-  <span class="rec-banner-text">● RECORDING</span>
-  <span class="rec-banner-sub" id="recBannerSub">OVERDUB</span>
-  <div class="rec-banner-keys">
-    <span class="rec-key kick">SPACE=Kick</span><span class="rec-key snare">S=Snare</span>
-    <span class="rec-key hihat">H=Hi-Hat</span><span class="rec-key melody">M=Melody</span>
-    <span class="rec-key bass">B=Bass</span>
+<!-- ══ SCREEN 1: PERFORMANCE (açılış) ══ -->
+<div class="screen active" id="screen-perf">
+
+<canvas id="s2bg"></canvas>
+
+<div class="layout">
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="panel-header">
+      <div class="panel-logo">D-CEY</div>
+      <div class="panel-genre" id="activeGenreLabel">RAP BEAT</div>
+    </div>
+
+    <div class="genre-row">
+      <div class="genre-pill active" onclick="selectGenre(this,'RAP BEAT')">Rap</div>
+      <div class="genre-pill" onclick="selectGenre(this,'TRAP')">Trap</div>
+      <div class="genre-pill" onclick="selectGenre(this,'PHONK')">Phonk</div>
+      <div class="genre-pill" onclick="selectGenre(this,'DRILL')">Drill</div>
+      <div class="genre-pill" onclick="selectGenre(this,'LO-FI')">Lo-Fi</div>
+    </div>
+
+    <div class="sounds-scroll" id="soundsScroll"></div>
+
+    <div class="fx-row">
+      <div class="fx-btn" onclick="this.classList.toggle('on')">Reverb</div>
+      <div class="fx-btn" onclick="this.classList.toggle('on')">Delay</div>
+      <div class="fx-btn" onclick="this.classList.toggle('on')">Tune</div>
+      <div class="fx-btn" onclick="this.classList.toggle('on')">Robot</div>
+    </div>
+  </div>
+
+  <!-- CENTER STAGE -->
+  <div class="center-stage" id="centerStage">
+    <canvas id="stageCanvas"></canvas>
+
+    <div class="hud-top">
+      <div class="hud-bpm">♩ 120 BPM</div>
+      <div class="hud-label">PERFORMANCE MODE</div>
+      <button class="hud-btn">↗ Export</button>
+    </div>
+
+    <div class="sound-label" id="soundLabel">
+      <div class="sound-label-name" id="soundLabelName">KICK</div>
+    </div>
+
+    <div class="arc-nav">
+      <canvas id="arcNavCanvas" width="700" height="160"></canvas>
+    </div>
+
+    <!-- Sol shift menüsü -->
+    <div class="shift-menu">
+      <div class="shift-rec" id="recBtn">●
+        <div class="tip">REC</div>
+      </div>
+      <div class="shift-divider"></div>
+      <div class="shift-icon-btn" id="btnFX" onclick="togglePanel('fx')">⚡
+        <div class="tip">FX</div>
+      </div>
+      <div class="shift-icon-btn" id="btnADSR" onclick="togglePanel('adsr')">〜
+        <div class="tip">ADSR</div>
+      </div>
+      <div class="shift-icon-btn" id="btnGrid" onclick="toggleGridPreview()">⊞
+        <div class="tip">GRID</div>
+      </div>
+    </div>
+
+    <!-- Holografik panel -->
+    <div class="holo-panel" id="holoPanel">
+      <div class="holo-panel-header">
+        <div class="holo-panel-title" id="holoPanelTitle">FX</div>
+        <button class="holo-panel-close" onclick="closePanel()">✕</button>
+      </div>
+      <div class="holo-tabs">
+        <div class="holo-tab active" onclick="switchHoloTab('fx',this)">FX</div>
+        <div class="holo-tab" onclick="switchHoloTab('adsr',this)">ADSR</div>
+      </div>
+
+      <!-- FX tab -->
+      <div class="holo-tab-content active" id="holoFX">
+        <div class="holo-row">
+          <div class="holo-row-label"><span>Robotize</span><span class="holo-val" id="valRobot">0%</span></div>
+          <input type="range" class="holo-slider" min="0" max="100" value="0" oninput="updateVal('valRobot',this.value,'%')">
+        </div>
+        <div class="holo-row">
+          <div class="holo-row-label"><span>Autotune</span><span class="holo-val" id="valTune">0%</span></div>
+          <input type="range" class="holo-slider" min="0" max="100" value="0" oninput="updateVal('valTune',this.value,'%')">
+        </div>
+        <div class="holo-row">
+          <div class="holo-row-label"><span>Reverb</span><span class="holo-val" id="valReverb">20%</span></div>
+          <input type="range" class="holo-slider" min="0" max="100" value="20" oninput="updateVal('valReverb',this.value,'%')">
+        </div>
+        <div class="holo-row">
+          <div class="holo-row-label"><span>Delay</span><span class="holo-val" id="valDelay">0ms</span></div>
+          <input type="range" class="holo-slider" min="0" max="500" value="0" oninput="updateVal('valDelay',this.value,'ms')">
+        </div>
+        <div class="holo-row">
+          <div class="holo-row-label"><span>Pitch</span><span class="holo-val" id="valPitch">0st</span></div>
+          <input type="range" class="holo-slider" min="-12" max="12" value="0" oninput="updateVal('valPitch',this.value,'st')">
+        </div>
+      </div>
+
+      <!-- ADSR tab -->
+      <div class="holo-tab-content" id="holoADSR">
+        <div class="holo-row">
+          <div class="holo-row-label"><span>Attack</span><span class="holo-val" id="valAttack">5ms</span></div>
+          <input type="range" class="holo-slider" min="1" max="500" value="5" oninput="updateVal('valAttack',this.value,'ms')">
+        </div>
+        <div class="holo-row">
+          <div class="holo-row-label"><span>Decay</span><span class="holo-val" id="valDecay">100ms</span></div>
+          <input type="range" class="holo-slider" min="1" max="1000" value="100" oninput="updateVal('valDecay',this.value,'ms')">
+        </div>
+        <div class="holo-row">
+          <div class="holo-row-label"><span>Sustain</span><span class="holo-val" id="valSustain">70%</span></div>
+          <input type="range" class="holo-slider" min="0" max="100" value="70" oninput="updateVal('valSustain',this.value,'%')">
+        </div>
+        <div class="holo-row">
+          <div class="holo-row-label"><span>Release</span><span class="holo-val" id="valRelease">200ms</span></div>
+          <input type="range" class="holo-slider" min="1" max="2000" value="200" oninput="updateVal('valRelease',this.value,'ms')">
+        </div>
+        <div class="holo-row">
+          <div class="holo-row-label"><span>Volume</span><span class="holo-val" id="valVol">80%</span></div>
+          <input type="range" class="holo-slider" min="0" max="150" value="80" oninput="updateVal('valVol',this.value,'%')">
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- HEADER -->
+<!-- Grid önizleme modal -->
+<div class="grid-preview" id="gridPreview">
+  <div class="grid-preview-inner">
+    <div class="grid-preview-title">⊞ GRID OVERVIEW</div>
+    <button class="grid-close" onclick="toggleGridPreview()">✕</button>
+    <div class="grid-tracks" id="gridTracks"></div>
+  </div>
+</div>
+
+<script>
+
+// ══════════════════════════════════════════════
+// ── AUDIO ENGINE — sıfır gecikme ──
+// ══════════════════════════════════════════════
+
+// AudioContext sayfa yüklenince hazır — kullanıcı etkileşimiyle aç
+let _actx = null;
+function getACtx() {
+  if (!_actx) {
+    _actx = new (window.AudioContext || window.webkitAudioContext)({
+      latencyHint: 'interactive',  // en düşük gecikme modu
+      sampleRate: 44100,
+    });
+  }
+  if (_actx.state === 'suspended') _actx.resume();
+  return _actx;
+}
+
+// ── Önceden hazırlanmış ses tamponları (buffers) ──
+// Her ses için OfflineAudioContext ile sentez yapılır,
+// buffer hazır olunca anlık çalınır — sıfır gecikme
+const _buffers = {};
+let _buffersReady = false;
+
+async function buildBuffers() {
+  const ctx = getACtx();
+  const sr = ctx.sampleRate;
+
+  // Her ses tipi için hazır buffer yap
+  const defs = {
+    // KICK — derin sub + transient
+    kick: (sr) => {
+      const dur = 0.55, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const osc = buf.createOscillator();
+      const gain = buf.createGain();
+      const distGain = buf.createGain();
+      osc.frequency.setValueAtTime(160, 0);
+      osc.frequency.exponentialRampToValueAtTime(40, 0.08);
+      osc.frequency.exponentialRampToValueAtTime(30, 0.3);
+      gain.gain.setValueAtTime(1.0, 0);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      osc.connect(gain); gain.connect(buf.destination);
+      osc.start(0); osc.stop(dur);
+      return buf.startRendering();
+    },
+    kick2: (sr) => {
+      const dur = 0.45, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const osc = buf.createOscillator();
+      const gain = buf.createGain();
+      osc.frequency.setValueAtTime(200, 0);
+      osc.frequency.exponentialRampToValueAtTime(45, 0.06);
+      osc.frequency.exponentialRampToValueAtTime(35, 0.25);
+      gain.gain.setValueAtTime(0.9, 0);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      osc.connect(gain); gain.connect(buf.destination);
+      osc.start(0); osc.stop(dur);
+      return buf.startRendering();
+    },
+    // SNARE — beyaz gürültü + transient
+    snare: (sr) => {
+      const dur = 0.22, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const noise = buf.createBuffer(1, sr*dur, sr);
+      const data = noise.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1);
+      const src = buf.createBufferSource(); src.buffer = noise;
+      const filter = buf.createBiquadFilter();
+      filter.type = 'highpass'; filter.frequency.value = 1800;
+      const gain = buf.createGain();
+      gain.gain.setValueAtTime(0.85, 0);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      // Crack transient
+      const osc = buf.createOscillator(); osc.frequency.value = 180;
+      const og = buf.createGain(); og.gain.setValueAtTime(0.6,0); og.gain.exponentialRampToValueAtTime(0.001,0.05);
+      src.connect(filter); filter.connect(gain); gain.connect(buf.destination);
+      osc.connect(og); og.connect(buf.destination);
+      src.start(0); osc.start(0); osc.stop(0.05); src.stop(dur);
+      return buf.startRendering();
+    },
+    snare2: (sr) => {
+      const dur = 0.15, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const noise = buf.createBuffer(1, sr*dur, sr);
+      const data = noise.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1);
+      const src = buf.createBufferSource(); src.buffer = noise;
+      const filter = buf.createBiquadFilter();
+      filter.type = 'highpass'; filter.frequency.value = 2500;
+      const gain = buf.createGain();
+      gain.gain.setValueAtTime(0.7, 0);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      src.connect(filter); filter.connect(gain); gain.connect(buf.destination);
+      src.start(0); src.stop(dur);
+      return buf.startRendering();
+    },
+    // HI-HAT — yüksek frekans gürültü
+    hihat: (sr) => {
+      const dur = 0.08, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const noise = buf.createBuffer(1, sr*dur, sr);
+      const data = noise.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1);
+      const src = buf.createBufferSource(); src.buffer = noise;
+      const filter = buf.createBiquadFilter();
+      filter.type = 'highpass'; filter.frequency.value = 8000;
+      const gain = buf.createGain();
+      gain.gain.setValueAtTime(0.6, 0);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      src.connect(filter); filter.connect(gain); gain.connect(buf.destination);
+      src.start(0); src.stop(dur);
+      return buf.startRendering();
+    },
+    hihat2: (sr) => {
+      const dur = 0.28, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const noise = buf.createBuffer(1, sr*dur, sr);
+      const data = noise.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1);
+      const src = buf.createBufferSource(); src.buffer = noise;
+      const filter = buf.createBiquadFilter();
+      filter.type = 'bandpass'; filter.frequency.value = 9000; filter.Q.value = 0.8;
+      const gain = buf.createGain();
+      gain.gain.setValueAtTime(0.5, 0);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      src.connect(filter); filter.connect(gain); gain.connect(buf.destination);
+      src.start(0); src.stop(dur);
+      return buf.startRendering();
+    },
+    hihat3: (sr) => {  // roll — kısa tekrar
+      const dur = 0.06, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const noise = buf.createBuffer(1, sr*dur, sr);
+      const data = noise.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1);
+      const src = buf.createBufferSource(); src.buffer = noise;
+      const filter = buf.createBiquadFilter();
+      filter.type = 'highpass'; filter.frequency.value = 10000;
+      const gain = buf.createGain();
+      gain.gain.setValueAtTime(0.55, 0);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      src.connect(filter); filter.connect(gain); gain.connect(buf.destination);
+      src.start(0); src.stop(dur);
+      return buf.startRendering();
+    },
+    // MELODY — sinüs pad
+    melody: (sr) => {
+      const dur = 1.2, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const osc = buf.createOscillator();
+      const osc2 = buf.createOscillator();
+      osc.type = 'sine'; osc.frequency.value = 261.63; // C4
+      osc2.type = 'sine'; osc2.frequency.value = 329.63; // E4
+      const gain = buf.createGain();
+      gain.gain.setValueAtTime(0, 0);
+      gain.gain.linearRampToValueAtTime(0.4, 0.02);
+      gain.gain.setValueAtTime(0.4, 0.1);
+      gain.gain.linearRampToValueAtTime(0.28, 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      osc.connect(gain); osc2.connect(gain); gain.connect(buf.destination);
+      osc.start(0); osc2.start(0); osc.stop(dur); osc2.stop(dur);
+      return buf.startRendering();
+    },
+    melody2: (sr) => {
+      const dur = 1.4, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const osc = buf.createOscillator();
+      osc.type = 'triangle'; osc.frequency.value = 220; // A3
+      const gain = buf.createGain();
+      gain.gain.setValueAtTime(0, 0);
+      gain.gain.linearRampToValueAtTime(0.35, 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      osc.connect(gain); gain.connect(buf.destination);
+      osc.start(0); osc.stop(dur);
+      return buf.startRendering();
+    },
+    // BASS — sub sine
+    bass: (sr) => {
+      const dur = 0.9, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const osc = buf.createOscillator();
+      osc.type = 'sine'; osc.frequency.value = 55; // A1
+      const gain = buf.createGain();
+      gain.gain.setValueAtTime(0.9, 0);
+      gain.gain.setValueAtTime(0.7, 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      osc.connect(gain); gain.connect(buf.destination);
+      osc.start(0); osc.stop(dur);
+      return buf.startRendering();
+    },
+    bass2: (sr) => {
+      const dur = 0.6, buf = new OfflineAudioContext(1, sr*dur, sr);
+      const osc = buf.createOscillator();
+      osc.type = 'triangle'; osc.frequency.value = 110; // A2
+      const gain = buf.createGain();
+      gain.gain.setValueAtTime(0.7, 0);
+      gain.gain.exponentialRampToValueAtTime(0.001, dur);
+      osc.connect(gain); gain.connect(buf.destination);
+      osc.start(0); osc.stop(dur);
+      return buf.startRendering();
+    },
+  };
+
+  // Tüm buffer'ları paralel oluştur
+  const keys = Object.keys(defs);
+  const results = await Promise.all(keys.map(k => defs[k](sr)));
+  keys.forEach((k,i) => _buffers[k] = results[i]);
+  _buffersReady = true;
+  console.log('✅ Ses tamponları hazır —', keys.length, 'ses');
+}
+
+// ── Anlık ses çalma — buffer.start() en düşük gecikme ──
+function playSound(id, volumeMult = 1.0) {
+  if (!_buffersReady) return;
+  const ctx = getACtx();
+  const buf = _buffers[id]; if (!buf) return;
+
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+
+  const gain = ctx.createGain();
+  gain.gain.value = Math.min(1.5, volumeMult);
+
+  src.connect(gain);
+  gain.connect(ctx.destination);
+
+  // ctx.currentTime ile başlat — setTimeout veya rAF yok
+  src.start(ctx.currentTime);
+}
+
+// ── Hold için sürekli ses (bass/melody looping) ──
+const _holdNodes = {};
+function startHoldAudio(id) {
+  if (!_buffersReady) return;
+  const ctx = getACtx();
+  const buf = _buffers[id]; if(!buf) return;
+  if(_holdNodes[id]) return; // zaten çalıyor
+
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  gain.gain.linearRampToValueAtTime(0.7, ctx.currentTime + 0.02); // 20ms fade-in
+  src.connect(gain); gain.connect(ctx.destination);
+  src.start(ctx.currentTime);
+  _holdNodes[id] = { src, gain };
+}
+
+function stopHoldAudio(id) {
+  const node = _holdNodes[id]; if(!node) return;
+  const ctx = getACtx();
+  node.gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.08); // 80ms fade-out
+  node.src.stop(ctx.currentTime + 0.08);
+  delete _holdNodes[id];
+}
+
+// Sayfa yüklenince buffer oluştur — kullanıcı tıklayınca context açılır
+document.addEventListener('click', () => { getACtx(); if(!_buffersReady) buildBuffers(); }, { once: true });
+document.addEventListener('keydown', () => { getACtx(); if(!_buffersReady) buildBuffers(); }, { once: true });
+
+// ── Cursor ──
+const cur=document.getElementById('cursor'), dot=document.getElementById('cursorDot');
+window.addEventListener('mousemove', e=>{ cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px'; dot.style.left=e.clientX+'px'; dot.style.top=e.clientY+'px'; });
+
+// ── Sound library ──
+const GENRES = {
+  'RAP BEAT': {
+    kicks: [{name:'808 Boom',type:'Sub Kick',key:'Q',col:'#ff2d55',id:'kick'},{name:'Trap Kick',type:'Hard Kick',key:'W',col:'#ff2d55',id:'kick2'}],
+    snares:[{name:'Clap',type:'Sharp Snare',key:'E',col:'#ff9f0a',id:'snare'},{name:'Rimshot',type:'Crack Snare',key:'R',col:'#ff9f0a',id:'snare2'}],
+    hats:  [{name:'Closed HH',type:'Hi-Hat',key:'T',col:'#00e5ff',id:'hihat'},{name:'Open HH',type:'Hi-Hat',key:'Y',col:'#00e5ff',id:'hihat2'},{name:'Roll',type:'16th Roll',key:'U',col:'#00e5ff',id:'hihat3'}],
+    melody:[{name:'Piano',type:'Melody',key:'A',col:'#bf5af2',id:'melody'},{name:'Strings',type:'Pad',key:'S',col:'#bf5af2',id:'melody2'}],
+    bass:  [{name:'808 Bass',type:'Sub Bass',key:'Z',col:'#30d158',id:'bass'},{name:'Pluck',type:'Bass Pluck',key:'X',col:'#30d158',id:'bass2'}],
+  },
+  'TRAP': {
+    kicks: [{name:'Trap 808',type:'Sub Kick',key:'Q',col:'#ff2d55',id:'kick'},{name:'Hi Kick',type:'Tight Kick',key:'W',col:'#ff2d55',id:'kick2'}],
+    snares:[{name:'Snappy Snare',type:'Trap Snare',key:'E',col:'#ff9f0a',id:'snare'}],
+    hats:  [{name:'Hi-Hat x16',type:'Rapid Hat',key:'T',col:'#00e5ff',id:'hihat'},{name:'Perc',type:'Percussion',key:'Y',col:'#00e5ff',id:'hihat2'}],
+    melody:[{name:'Ominous Pad',type:'Dark Pad',key:'A',col:'#bf5af2',id:'melody'}],
+    bass:  [{name:'Deep 808',type:'Trap Bass',key:'Z',col:'#30d158',id:'bass'}],
+  }
+};
+
+const SOUND_EFFECTS = {
+  kick:   { col:'#ff2d55', rgb:[255,45,85],   effect:'WALL_CRACK',  label:'KICK'    },
+  kick2:  { col:'#ff2d55', rgb:[255,45,85],   effect:'WALL_CRACK',  label:'TRAP KICK'},
+  snare:  { col:'#00c8ff', rgb:[0,200,255],   effect:'WALL_LAMP',   label:'CLAP'    },
+  snare2: { col:'#00c8ff', rgb:[0,200,255],   effect:'WALL_LAMP',   label:'RIMSHOT' },
+  hihat:  { col:'#00e5ff', rgb:[0,229,255],   effect:'WALL_LAMP',   label:'HI-HAT'  },
+  hihat2: { col:'#00e5ff', rgb:[0,229,255],   effect:'WALL_LAMP',   label:'OPEN HH' },
+  hihat3: { col:'#00e5ff', rgb:[0,229,255],   effect:'WALL_LAMP',   label:'ROLL'    },
+  melody: { col:'#40d0ff', rgb:[64,208,255],  effect:'WALL_LAMP',   label:'MELODY'  },
+  melody2:{ col:'#40d0ff', rgb:[64,208,255],  effect:'WALL_LAMP',   label:'STRINGS' },
+  bass:   { col:'#30d158', rgb:[48,209,88],   effect:'SHOCKWAVE',   label:'808'     },
+  bass2:  { col:'#30d158', rgb:[48,209,88],   effect:'SHOCKWAVE',   label:'PLUCK'   },
+};
+
+let activeSound = 'hihat';
+let arcPos = 2, arcTarget = 2, arcVel = 0;
+let hitEvents = []; // {time, effect, rgb, col, power}
+
+// Hold state — bass & melody uzun ses
+const HOLD_SOUNDS = new Set(['bass','bass2','melody','melody2']);
+let holdState = {}; // id -> {startT, active, loopEv}
+
+
+// Build sound list
+function buildSounds(genre) {
+  const scroll = document.getElementById('soundsScroll');
+  scroll.innerHTML = '';
+  const g = GENRES[genre] || GENRES['RAP BEAT'];
+  const cats = [{key:'kicks',label:'Kicks'},{key:'snares',label:'Snares'},{key:'hats',label:'Hi-Hats'},{key:'melody',label:'Melody'},{key:'bass',label:'Bass'}];
+  cats.forEach(({key,label})=>{
+    if(!g[key]||!g[key].length) return;
+    const sec=document.createElement('div'); sec.className='cat-section';
+    sec.innerHTML=`<div class="cat-title">${label}</div>`;
+    g[key].forEach(s=>{
+      const btn=document.createElement('div');
+      btn.className='sound-btn'+(s.id===activeSound?' active':'');
+      btn.style.setProperty('--snd-col',s.col);
+      btn.innerHTML=`<div class="snd-icon">${getSoundIcon(key)}</div><div class="snd-info"><div class="snd-name">${s.name}</div><div class="snd-type">${s.type}</div></div><div class="snd-key">${s.key}</div>`;
+      btn.addEventListener('click',()=>triggerSound(s.id, true));
+      sec.appendChild(btn);
+    });
+    scroll.appendChild(sec);
+  });
+}
+
+function getSoundIcon(cat){
+  return {kicks:'🥁',snares:'🪘',hats:'🎩',melody:'🎹',bass:'🎸'}[cat]||'🎵';
+}
+function selectGenre(el, name){
+  document.querySelectorAll('.genre-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('activeGenreLabel').textContent=name;
+  buildSounds(name);
+}
+buildSounds('RAP BEAT');
+
+// ── Stage canvas ──
+const stage = document.getElementById('centerStage');
+const sc = document.getElementById('stageCanvas');
+const sctx = sc.getContext('2d');
+let SW, SH, SCX, SCY, SSR;
+
+function resizeStage(){
+  const r=stage.getBoundingClientRect();
+  SW=sc.width=r.width; SH=sc.height=r.height;
+  SCX=SW/2; SCY=SH*0.36; SSR=Math.min(SW,SH)*0.13;
+}
+resizeStage(); window.addEventListener('resize',resizeStage);
+
+// ── Particles ──
+let particles=[];
+function spawnParticles(effect, rgb, col, power){
+  const n = effect==='WALL_CRACK' ? 14 : effect==='STROBE' ? 8 : effect==='WALL_LAMP' ? 6 : 10;
+  for(let i=0;i<n;i++){
+    const angle = Math.random()*Math.PI*2;
+    const speed = (effect==='WALL_CRACK') ? 80+Math.random()*180 : 40+Math.random()*120;
+    particles.push({
+      x: SCX, y: SCY,
+      vx: Math.cos(angle)*speed*(0.5+power*0.8),
+      vy: Math.sin(angle)*speed*(0.5+power*0.8) - (effect==='WALL_CRACK'?20:0),
+      r: 2+Math.random()*4, alpha:0.9,
+      decay: 0.03+Math.random()*0.04,
+      col, rgb, effect,
+      trail: effect==='WALL_CRACK',
+      px:SCX, py:SCY,
+    });
+  }
+}
+
+// ── Background ambient ──
+let bgClouds=[];
+// Üst bulutlar
+for(let i=0;i<18;i++){
+  bgClouds.push({
+    x:Math.random(), y:Math.random()*0.52,
+    r:30+Math.random()*80,
+    speed:(Math.random()-0.5)*0.00008,
+    alpha:0.04+Math.random()*0.06,
+    col:[0,30,80],
+  });
+}
+// Alt bulutlar — biraz daha geniş, sönük
+for(let i=0;i<18;i++){
+  bgClouds.push({
+    x:Math.random(), y:0.60+Math.random()*0.40,
+    r:40+Math.random()*90,
+    speed:(Math.random()-0.5)*0.00007,
+    alpha:0.025+Math.random()*0.045,
+    col:[0,25,70],
+  });
+}
+
+// ── Hit events ──
+function triggerSound(id, manual=false) {
+  const se = SOUND_EFFECTS[id] || SOUND_EFFECTS['hihat'];
+  const hasActiveHold = Object.keys(holdState).length > 0;
+  const isHoldSound = HOLD_SOUNDS.has(id);
+
+  // Aktif hold varken başka bir ses tetiklenirse → secondary (sönük)
+  if(hasActiveHold && !isHoldSound && !holdState[id]) {
+    fireHit(id, se, 0.28, true); // secondary mod
+    return;
+  }
+
+  // Hold sesine basılırsa aktif hold değilse normal başlat
+  if(isHoldSound) {
+    activeSound = id;
+    buildSounds(document.getElementById('activeGenreLabel').textContent);
+    startHold(id, se);
+    return;
+  }
+
+  // Normal hit
+  activeSound = id;
+  buildSounds(document.getElementById('activeGenreLabel').textContent);
+  setTimeout(()=>{
+    document.querySelectorAll('.sound-btn').forEach(b=>{
+      if(b.querySelector('.snd-name')?.textContent === getSoundName(id))
+        b.classList.add('active');
+    });
+  },0);
+  fireHit(id, se, 1);
+}
+
+function fireHit(id, se, power, secondary=false) {
+  // ── Anlık ses — görsel efektten önce ──
+  if(!secondary) playSound(id, power);
+  hitEvents.push({
+    time: performance.now(),
+    duration: se.effect==='WALL_CRACK'?1400:se.effect==='SHOCKWAVE'?1600:1100,
+    effect: se.effect, rgb: se.rgb, col: se.col, power,
+    secondary, // secondary=true → çok sönük overlay
+    phase:0,
+  });
+  if(!secondary) spawnParticles(se.effect, se.rgb, se.col, power);
+  else spawnParticles(se.effect, se.rgb, se.col, power*0.25); // az parçacık
+
+  if(!secondary){
+    const lbl=document.getElementById('soundLabel');
+    const nm=document.getElementById('soundLabelName');
+    nm.textContent=se.label; nm.style.color=se.col; nm.style.textShadow=`0 0 20px ${se.col}`;
+    lbl.classList.add('show');
+    clearTimeout(lbl._t); lbl._t=setTimeout(()=>lbl.classList.remove('show'),1200);
+
+
+  } else {
+    // Secondary: küçük, sönük, köşede mini ripple
+
+  }
+}
+
+function startHold(id, se) {
+  if(holdState[id]?.active) return;
+  holdState[id] = { active:true, startT: performance.now(), se };
+
+  // Sürekli loop efekti — WALL_LAMP yerine özel HOLD efekti
+  function holdLoop() {
+    if(!holdState[id]?.active) return;
+    const age = performance.now() - holdState[id].startT;
+    // Her 180ms'de bir pulse
+    holdState[id].loopT = setTimeout(holdLoop, 280);
+
+    const [r,g,b] = se.rgb;
+    // Hold event — sonsuz gibi görünen uzun efekt
+    hitEvents.push({
+      time: performance.now(),
+      duration: 400,
+      effect: 'HOLD_' + id.replace(/\d/,'').toUpperCase(),
+      rgb: se.rgb, col: se.col, power: 1,
+      holdId: id,
+    });
+    spawnParticles('HOLD', se.rgb, se.col, 0.5);
+  }
+
+  // İlk ateş + ses
+  fireHit(id, se, 1);
+  startHoldAudio(id);
+  holdState[id].loopT = setTimeout(holdLoop, 320);
+
+  // Label göster — basılı tutulduğu sürece
+  const lbl=document.getElementById('soundLabel');
+  const nm=document.getElementById('soundLabelName');
+  nm.textContent = se.label + ' ▶'; nm.style.color=se.col; nm.style.textShadow=`0 0 20px ${se.col}`;
+  lbl.classList.add('show');
+}
+
+function stopHold(id) {
+  if(!holdState[id]?.active) return;
+  holdState[id].active = false;
+  clearTimeout(holdState[id].loopT);
+  delete holdState[id];
+  stopHoldAudio(id);
+
+  const lbl=document.getElementById('soundLabel');
+  lbl.classList.remove('show');
+}
+
+function getSoundName(id){
+  for(const cat of Object.values(GENRES['RAP BEAT']||{}))
+    for(const s of cat) if(s.id===id) return s.name;
+  return '';
+}
+
+// ── Draw speaker ──
+function drawSpeaker(ctx,cx,cy,r,[sr,sg,sb],alpha){
+  if(alpha<0.005) return;
+  ctx.save(); ctx.translate(cx,cy);
+
+  // ── Sessizlikte neredeyse yok — sadece 3 ince halka hayaleti ──
+  // Ses geldikçe bu halkalar neon ile aydınlanır
+
+  const baseOpa = alpha * 0.08;  // sessizde çok sönük
+  const glowOpa = alpha;         // ses anında tam güç
+
+  // Üç konsantrik halka — hoparlörün anatomik boşlukları
+  // Her biri bağımsız, aralarında tamamen siyah boşluk
+  const rings = [
+    { r: r*0.86, thickness: r*0.004, shadowMult: 0.55 },
+    { r: r*0.63, thickness: r*0.003, shadowMult: 0.70 },
+    { r: r*0.19, thickness: r*0.003, shadowMult: 0.85 },
+  ];
+
+  rings.forEach(({r:rr, thickness, shadowMult}) => {
+    // Halkayı çiz — çok ince, neredeyse yok
+    ctx.beginPath(); ctx.arc(0,0,rr,0,Math.PI*2);
+    ctx.strokeStyle = `rgba(${sr},${sg},${sb},${glowOpa * shadowMult * 0.45})`;
+    ctx.lineWidth = thickness;
+    ctx.shadowColor = `rgba(${sr},${sg},${sb},${glowOpa * shadowMult})`;
+    ctx.shadowBlur = r * 0.20 * glowOpa; // alpha ile orantılı blur
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  });
+
+  // ── İç enerji — merkeze doğru sönükleşen, kenarlarda yoğunlaşan ──
+  // Ortası karanlık, kenar halkalar parlıyor — ters radyal
+  const energy = ctx.createRadialGradient(0,0,r*0.12, 0,0,r*0.60);
+  energy.addColorStop(0,    'rgba(0,0,0,0)');
+  energy.addColorStop(0.55, `rgba(${sr},${sg},${sb},${alpha*0.06})`);
+  energy.addColorStop(0.82, `rgba(${sr},${sg},${sb},${alpha*0.10})`);
+  energy.addColorStop(1,     'rgba(0,0,0,0)');
+  ctx.fillStyle = energy;
+  ctx.beginPath(); ctx.arc(0,0,r*0.62,0,Math.PI*2); ctx.fill();
+
+  // ── Dış atmosfer — hoparlör küreye karışıyor ──
+  // Sert çember değil, etrafa yayılan sis
+  const aura = ctx.createRadialGradient(0,0,r*0.72, 0,0,r*1.40);
+  aura.addColorStop(0,   `rgba(${sr},${sg},${sb},${alpha*0.12})`);
+  aura.addColorStop(0.3, `rgba(${sr},${sg},${sb},${alpha*0.05})`);
+  aura.addColorStop(0.65,`rgba(${sr},${sg},${sb},${alpha*0.02})`);
+  aura.addColorStop(1,    'rgba(0,0,0,0)');
+  ctx.fillStyle = aura;
+  ctx.beginPath(); ctx.arc(0,0,r*1.4,0,Math.PI*2); ctx.fill();
+
+  ctx.restore();
+}
+
+// ── Effect renderers ──
+function drawWallCrack(ctx, ev, t) {
+  const [r,g,b]=ev.rgb; const opa=1-t;
+
+  // Tam ekran kırmızı flash — anlık
+  if(t<0.15){
+    const ft=1-t/0.15;
+    ctx.save(); ctx.globalAlpha=ft*0.22;
+    ctx.fillStyle=`rgba(${r},${g},${b},1)`; ctx.fillRect(0,0,SW,SH);
+    ctx.restore();
+  }
+
+  // Güçlü shockwave halkalar — 5 katman
+  for(let i=0;i<5;i++){
+    const scale=0.1+t*(2.2+i*0.55);
+    const ringOpa=Math.max(0,opa-i*0.15);
+    ctx.save(); ctx.globalAlpha=ringOpa*(0.9-i*0.16);
+    ctx.shadowColor=ev.col; ctx.shadowBlur=40-i*6;
+    ctx.strokeStyle=`rgba(${r},${g},${b},${ringOpa})`;
+    ctx.lineWidth=Math.max(0.3, 4-i*0.7);
+    ctx.beginPath(); ctx.arc(SCX,SCY,SSR*scale,0,Math.PI*2);
+    ctx.stroke(); ctx.shadowBlur=0; ctx.restore();
+  }
+
+  // Duvar çatlakları — 20 çatlak, zigzag
+  const nCracks=20;
+  for(let i=0;i<nCracks;i++){
+    const angle=(i/nCracks)*Math.PI*2;
+    const len=SSR*(1.2+t*2.8)*(0.55+Math.sin(i*5.3)*0.45);
+    const jag=12+t*8;
+    ctx.save(); ctx.globalAlpha=opa*(0.55+Math.sin(i*3)*0.25);
+    ctx.strokeStyle=`rgba(${r},${g},${b},${opa*0.75})`;
+    ctx.lineWidth=Math.max(0.3, 1.8*(1-t));
+    ctx.shadowColor=ev.col; ctx.shadowBlur=10;
+    ctx.beginPath(); ctx.moveTo(SCX,SCY);
+    const steps=8;
+    for(let s=1;s<=steps;s++){
+      const d=len*(s/steps);
+      const nx=SCX+Math.cos(angle)*d+(Math.random()-0.5)*jag*(s/steps);
+      const ny=SCY+Math.sin(angle)*d+(Math.random()-0.5)*jag*(s/steps);
+      ctx.lineTo(nx,ny);
+    }
+    ctx.stroke(); ctx.shadowBlur=0; ctx.restore();
+  }
+
+  // Köşe çatlakları
+  [[0,0],[SW,0],[0,SH],[SW,SH]].forEach(([cx2,cy2],ci)=>{
+    const clen=Math.min(SW,SH)*0.35*t;
+    for(let i=0;i<4;i++){
+      const baseAngle=(ci*Math.PI/2+Math.PI/4)+(i*0.3-0.45);
+      ctx.save(); ctx.globalAlpha=opa*0.4;
+      ctx.strokeStyle=`rgba(${r},${g},${b},0.5)`; ctx.lineWidth=0.8;
+      ctx.shadowColor=ev.col; ctx.shadowBlur=6;
+      ctx.beginPath(); ctx.moveTo(cx2,cy2);
+      let lx=cx2,ly=cy2;
+      for(let s=0;s<5;s++){
+        const d=clen*(s+1)/5;
+        lx=cx2+Math.cos(baseAngle)*d+(Math.random()-0.5)*20;
+        ly=cy2+Math.sin(baseAngle)*d+(Math.random()-0.5)*20;
+        ctx.lineTo(lx,ly);
+      }
+      ctx.stroke(); ctx.shadowBlur=0; ctx.restore();
+    }
+  });
+
+  // Merkez bloom
+  if(t<0.4){
+    const ft=1-t/0.4;
+    const fl=ctx.createRadialGradient(SCX,SCY,0,SCX,SCY,SSR*1.2);
+    fl.addColorStop(0,`rgba(${r},${g},${b},${ft*0.5})`);
+    fl.addColorStop(0.4,`rgba(${r},${g},${b},${ft*0.15})`);
+    fl.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=fl; ctx.beginPath(); ctx.arc(SCX,SCY,SSR*1.2,0,Math.PI*2); ctx.fill();
+  }
+}
+
+
+function drawStrobe(ctx, ev, t) {
+  const [r,g,b]=ev.rgb; const opa=1-t;
+  const flash=Math.sin(t*Math.PI*8)*0.5+0.5;
+  // Strobe rings — no shadow
+  for(let i=0;i<3;i++){
+    const s=0.4+t*(1+i*0.5);
+    ctx.save(); ctx.globalAlpha=opa*flash*(0.85-i*0.25);
+    ctx.strokeStyle=`rgba(${r},${g},${b},${opa*0.75})`;
+    ctx.lineWidth=2.2-i*.5; ctx.setLineDash([8,6]);
+    ctx.beginPath(); ctx.arc(SCX,SCY,SSR*s,0,Math.PI*2);
+    ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  }
+  // Corner flashes
+  if(flash>0.7){
+    [[0,0],[SW,0],[0,SH],[SW,SH]].forEach(([cx,cy])=>{
+      const lg=ctx.createRadialGradient(cx,cy,0,cx,cy,SH*0.4);
+      lg.addColorStop(0,`rgba(${r},${g},${b},${(flash-0.7)*0.15})`);
+      lg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=lg; ctx.fillRect(0,0,SW,SH);
+    });
+  }
+}
+
+function drawWallLamp(ctx, ev, t) {
+  const [r,g,b]=ev.rgb; const opa=1-t;
+  // Wall sconce lights on sides
+  const lamps=[-0.85,-0.55,-0.25,0.25,0.55,0.85];
+  const lampY=SH*0.3;
+  lamps.forEach((xf,i)=>{
+    const lx=SCX+SW*0.5*xf, ly=lampY+(i%2)*60;
+    const flicker=0.7+Math.sin(t*Math.PI*6+i*1.3)*0.3;
+    const sz=60+Math.sin(t*Math.PI*4+i)*20;
+    const lg=ctx.createRadialGradient(lx,ly,0,lx,ly,sz*(1+opa));
+    lg.addColorStop(0,`rgba(${r},${g},${b},${opa*flicker*0.35})`);
+    lg.addColorStop(0.5,`rgba(${r},${g},${b},${opa*flicker*0.12})`);
+    lg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=lg; ctx.fillRect(0,0,SW,SH);
+    // Bulb
+    ctx.save(); ctx.globalAlpha=opa*flicker*0.9;
+    ctx.shadowColor=ev.col; ctx.shadowBlur=16;
+    ctx.fillStyle=`rgba(${r},${g},${b},0.8)`;
+    ctx.beginPath(); ctx.arc(lx,ly,3,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  });
+  // Speaker sync pulse
+  const sp=ctx.createRadialGradient(SCX,SCY,SSR*0.5,SCX,SCY,SSR*2);
+  sp.addColorStop(0,`rgba(${r},${g},${b},${opa*0.08})`);
+  sp.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sp; ctx.fillRect(0,0,SW,SH);
+}
+
+function drawAurora(ctx, ev, t) {
+  const [r,g,b]=ev.rgb; const opa=1-t;
+  // Aurora curtains
+  for(let i=0;i<6;i++){
+    const x=SW*i/5;
+    const wave=Math.sin(t*Math.PI*3+i*0.8)*80;
+    ctx.save(); ctx.globalAlpha=opa*0.12;
+    const ag=ctx.createLinearGradient(x+wave,0,x+wave+80,SH);
+    ag.addColorStop(0,'rgba(0,0,0,0)');
+    ag.addColorStop(0.3,`rgba(${r},${g},${b},0.4)`);
+    ag.addColorStop(0.7,`rgba(${r},${g},${b},0.2)`);
+    ag.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=ag; ctx.fillRect(x+wave-20,0,120,SH);
+    ctx.restore();
+  }
+  // Radial bloom
+  const bl=ctx.createRadialGradient(SCX,SCY,0,SCX,SCY,SSR*2);
+  bl.addColorStop(0,`rgba(${r},${g},${b},${opa*0.18})`);
+  bl.addColorStop(0.5,`rgba(${r},${g},${b},${opa*0.06})`);
+  bl.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=bl; ctx.fillRect(0,0,SW,SH);
+}
+
+// ── Hold lamp — bass için sürekli zemin nabzı ──
+function drawHoldWave(ctx, se, age) {
+  const [r,g,b]=se.rgb;
+  const pulse = Math.sin(age*Math.PI*4)*0.5+0.5; // 2Hz nabız
+  const slow  = Math.sin(age*Math.PI*1.5)*0.5+0.5;
+
+  // Zemin dalgaları — sürekli genişleyen
+  for(let i=0;i<4;i++){
+    const phase=(age*1.8+i*0.5)%2;
+    const s=phase*2.5;
+    const opa=(1-phase/2)*0.5;
+    if(opa<0.01) continue;
+    const groundY=SH*0.88;
+    ctx.save(); ctx.globalAlpha=opa;
+    ctx.shadowColor=se.col; ctx.shadowBlur=12;
+    ctx.strokeStyle=`rgba(${r},${g},${b},${opa})`;
+    ctx.lineWidth=2*(1-phase/2);
+    ctx.beginPath(); ctx.ellipse(SCX,groundY,SW*0.2*s,SSR*0.2*s,0,0,Math.PI*2);
+    ctx.stroke(); ctx.shadowBlur=0; ctx.restore();
+  }
+
+  // Merkez nabız glow
+  const bloom=ctx.createRadialGradient(SCX,SCY,0,SCX,SCY,SSR*(1+pulse*0.4));
+  bloom.addColorStop(0,`rgba(${r},${g},${b},${0.12+pulse*0.10})`);
+  bloom.addColorStop(0.5,`rgba(${r},${g},${b},${0.03+pulse*0.04})`);
+  bloom.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=bloom; ctx.beginPath(); ctx.arc(SCX,SCY,SSR*(1+pulse*0.4),0,Math.PI*2); ctx.fill();
+
+  // Dikey şeritler titreşim
+  for(let i=0;i<3;i++){
+    const bx=SCX+(i-1)*SSR*0.7;
+    const bh=SH*(0.15+slow*0.25+pulse*0.1);
+    const by=SH-bh;
+    const bg=ctx.createLinearGradient(bx,SH,bx,by);
+    bg.addColorStop(0,`rgba(${r},${g},${b},${(0.15+pulse*0.12)*(1-i*0.2)})`);
+    bg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=bg; ctx.fillRect(bx-3,by,6,bh);
+  }
+}
+
+// ── Hold lamp — melody için sürekli aurora ──
+function drawHoldLamp(ctx, se, age) {
+  const [r,g,b]=se.rgb;
+  const pulse=Math.sin(age*Math.PI*2)*0.5+0.5;
+  const wave=Math.sin(age*Math.PI*1.2)*0.5+0.5;
+
+  // Duvar lambaları sürekli titreşiyor
+  const lamps=[-0.82,-0.52,-0.22,0.22,0.52,0.82];
+  lamps.forEach((xf,i)=>{
+    const lx=SCX+SW*0.5*xf;
+    const ly=SH*(0.25+(i%3)*0.08);
+    const flicker=0.5+Math.sin(age*Math.PI*(3+i*0.7))*0.5;
+    const sz=50+flicker*60+pulse*30;
+    const lg=ctx.createRadialGradient(lx,ly,0,lx,ly,sz);
+    lg.addColorStop(0,`rgba(${r},${g},${b},${flicker*0.28})`);
+    lg.addColorStop(0.5,`rgba(${r},${g},${b},${flicker*0.08})`);
+    lg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=lg; ctx.fillRect(0,0,SW,SH);
+    ctx.save(); ctx.globalAlpha=flicker*0.85;
+    ctx.shadowColor=se.col; ctx.shadowBlur=12+pulse*8;
+    ctx.fillStyle=`rgba(${r},${g},${b},0.9)`;
+    ctx.beginPath(); ctx.arc(lx,ly,2.5+pulse*1.5,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  });
+
+  // Merkez hoparlör pulse
+  const sp=ctx.createRadialGradient(SCX,SCY,SSR*0.4,SCX,SCY,SSR*(1.5+pulse*0.3));
+  sp.addColorStop(0,`rgba(${r},${g},${b},${0.06+pulse*0.06})`);
+  sp.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sp; ctx.fillRect(0,0,SW,SH);
+}
+
+
+// ── Alt spot yansımaları — üsttekilerle aynı ışıklar, alt simetri ──
+function drawBottomAtmos(ctx, ev, t) {
+  const [r,g,b] = ev.rgb;
+  const opa = (1-t) * (ev.secondary ? 0.18 : 0.55);
+  // Üstteki lamp koordinatlarının alt simetrisi
+  const lamps = [-0.85,-0.55,-0.25,0.25,0.55,0.85];
+  const lampY = SH * 0.3; // üstteki Y
+  lamps.forEach((xf,i) => {
+    const lx = SCX + SW*0.5*xf;
+    const lyTop = lampY + (i%2)*60;
+    // Alt simetri: SH - lyTop
+    const ly = SH - lyTop;
+    const flicker = 0.7 + Math.sin(t*Math.PI*6+i*1.3)*0.3;
+    const sz = 60 + Math.sin(t*Math.PI*4+i)*20;
+    const lg = ctx.createRadialGradient(lx,ly,0,lx,ly,sz*(1+opa));
+    lg.addColorStop(0, `rgba(${r},${g},${b},${opa*flicker*0.35})`);
+    lg.addColorStop(0.5, `rgba(${r},${g},${b},${opa*flicker*0.12})`);
+    lg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = lg; ctx.fillRect(0,0,SW,SH);
+    // Bulb noktası
+    ctx.save(); ctx.globalAlpha = opa*flicker*0.9;
+    ctx.shadowColor = ev.col; ctx.shadowBlur = 16;
+    ctx.fillStyle = `rgba(${r},${g},${b},0.8)`;
+    ctx.beginPath(); ctx.arc(lx,ly,3,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  });
+}
+
+function drawBottomAtmosHold(ctx, se, age) {
+  const [r,g,b] = se.rgb;
+  const lamps = [-0.85,-0.55,-0.25,0.25,0.55,0.85];
+  const lampY = SH * 0.3;
+  lamps.forEach((xf,i) => {
+    const lx = SCX + SW*0.5*xf;
+    const lyTop = lampY + (i%2)*60;
+    const ly = SH - lyTop;
+    const fl = 0.5 + Math.sin(age*Math.PI*(3+i*0.7))*0.5;
+    const sz = 50 + fl*60;
+    const lg = ctx.createRadialGradient(lx,ly,0,lx,ly,sz);
+    lg.addColorStop(0, `rgba(${r},${g},${b},${fl*0.28})`);
+    lg.addColorStop(0.5, `rgba(${r},${g},${b},${fl*0.09})`);
+    lg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = lg; ctx.fillRect(0,0,SW,SH);
+    ctx.save(); ctx.globalAlpha = fl*0.8;
+    ctx.shadowColor = se.col; ctx.shadowBlur = 12+fl*8;
+    ctx.fillStyle = `rgba(${r},${g},${b},0.85)`;
+    ctx.beginPath(); ctx.arc(lx,ly,2.5+fl*1.5,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  });
+}
+
+
+function drawShockwave(ctx, ev, t) {
+  const [r,g,b]=ev.rgb; const opa=1-t;
+
+  // Tam ekran yeşil flash
+  if(t<0.12){
+    const ft=1-t/0.12;
+    ctx.save(); ctx.globalAlpha=ft*0.18;
+    ctx.fillStyle=`rgba(${r},${g},${b},1)`; ctx.fillRect(0,0,SW,SH);
+    ctx.restore();
+  }
+
+  // Güçlü zemin dalgaları — elips ripples
+  const groundY=SH*0.88;
+  for(let i=0;i<7;i++){
+    const s=0.1+t*(3.5+i*0.7);
+    const ellW=SW*0.35*s, ellH=SSR*0.3*s;
+    const wOpa=Math.max(0,opa*(1-i*0.13));
+    ctx.save(); ctx.globalAlpha=wOpa;
+    ctx.shadowColor=ev.col; ctx.shadowBlur=20-i*2;
+    ctx.strokeStyle=`rgba(${r},${g},${b},${wOpa*0.8})`;
+    ctx.lineWidth=Math.max(0.3, 3-i*0.35);
+    ctx.beginPath(); ctx.ellipse(SCX,groundY,ellW,ellH,0,0,Math.PI*2);
+    ctx.stroke(); ctx.shadowBlur=0; ctx.restore();
+  }
+
+  // Zemin parlama — yukarı doğru yayılan
+  const fp=ctx.createRadialGradient(SCX,SH,0,SCX,SH,SH*0.9);
+  fp.addColorStop(0,`rgba(${r},${g},${b},${opa*0.28})`);
+  fp.addColorStop(0.15,`rgba(${r},${g},${b},${opa*0.12})`);
+  fp.addColorStop(0.4,`rgba(${r},${g},${b},${opa*0.04})`);
+  fp.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=fp; ctx.fillRect(0,0,SW,SH);
+
+  // Dikey bas vuruşu şeritleri — 3 şerit
+  for(let i=0;i<3;i++){
+    const bx=SCX+(i-1)*SSR*0.8;
+    const bh=SH*(0.1+t*0.6); const by=SH-bh;
+    const bopa=opa*(1-i*0.25)*(1-t*0.5);
+    const bg=ctx.createLinearGradient(bx,SH,bx,by);
+    bg.addColorStop(0,`rgba(${r},${g},${b},${bopa*0.35})`);
+    bg.addColorStop(0.5,`rgba(${r},${g},${b},${bopa*0.12})`);
+    bg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=bg; ctx.fillRect(bx-4,by,8,bh);
+  }
+
+  // Merkez downward ripple
+  for(let i=0;i<3;i++){
+    const rs=0.3+t*(1.2+i*0.4);
+    ctx.save(); ctx.globalAlpha=opa*(0.7-i*0.2);
+    ctx.shadowColor=ev.col; ctx.shadowBlur=18;
+    ctx.strokeStyle=`rgba(${r},${g},${b},${opa*0.6})`;
+    ctx.lineWidth=2.5-i*0.6;
+    ctx.beginPath(); ctx.arc(SCX,SCY,SSR*rs,0,Math.PI*2);
+    ctx.stroke(); ctx.shadowBlur=0; ctx.restore();
+  }
+}
+
+// ── Arc nav ──
+function drawArcNav(){
+  const ac=document.getElementById('arcNavCanvas');
+  const actx=ac.getContext('2d');
+  const AW=ac.width,AH=ac.height;
+  actx.clearRect(0,0,AW,AH);
+  const cx=AW/2, cy=AH+110, R=230;
+  const se=SOUND_EFFECTS[activeSound]||SOUND_EFFECTS['hihat'];
+  const [ar,ag,ab]=se.rgb;
+
+  actx.save(); actx.shadowColor=se.col; actx.shadowBlur=10;
+  actx.strokeStyle=`rgba(${ar},${ag},${ab},0.35)`;
+  actx.lineWidth=1.2; actx.setLineDash([4,5]);
+  actx.beginPath(); actx.arc(cx,cy,R,0,Math.PI*2); actx.stroke();
+  actx.setLineDash([]); actx.shadowBlur=0; actx.restore();
+
+  // Active arc highlight
+  actx.save(); actx.shadowColor=se.col; actx.shadowBlur=16;
+  actx.strokeStyle=se.col; actx.lineWidth=2;
+  actx.beginPath(); actx.arc(cx,cy,R,-Math.PI/2-0.2,-Math.PI/2+0.2); actx.stroke();
+  actx.shadowBlur=0; actx.restore();
+
+  const sounds=['kick','snare','hihat','melody','bass'];
+  const N=sounds.length;
+  const STEP=(Math.PI*2)/N;
+  const ai=sounds.indexOf(activeSound.replace(/\d/,''))||0;
+  const pos=ai+(arcPos-Math.round(arcPos));
+
+  for(let i=0;i<N;i++){
+    let offset=i-pos;
+    while(offset>N/2) offset-=N; while(offset<-N/2) offset+=N;
+    if(Math.abs(offset)>2.5) continue;
+    const angle=-Math.PI/2+offset*STEP;
+    const px=cx+R*Math.cos(angle), py=cy+R*Math.sin(angle);
+    if(py<-10||py>AH+10) continue;
+    const dist=Math.abs(offset), isAct=dist<0.3;
+    const snd=SOUND_EFFECTS[sounds[i]]||SOUND_EFFECTS['hihat'];
+    const [r2,g2,b2]=snd.rgb;
+    const nr=isAct?32:Math.max(14,28-dist*5);
+    const alpha=isAct?1:Math.max(0.1,0.55-dist*0.2);
+
+    actx.save(); actx.globalAlpha=alpha;
+    if(isAct){
+      actx.strokeStyle=`rgba(${r2},${g2},${b2},0.15)`; actx.lineWidth=10;
+      actx.beginPath(); actx.arc(px,py,nr+9,0,Math.PI*2); actx.stroke();
+      actx.shadowColor=snd.col; actx.shadowBlur=14;
+      actx.strokeStyle=`rgba(${r2},${g2},${b2},0.65)`; actx.lineWidth=2;
+      actx.beginPath(); actx.arc(px,py,nr+4,0,Math.PI*2); actx.stroke(); actx.shadowBlur=0;
+    }
+    actx.beginPath(); actx.arc(px,py,nr,0,Math.PI*2);
+    if(isAct){const ig=actx.createRadialGradient(px-nr*.2,py-nr*.2,0,px,py,nr); ig.addColorStop(0,`rgba(${r2},${g2},${b2},0.28)`); ig.addColorStop(1,'rgba(0,0,0,0.15)'); actx.fillStyle=ig;}
+    else actx.fillStyle='rgba(0,0,0,0.0)'; // şeffaf — arka plan görünsün
+    actx.fill();
+    actx.shadowColor=snd.col; actx.shadowBlur=isAct?18:0;
+    actx.strokeStyle=isAct?snd.col:`rgba(${r2},${g2},${b2},0.22)`; actx.lineWidth=isAct?2:.7; actx.stroke(); actx.shadowBlur=0;
+    const icons={kick:'🥁',snare:'🪘',hihat:'🎩',melody:'🎹',bass:'🎸'};
+    actx.globalAlpha=alpha; actx.font=`${isAct?16:10}px serif`;
+    actx.textAlign='center'; actx.textBaseline='middle';
+    actx.fillText(icons[sounds[i]]||'🎵',px,py-(isAct?5:2));
+    // isim arc'ta yok — HTML label kullanıyor
+    actx.restore();
+  }
+  // kenar maskeleri kaldırıldı
+}
+
+// ── Main render loop ──
+let lastT=0;
+function loop(ts){
+  const dt=Math.min((ts-lastT)/1000,0.05); lastT=ts;
+  sctx.clearRect(0,0,SW,SH);
+
+  // Deep dark base
+  sctx.fillStyle='rgba(2,4,18,1)'; sctx.fillRect(0,0,SW,SH);
+
+  // grid removed for perf
+
+  // Ambient bg clouds
+  bgClouds.forEach(cl=>{
+    cl.x+=cl.speed; if(cl.x>1.2) cl.x=-0.2; if(cl.x<-0.2) cl.x=1.2;
+    const grd=sctx.createRadialGradient(cl.x*SW,cl.y*SH,0,cl.x*SW,cl.y*SH,cl.r);
+    grd.addColorStop(0,`rgba(${cl.col[0]},${cl.col[1]},${cl.col[2]},${cl.alpha})`);
+    grd.addColorStop(1,'rgba(0,0,0,0)');
+    sctx.fillStyle=grd; sctx.fillRect(0,0,SW,SH);
+  });
+
+  // Hit effects
+  const now=performance.now();
+  // Aktif hold efektleri — sürekli çizim
+  Object.values(holdState).forEach(hs => {
+    const age = (now - hs.startT) / 1000;
+    if(hs.se.effect === 'WALL_LAMP') drawHoldLamp(sctx, hs.se, age);
+    else drawHoldWave(sctx, hs.se, age);
+
+    // Alt ayna — hold efekti
+    sctx.save();
+    sctx.globalAlpha = 0.22;
+    sctx.translate(SCX, SH); sctx.scale(1,-1); sctx.translate(-SCX, 0);
+    const _oy = SCY; SCY = SH - _oy;
+    if(hs.se.effect === 'WALL_LAMP') drawHoldLamp(sctx, hs.se, age);
+    else drawHoldWave(sctx, hs.se, age);
+    SCY = _oy;
+    sctx.restore();
+  });
+
+  hitEvents=hitEvents.filter(ev=>{
+    const age=now-ev.time; const t=age/ev.duration;
+    if(t>=1) return false;
+    // Secondary efektler çok sönük — globalAlpha wrap
+    if(ev.secondary) {
+      sctx.save(); sctx.globalAlpha=0.22;
+    }
+    if(ev.effect==='WALL_CRACK') drawWallCrack(sctx,ev,t);
+    else if(ev.effect==='STROBE') drawStrobe(sctx,ev,t);
+    else if(ev.effect==='WALL_LAMP') drawWallLamp(sctx,ev,t);
+    else if(ev.effect==='AURORA') drawAurora(sctx,ev,t);
+    else if(ev.effect==='SHOCKWAVE') drawShockwave(sctx,ev,t);
+    else if(ev.effect.startsWith('HOLD_')) { /* handled above */ }
+    if(ev.secondary) sctx.restore();
+
+    // ── Alt atmosferik yansıma ──
+    drawBottomAtmos(sctx, ev, t);
+    return true;
+  });
+
+  // Sphere
+  const se=SOUND_EFFECTS[activeSound]||SOUND_EFFECTS['hihat'];
+  const [r,g,b]=se.rgb;
+  const activePow=hitEvents.length>0?Math.max(0,1-(now-hitEvents[hitEvents.length-1].time)/hitEvents[hitEvents.length-1].duration):0;
+
+  const halo=sctx.createRadialGradient(SCX,SCY,SSR*.85,SCX,SCY,SSR*1.3);
+  halo.addColorStop(0,'rgba(0,0,0,0.97)'); halo.addColorStop(1,'rgba(0,0,0,0)');
+  sctx.fillStyle=halo; sctx.beginPath(); sctx.arc(SCX,SCY,SSR*1.3,0,Math.PI*2); sctx.fill();
+
+  const sg=sctx.createRadialGradient(SCX-SSR*.25,SCY-SSR*.25,1,SCX,SCY,SSR);
+  sg.addColorStop(0,'#050810'); sg.addColorStop(0.6,'#010108'); sg.addColorStop(1,'#000');
+  sctx.fillStyle=sg; sctx.beginPath(); sctx.arc(SCX,SCY,SSR,0,Math.PI*2); sctx.fill();
+
+  if(activePow>0.02){
+    const rim=sctx.createRadialGradient(SCX,SCY,SSR*.76,SCX,SCY,SSR);
+    rim.addColorStop(0,'rgba(0,0,0,0)'); rim.addColorStop(0.8,'rgba(0,0,0,0)');
+    rim.addColorStop(1,`rgba(${r},${g},${b},${activePow*0.35})`);
+    sctx.fillStyle=rim; sctx.beginPath(); sctx.arc(SCX,SCY,SSR,0,Math.PI*2); sctx.fill();
+  }
+
+  // Speaker
+  const spkAlpha=0.04+activePow*1.1;
+  sctx.save(); sctx.beginPath(); sctx.arc(SCX,SCY,SSR*.95,0,Math.PI*2); sctx.clip();
+  drawSpeaker(sctx,SCX,SCY,SSR*.68,[r,g,b],spkAlpha); sctx.restore();
+
+  // Particles
+  particles=particles.filter(p=>{
+    p.px=p.x; p.py=p.y;
+    p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=120*dt; p.alpha-=p.decay;
+    if(p.alpha<=0) return false;
+    sctx.save(); sctx.globalAlpha=p.alpha;
+    sctx.fillStyle=p.col;
+    if(p.trail){
+      sctx.strokeStyle=p.col; sctx.lineWidth=p.r*.5;
+      sctx.beginPath(); sctx.moveTo(p.px,p.py); sctx.lineTo(p.x,p.y); sctx.stroke();
+    }
+    sctx.beginPath(); sctx.arc(p.x,p.y,p.r*p.alpha,0,Math.PI*2); sctx.fill();
+    sctx.restore();
+    return true;
+  });
+
+  // Arc nav
+  arcPos+=(arcTarget-arcPos)*0.12;
+  drawArcNav();
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ── Keyboard ──
+const KEY_MAP={
+  'q':'kick','w':'kick2','e':'snare','r':'snare2',
+  't':'hihat','y':'hihat2','u':'hihat3',
+  'a':'melody','s':'melody2',
+  'z':'bass','x':'bass2'
+};
+window.addEventListener('keydown',e=>{
+  if(e.repeat) return;
+  const id=KEY_MAP[e.key.toLowerCase()];
+  if(!id) return;
+  if(HOLD_SOUNDS.has(id)){
+    // Hold ses
+    const se=SOUND_EFFECTS[id]||SOUND_EFFECTS['hihat'];
+    activeSound=id;
+    startHold(id, se);
+  } else {
+    // Normal ses — hold varsa secondary
+    triggerSound(id);
+  }
+});
+window.addEventListener('keyup',e=>{
+  const id=KEY_MAP[e.key.toLowerCase()];
+  if(id && HOLD_SOUNDS.has(id)) stopHold(id);
+});
+
+// Stage hold — mousedown/up
+const stageEl = document.getElementById('centerStage');
+stageEl.addEventListener('mousedown',e=>{
+  if(e.target===document.getElementById('recBtn')) return;
+  if(HOLD_SOUNDS.has(activeSound)){
+    const se=SOUND_EFFECTS[activeSound]||SOUND_EFFECTS['hihat'];
+    startHold(activeSound, se);
+  } else {
+    triggerSound(activeSound);
+  }
+});
+stageEl.addEventListener('mouseup',e=>{
+  if(HOLD_SOUNDS.has(activeSound)) stopHold(activeSound);
+});
+stageEl.addEventListener('mouseleave',e=>{
+  Object.keys(holdState).forEach(stopHold);
+});
+stageEl.addEventListener('touchstart',e=>{
+  if(e.target===document.getElementById('recBtn')) return;
+  e.preventDefault();
+  if(HOLD_SOUNDS.has(activeSound)){
+    const se=SOUND_EFFECTS[activeSound]||SOUND_EFFECTS['hihat'];
+    startHold(activeSound, se);
+  } else { triggerSound(activeSound); }
+},{passive:false});
+stageEl.addEventListener('touchend',()=>{
+  Object.keys(holdState).forEach(stopHold);
+});
+
+
+
+// ── Panel toggle ──
+let activePanel = null;
+function togglePanel(type) {
+  const panel = document.getElementById('holoPanel');
+  if(activePanel === type) { panel.classList.remove('show'); activePanel=null; document.querySelectorAll('.shift-icon-btn').forEach(b=>b.classList.remove('active')); return; }
+  activePanel = type;
+  panel.classList.add('show');
+  switchHoloTab(type, null);
+  document.querySelectorAll('.shift-icon-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(type==='fx'?'btnFX':'btnADSR').classList.add('active');
+}
+function closePanel() {
+  document.getElementById('holoPanel').classList.remove('show');
+  activePanel=null;
+  document.querySelectorAll('.shift-icon-btn').forEach(b=>b.classList.remove('active'));
+}
+function switchHoloTab(tab, el) {
+  document.querySelectorAll('.holo-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.holo-tab-content').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  else document.querySelectorAll('.holo-tab')[tab==='fx'?0:1].classList.add('active');
+  document.getElementById(tab==='fx'?'holoFX':'holoADSR').classList.add('active');
+}
+function updateVal(id, val, unit) {
+  document.getElementById(id).textContent = val + unit;
+}
+
+// ── Grid önizleme ──
+const GRID_TRACKS_DEF = [
+  {id:'kick',  name:'KICK',   col:'#ff2d55'},
+  {id:'snare', name:'SNARE',  col:'#ff9f0a'},
+  {id:'hihat', name:'HI-HAT', col:'#00e5ff'},
+  {id:'melody',name:'MELODY', col:'#bf5af2'},
+  {id:'bass',  name:'BASS',   col:'#30d158'},
+];
+// Basit grid state
+const previewGrid = {};
+GRID_TRACKS_DEF.forEach(t => previewGrid[t.id] = Array(16).fill(false));
+
+function buildGridPreview() {
+  const cont = document.getElementById('gridTracks');
+  cont.innerHTML = '';
+  GRID_TRACKS_DEF.forEach(t => {
+    const row = document.createElement('div'); row.className='grid-track-row';
+    const lbl = document.createElement('div'); lbl.className='grid-track-label';
+    lbl.textContent=t.name; lbl.style.color=t.col+'99';
+    row.appendChild(lbl);
+    const cells = document.createElement('div'); cells.className='grid-cells';
+    for(let i=0;i<16;i++){
+      const cell=document.createElement('div');
+      cell.className='grid-cell'+(i%4===0?' beat4':'')+(previewGrid[t.id][i]?' active':'');
+      cell.style.setProperty('--cell-col',t.col+'aa');
+      cell.addEventListener('click',()=>{
+        previewGrid[t.id][i]=!previewGrid[t.id][i];
+        cell.classList.toggle('active'); 
+      });
+      cells.appendChild(cell);
+    }
+    row.appendChild(cells); cont.appendChild(row);
+  });
+}
+
+function toggleGridPreview() {
+  const modal=document.getElementById('gridPreview');
+  const isShowing=modal.classList.contains('show');
+  if(!isShowing){ buildGridPreview(); document.getElementById('btnGrid').classList.add('active'); }
+  else { document.getElementById('btnGrid').classList.remove('active'); }
+  modal.classList.toggle('show');
+}
+
+// rec butonu
+document.getElementById('recBtn').addEventListener('click', e=>{
+  e.stopPropagation();
+  document.getElementById('recBtn').classList.toggle('active');
+});
+
+</script>
+</div>
+
+<!-- ══ SCREEN 2: STUDIO (grid/sequencer) ══ -->
+<div class="screen" id="screen-studio">
+  <div style="background:#0a0a0f;color:#e8e8f0;font-family:Syne,sans-serif;min-height:100vh;overflow-x:hidden;">
 <header>
   <div class="logo"><div class="logo-dot"></div>RhythmAI</div>
   <div class="bpm-control">
@@ -1611,7 +2953,6 @@ body.erase-cursor .beat-cell.active:hover {
   <div class="header-spacer"></div>
   <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;">hover a lit cell → click ⊹ to edit envelope</div>
   <button class="stage-open-btn" id="stageOpenBtn" title="Stage Modu — F">🎭 Stage</button>
-  <button class="goto-s2-btn" onclick="showScreen('s2')">⚡ Performance</button>
 </header>
 
 <!-- STRUCTURE BAR -->
@@ -1821,381 +3162,7 @@ body.erase-cursor .beat-cell.active:hover {
       <input type="range" id="apSDur" min="20" max="2000" step="10" value="300"
         style="-webkit-appearance:none;width:100%;height:3px;border-radius:2px;background:var(--surface3);outline:none;cursor:pointer;"
         />
-      <style>#apSDur::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#ff9500;box-shadow:0 0 6px rgba(255,149,0,.5);cursor:pointer;}
-/* ══ SCREEN SYSTEM ══ */
-.screen-studio { display:block; }
-.screen-studio.hidden { display:none; }
-#screen-s2 { display:none; }
-#screen-s2.show { display:block; }
-
-/* Studio'ya Performance butonu */
-.goto-s2-btn {
-  padding:6px 14px; border-radius:16px; font-size:9px; letter-spacing:2px;
-  text-transform:uppercase; cursor:pointer; font-family:'Space Mono',monospace;
-  border:1px solid rgba(0,200,255,0.25); color:rgba(0,200,255,0.55);
-  background:rgba(0,8,28,0.6); transition:all .2s;
-}
-.goto-s2-btn:hover { border-color:rgba(0,229,255,0.7); color:rgba(0,229,255,0.9); box-shadow:0 0 12px rgba(0,229,255,0.15); }
-
-/* ══ SCREEN-2 (Performance) ══ */
-#screen-s2 { position:fixed; inset:0; z-index:500; display:none; }
-#screen-s2.show { display:block; }
-#screen-s2 canvas#s2nebula { position:absolute; inset:0; z-index:1; pointer-events:none; }
-
-:root {
-  --holo-cyan:   #00e5ff;
-  --holo-blue:   #1a6aff;
-  --holo-mid:    #0a4aff;
-  --holo-dark:   #020820;
-  --holo-panel:  rgba(0,20,60,0.72);
-  --holo-border: rgba(0,200,255,0.18);
-  --holo-glow:   rgba(0,229,255,0.55);
-
-  /* Per-sound colors */
-  --kick-col:   #ff2d55;  --kick-rgb:   255,45,85;
-  --snare-col:  #ff9f0a;  --snare-rgb:  255,159,10;
-  --hihat-col:  #00e5ff;  --hihat-rgb:  0,229,255;
-  --melody-col: #bf5af2;  --melody-rgb: 191,90,242;
-  --bass-col:   #30d158;  --bass-rgb:   48,209,88;
-}
-
-/* ── Custom cursor ── */
-.cursor { position:fixed; width:14px; height:14px; border:1.5px solid var(--holo-cyan); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:width .12s,height .12s,opacity .15s; }
-.cursor-dot { position:fixed; width:3px; height:3px; background:var(--holo-cyan); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); box-shadow:0 0 6px var(--holo-cyan); }
-
-/* ── Main canvas ── */
-#bg { position:fixed; inset:0; z-index:0; }
-
-/* ── Layout ── */
-#screen-s2 .s2-layout { position:fixed; inset:0; z-index:10; display:grid; grid-template-columns:240px 1fr; }
-
-/* ── Left panel ── */
-#screen-s2 .left-panel {
-  background: linear-gradient(180deg, rgba(0,8,22,0.55) 0%, rgba(0,4,14,0.60) 100%);
-  border-right: 1px solid rgba(0,200,255,0.08);
-  display:flex; flex-direction:column; padding:0;
-  backdrop-filter: blur(18px);
-  position:relative; overflow:hidden;
-}
-.left-panel::before {
-  content:''; position:absolute; inset:0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,229,255,0.015) 40px);
-  pointer-events:none;
-}
-.panel-header {
-  padding:20px 20px 0;
-  border-bottom:1px solid rgba(0,200,255,0.06);
-  padding-bottom:16px;
-}
-.panel-logo {
-  font-family:'Space Mono',monospace; font-size:18px; font-weight:700;
-  color:var(--holo-cyan); letter-spacing:4px;
-  text-shadow:0 0 20px var(--holo-cyan), 0 0 40px rgba(0,229,255,0.4);
-}
-.panel-genre {
-  margin-top:6px; font-size:8px; font-weight:200; letter-spacing:3px;
-  color:rgba(0,229,255,0.45); text-transform:uppercase;
-}
-
-/* Genre selector */
-.genre-row {
-  display:flex; gap:6px; padding:12px 20px; flex-wrap:wrap;
-  border-bottom:1px solid var(--holo-border);
-}
-.genre-pill {
-  padding:4px 10px; border-radius:12px; font-size:8px; font-weight:300;
-  letter-spacing:1.5px; text-transform:uppercase; cursor:pointer;
-  border:1px solid rgba(0,229,255,0.2); color:rgba(0,229,255,0.45);
-  transition:all .2s; background:transparent;
-}
-.genre-pill.active, .genre-pill:hover {
-  border-color:var(--holo-cyan); color:var(--holo-cyan);
-  background:rgba(0,229,255,0.08); box-shadow:0 0 12px rgba(0,229,255,0.2);
-}
-
-/* Sound categories */
-.cat-section { padding:10px 20px 6px; }
-.cat-title {
-  font-size:7px; letter-spacing:3px; font-weight:200; text-transform:uppercase;
-  color:rgba(0,229,255,0.3); margin-bottom:8px;
-  display:flex; align-items:center; gap:8px;
-}
-.cat-title::after { content:''; flex:1; height:1px; background:var(--holo-border); }
-
-.sound-btn {
-  width:100%; padding:9px 12px; margin-bottom:4px;
-  background:rgba(0,15,40,0.35); border:1px solid rgba(0,229,255,0.08);
-  border-radius:6px; cursor:pointer;
-  display:flex; align-items:center; gap:10px;
-  transition:all .18s; position:relative; overflow:hidden;
-}
-.sound-btn::before {
-  content:''; position:absolute; left:0; top:0; bottom:0;
-  width:2px; background:var(--snd-col,var(--holo-cyan));
-  opacity:0; transition:opacity .18s;
-}
-.sound-btn:hover, .sound-btn.active {
-  background:rgba(0,20,55,0.45); border-color:var(--snd-col,var(--holo-cyan));
-  box-shadow:0 0 16px rgba(0,229,255,0.1), inset 0 0 20px rgba(0,229,255,0.03);
-}
-.sound-btn:hover::before, .sound-btn.active::before { opacity:1; }
-.snd-icon { font-size:14px; filter:grayscale(0.4); }
-.snd-info { flex:1; }
-.snd-name { font-size:10px; font-weight:300; color:rgba(255,255,255,0.7); letter-spacing:0.5px; }
-.snd-type { font-size:7px; font-weight:200; color:rgba(0,229,255,0.35); letter-spacing:1.5px; text-transform:uppercase; margin-top:1px; }
-.snd-key {
-  font-family:'Space Mono',monospace; font-size:7px;
-  color:rgba(0,229,255,0.3); border:1px solid rgba(0,229,255,0.12);
-  padding:1px 5px; border-radius:3px;
-}
-
-/* Scrollable sounds */
-.sounds-scroll { flex:1; overflow-y:auto; padding:0 20px 20px; scrollbar-width:none; }
-.sounds-scroll::-webkit-scrollbar { display:none; }
-
-/* Bottom FX row */
-.fx-row {
-  padding:12px 20px; border-top:1px solid var(--holo-border);
-  display:flex; gap:6px;
-}
-.fx-btn {
-  flex:1; padding:7px 4px; background:rgba(0,12,35,0.3);
-  border:1px solid rgba(0,229,255,0.08); border-radius:6px;
-  font-size:7px; font-weight:200; letter-spacing:1.5px; text-transform:uppercase;
-  color:rgba(0,229,255,0.4); cursor:pointer; transition:all .2s; text-align:center;
-}
-.fx-btn:hover, .fx-btn.on {
-  border-color:var(--holo-cyan); color:var(--holo-cyan);
-  background:rgba(0,229,255,0.08); box-shadow:0 0 10px rgba(0,229,255,0.15);
-}
-
-/* ── Center stage ── */
-#screen-s2 .center-stage {
-  position:relative; display:flex; align-items:center; justify-content:center;
-  overflow:hidden;
-}
-#stageCanvas { position:absolute; inset:0; }
-
-/* HUD top */
-.hud-top {
-  position:absolute; top:0; left:0; right:0;
-  padding:16px 24px; display:flex; align-items:center; justify-content:space-between;
-  z-index:20;
-}
-.hud-bpm {
-  font-family:'Space Mono',monospace; font-size:11px; color:rgba(0,229,255,0.35);
-  letter-spacing:3px;
-}
-.hud-label {
-  font-size:9px; font-weight:200; letter-spacing:5px; text-transform:uppercase;
-  color:rgba(0,229,255,0.2);
-}
-.hud-btn {
-  padding:5px 14px; border-radius:16px; font-size:8px; letter-spacing:2px;
-  text-transform:uppercase; cursor:pointer;
-  border:1px solid rgba(0,229,255,0.2); color:rgba(0,229,255,0.45);
-  background:rgba(0,20,60,0.6); transition:all .2s; font-family:'Space Mono',monospace;
-}
-.hud-btn:hover { border-color:var(--holo-cyan); color:var(--holo-cyan); box-shadow:0 0 12px rgba(0,229,255,0.2); }
-
-/* Active sound label */
-.sound-label {
-  position:absolute; bottom:210px; left:50%; transform:translateX(-50%);
-  text-align:center; z-index:20; pointer-events:none;
-  opacity:0; transition:opacity .4s;
-}
-.sound-label.show { opacity:1; }
-.sound-label-name {
-  font-size:11px; font-weight:200; letter-spacing:6px; text-transform:uppercase;
-  color:rgba(255,255,255,0.35);
-}
-
-/* Bottom arc nav */
-#screen-s2 .arc-nav {
-  position:absolute; bottom:0; left:50%; transform:translateX(-50%);
-  z-index:20; pointer-events:none;
-}
-#arcNavCanvas { display:block; }
-
-/* Rec button */
-.rec-btn {
-  position:absolute; bottom:172px; left:50%; transform:translateX(-50%);
-  width:52px; height:52px; border-radius:50%; z-index:25; cursor:pointer;
-  border:1.5px solid rgba(255,45,85,0.4); background:rgba(255,45,85,0.08);
-  color:rgba(255,45,85,0.6); font-size:14px;
-  display:flex; align-items:center; justify-content:center;
-  transition:all .2s;
-  box-shadow:0 0 0 0 rgba(255,45,85,0);
-}
-.rec-btn:hover { border-color:#ff2d55; color:#ff2d55; box-shadow:0 0 20px rgba(255,45,85,0.3); }
-.rec-btn.active {
-  border-color:#ff2d55; color:#ff2d55; background:rgba(255,45,85,0.2);
-  box-shadow:0 0 30px rgba(255,45,85,0.5);
-  animation:recpulse .5s ease-in-out infinite alternate;
-}
-@keyframes recpulse { from { box-shadow:0 0 20px rgba(255,45,85,0.4); } to { box-shadow:0 0 40px rgba(255,45,85,0.8); } }
-
-/* Hologram grid overlay btn */
-.grid-btn {
-  position:absolute; top:16px; right:80px; z-index:25;
-  padding:6px 14px; border-radius:16px; font-size:8px; letter-spacing:2px;
-  text-transform:uppercase; cursor:pointer;
-  border:1px solid rgba(0,229,255,0.25); color:rgba(0,229,255,0.5);
-  background:rgba(0,20,60,0.7); transition:all .2s; font-family:'Space Mono',monospace;
-}
-.grid-btn:hover { border-color:var(--holo-cyan); color:var(--holo-cyan); }
-
-/* Hit ripple */
-@keyframes hitRipple {
-  0%   { transform:translate(-50%,-50%) scale(0.8); opacity:0.9; }
-  100% { transform:translate(-50%,-50%) scale(2.8); opacity:0; }
-}
-.hit-ripple {
-  position:absolute; border-radius:50%; pointer-events:none; z-index:15;
-  animation: hitRipple 0.8s ease-out forwards;
-}
-
-/* ── Sol shift menüsü (Rec + kontroller) ── */
-.shift-menu {
-  position:absolute; left:0; top:50%; transform:translateY(-50%);
-  z-index:30; display:flex; flex-direction:column; align-items:flex-start;
-  gap:10px; padding:16px 0 16px 12px;
-}
-.shift-rec {
-  width:48px; height:48px; border-radius:50%;
-  border:1.5px solid rgba(255,45,85,0.45); background:rgba(255,45,85,0.07);
-  color:rgba(255,45,85,0.65); font-size:16px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-  transition:all .2s;
-}
-.shift-rec:hover { border-color:#ff2d55; color:#ff2d55; box-shadow:0 0 20px rgba(255,45,85,0.35); }
-.shift-rec.active {
-  border-color:#ff2d55; color:#ff2d55; background:rgba(255,45,85,0.18);
-  box-shadow:0 0 30px rgba(255,45,85,0.55);
-  animation:recpulse .5s ease-in-out infinite alternate;
-}
-.shift-divider { width:32px; height:1px; background:rgba(0,229,255,0.1); margin-left:8px; }
-.shift-icon-btn {
-  width:36px; height:36px; border-radius:8px;
-  border:1px solid rgba(0,229,255,0.12); background:rgba(0,229,255,0.04);
-  color:rgba(0,229,255,0.4); font-size:13px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-  transition:all .2s; position:relative;
-}
-.shift-icon-btn:hover, .shift-icon-btn.active {
-  border-color:rgba(0,229,255,0.45); color:rgba(0,229,255,0.85);
-  background:rgba(0,229,255,0.08); box-shadow:0 0 12px rgba(0,229,255,0.15);
-}
-.shift-icon-btn .tip {
-  position:absolute; left:44px; top:50%; transform:translateY(-50%);
-  font-size:8px; letter-spacing:2px; color:rgba(0,229,255,0.4);
-  white-space:nowrap; pointer-events:none; opacity:0; transition:opacity .15s;
-  font-family:'Space Mono',monospace; text-transform:uppercase;
-}
-.shift-icon-btn:hover .tip { opacity:1; }
-
-/* ── Holografik panel ── */
-.holo-panel {
-  position:absolute; left:58px; top:50%; transform:translateY(-50%);
-  z-index:40; width:300px;
-  background:rgba(0,8,28,0.82); backdrop-filter:blur(20px);
-  border:1px solid rgba(0,229,255,0.18); border-radius:12px;
-  padding:16px; display:none; flex-direction:column; gap:14px;
-  box-shadow:0 0 40px rgba(0,229,255,0.08), inset 0 0 30px rgba(0,229,255,0.02);
-}
-.holo-panel.show { display:flex; }
-.holo-panel-header {
-  display:flex; align-items:center; justify-content:space-between;
-  border-bottom:1px solid rgba(0,229,255,0.1); padding-bottom:10px;
-}
-.holo-panel-title {
-  font-size:9px; font-weight:200; letter-spacing:4px; text-transform:uppercase;
-  color:rgba(0,229,255,0.6); font-family:'Space Mono',monospace;
-}
-.holo-panel-close {
-  width:20px; height:20px; border-radius:50%;
-  border:1px solid rgba(0,229,255,0.15); background:transparent;
-  color:rgba(0,229,255,0.35); font-size:9px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-}
-.holo-tabs {
-  display:flex; gap:4px; padding:0;
-}
-.holo-tab {
-  flex:1; padding:5px; text-align:center; font-size:7px; letter-spacing:2px;
-  text-transform:uppercase; cursor:pointer; border-radius:5px;
-  color:rgba(0,229,255,0.3); border:1px solid transparent;
-  transition:all .2s; font-family:'Space Mono',monospace;
-}
-.holo-tab.active {
-  border-color:rgba(0,229,255,0.3); color:rgba(0,229,255,0.85);
-  background:rgba(0,229,255,0.07);
-}
-.holo-tab-content { display:none; flex-direction:column; gap:10px; }
-.holo-tab-content.active { display:flex; }
-
-/* Slider satırı */
-.holo-row { display:flex; flex-direction:column; gap:4px; }
-.holo-row-label {
-  display:flex; justify-content:space-between;
-  font-size:8px; font-weight:200; letter-spacing:1.5px; text-transform:uppercase;
-  color:rgba(0,229,255,0.4); font-family:'Space Mono',monospace;
-}
-.holo-val { color:rgba(0,229,255,0.75); }
-.holo-slider {
-  -webkit-appearance:none; appearance:none;
-  width:100%; height:3px; border-radius:2px; outline:none; cursor:pointer;
-  background:rgba(0,229,255,0.1);
-}
-.holo-slider::-webkit-slider-thumb {
-  -webkit-appearance:none; width:12px; height:12px; border-radius:50%;
-  background:var(--holo-cyan); box-shadow:0 0 8px var(--holo-cyan); cursor:pointer;
-}
-
-/* Grid preview modal */
-.grid-preview {
-  position:fixed; inset:0; z-index:100;
-  background:rgba(0,4,14,0.9); backdrop-filter:blur(12px);
-  display:none; align-items:center; justify-content:center;
-}
-.grid-preview.show { display:flex; }
-.grid-preview-inner {
-  width:80vw; max-width:900px; background:rgba(0,8,28,0.95);
-  border:1px solid rgba(0,229,255,0.2); border-radius:14px;
-  padding:24px; position:relative;
-}
-.grid-preview-title {
-  font-size:9px; letter-spacing:4px; color:rgba(0,229,255,0.5);
-  text-transform:uppercase; font-family:'Space Mono',monospace; margin-bottom:16px;
-}
-.grid-close {
-  position:absolute; top:16px; right:16px; width:28px; height:28px;
-  border-radius:50%; border:1px solid rgba(0,229,255,0.2); background:transparent;
-  color:rgba(0,229,255,0.4); cursor:pointer; font-size:11px;
-  display:flex; align-items:center; justify-content:center;
-}
-.grid-tracks { display:flex; flex-direction:column; gap:8px; }
-.grid-track-row { display:flex; align-items:center; gap:8px; }
-.grid-track-label {
-  width:60px; font-size:8px; letter-spacing:1.5px; text-transform:uppercase;
-  color:rgba(255,255,255,0.35); font-family:'Space Mono',monospace; flex-shrink:0;
-}
-.grid-cells { display:flex; gap:3px; flex:1; }
-.grid-cell {
-  flex:1; height:22px; border-radius:3px;
-  background:rgba(0,229,255,0.05); border:1px solid rgba(0,229,255,0.08);
-  cursor:pointer; transition:all .15s;
-}
-.grid-cell.beat4 { border-left:1px solid rgba(0,229,255,0.18); }
-.grid-cell.active { background:var(--cell-col); box-shadow:0 0 6px var(--cell-col); border-color:transparent; }
-
-/* Sound label ortala */
-.sound-label {
-  position:absolute; top:auto !important;
-  bottom:195px !important; left:50%; transform:translateX(-50%) !important;
-}
-
-</style>
+      <style>#apSDur::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#ff9500;box-shadow:0 0 6px rgba(255,149,0,.5);cursor:pointer;}</style>
       <div style="display:flex;justify-content:space-between;margin-top:3px;">
         <span style="font-size:8px;color:var(--text3);font-family:'Space Mono',monospace;">20ms</span>
         <span style="font-size:8px;color:var(--text3);">How long the note plays before release kicks in</span>
@@ -2437,7 +3404,44 @@ body.erase-cursor .beat-cell.active:hover {
 <div class="tooltip" id="tooltip"></div>
 <div class="toast" id="toast"></div>
 
+  </div>
+</div>
+
+<!-- ══ SCREEN 3: STAGE (sphere/arc) ══ -->
+<div class="screen" id="screen-stage">
+  <!-- Stage overlay mevcut app içindeki stage-overlay buraya taşınacak -->
+  <div id="stageInnerWrap" style="width:100%;height:100%;"></div>
+</div>
+
 <script>
+// ══ SCREEN NAVIGATION ══
+const SCREENS = ['perf','studio','stage'];
+function showScreen(name) {
+  SCREENS.forEach(s => {
+    document.getElementById('screen-'+s)?.classList.remove('active');
+    document.getElementById('nav-'+s)?.classList.remove('active');
+  });
+  document.getElementById('screen-'+name)?.classList.add('active');
+  document.getElementById('nav-'+name)?.classList.add('active');
+
+  if(name === 'perf') {
+    setTimeout(()=>{ if(typeof resizeStage==='function') resizeStage(); }, 30);
+  }
+  if(name === 'stage') {
+    if(typeof openStage==='function') openStage();
+  }
+}
+
+// F tuşu — stage
+window.addEventListener('keydown', e=>{
+  if(e.key==='f'||e.key==='F') showScreen('stage');
+  if(e.key==='Escape') showScreen('perf');
+});
+</script>
+
+<!-- ══ STUDIO JS ══ -->
+<script>
+
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
@@ -5354,157 +6358,12 @@ function stageHitEffect(track, overrideColor) {
 
 
 init();
+
 </script>
 
-<!-- ══ SCREEN-2: PERFORMANCE ══ -->
-<div id="screen-s2">
-  <!-- Geri butonu -->
-  <button onclick="showScreen('studio')" style="
-    position:fixed;top:14px;right:60px;z-index:600;
-    padding:6px 16px;border-radius:16px;font-size:8px;letter-spacing:2px;
-    text-transform:uppercase;cursor:pointer;font-family:'Space Mono',monospace;
-    border:1px solid rgba(0,229,255,0.25);color:rgba(0,229,255,0.55);
-    background:rgba(0,8,28,0.7);backdrop-filter:blur(8px);transition:all .2s;
-  " onmouseover="this.style.borderColor='rgba(0,229,255,0.7)'" onmouseout="this.style.borderColor='rgba(0,229,255,0.25)'">
-    ⊞ Studio
-  </button>
-
-<canvas id="s2bg"></canvas>
-
-<div class="s2-layout">
-  <!-- LEFT PANEL -->
-  <div class="left-panel">
-    <div class="panel-header">
-      <div class="panel-logo">D-CEY</div>
-      <div class="panel-genre" id="activeGenreLabel">RAP BEAT</div>
-    </div>
-
-    <div class="genre-row">
-      <div class="genre-pill active" onclick="selectGenre(this,'RAP BEAT')">Rap</div>
-      <div class="genre-pill" onclick="selectGenre(this,'TRAP')">Trap</div>
-      <div class="genre-pill" onclick="selectGenre(this,'PHONK')">Phonk</div>
-      <div class="genre-pill" onclick="selectGenre(this,'DRILL')">Drill</div>
-      <div class="genre-pill" onclick="selectGenre(this,'LO-FI')">Lo-Fi</div>
-    </div>
-
-    <div class="sounds-scroll" id="soundsScroll"></div>
-
-    <div class="fx-row">
-      <div class="fx-btn" onclick="this.classList.toggle('on')">Reverb</div>
-      <div class="fx-btn" onclick="this.classList.toggle('on')">Delay</div>
-      <div class="fx-btn" onclick="this.classList.toggle('on')">Tune</div>
-      <div class="fx-btn" onclick="this.classList.toggle('on')">Robot</div>
-    </div>
-  </div>
-
-  <!-- CENTER STAGE -->
-  <div class="center-stage" id="centerStage">
-    <canvas id="stageCanvas"></canvas>
-
-    <div class="hud-top">
-      <div class="hud-bpm">♩ 120 BPM</div>
-      <div class="hud-label">PERFORMANCE MODE</div>
-      <button class="hud-btn">↗ Export</button>
-    </div>
-
-    <div class="sound-label" id="soundLabel">
-      <div class="sound-label-name" id="soundLabelName">KICK</div>
-    </div>
-
-    <div class="arc-nav">
-      <canvas id="arcNavCanvas" width="700" height="160"></canvas>
-    </div>
-
-    <!-- Sol shift menüsü -->
-    <div class="shift-menu">
-      <div class="shift-rec" id="recBtn">●
-        <div class="tip">REC</div>
-      </div>
-      <div class="shift-divider"></div>
-      <div class="shift-icon-btn" id="btnFX" onclick="togglePanel('fx')">⚡
-        <div class="tip">FX</div>
-      </div>
-      <div class="shift-icon-btn" id="btnADSR" onclick="togglePanel('adsr')">〜
-        <div class="tip">ADSR</div>
-      </div>
-      <div class="shift-icon-btn" id="btnGrid" onclick="toggleGridPreview()">⊞
-        <div class="tip">GRID</div>
-      </div>
-    </div>
-
-    <!-- Holografik panel -->
-    <div class="holo-panel" id="holoPanel">
-      <div class="holo-panel-header">
-        <div class="holo-panel-title" id="holoPanelTitle">FX</div>
-        <button class="holo-panel-close" onclick="closePanel()">✕</button>
-      </div>
-      <div class="holo-tabs">
-        <div class="holo-tab active" onclick="switchHoloTab('fx',this)">FX</div>
-        <div class="holo-tab" onclick="switchHoloTab('adsr',this)">ADSR</div>
-      </div>
-
-      <!-- FX tab -->
-      <div class="holo-tab-content active" id="holoFX">
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Robotize</span><span class="holo-val" id="valRobot">0%</span></div>
-          <input type="range" class="holo-slider" min="0" max="100" value="0" oninput="updateVal('valRobot',this.value,'%')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Autotune</span><span class="holo-val" id="valTune">0%</span></div>
-          <input type="range" class="holo-slider" min="0" max="100" value="0" oninput="updateVal('valTune',this.value,'%')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Reverb</span><span class="holo-val" id="valReverb">20%</span></div>
-          <input type="range" class="holo-slider" min="0" max="100" value="20" oninput="updateVal('valReverb',this.value,'%')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Delay</span><span class="holo-val" id="valDelay">0ms</span></div>
-          <input type="range" class="holo-slider" min="0" max="500" value="0" oninput="updateVal('valDelay',this.value,'ms')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Pitch</span><span class="holo-val" id="valPitch">0st</span></div>
-          <input type="range" class="holo-slider" min="-12" max="12" value="0" oninput="updateVal('valPitch',this.value,'st')">
-        </div>
-      </div>
-
-      <!-- ADSR tab -->
-      <div class="holo-tab-content" id="holoADSR">
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Attack</span><span class="holo-val" id="valAttack">5ms</span></div>
-          <input type="range" class="holo-slider" min="1" max="500" value="5" oninput="updateVal('valAttack',this.value,'ms')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Decay</span><span class="holo-val" id="valDecay">100ms</span></div>
-          <input type="range" class="holo-slider" min="1" max="1000" value="100" oninput="updateVal('valDecay',this.value,'ms')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Sustain</span><span class="holo-val" id="valSustain">70%</span></div>
-          <input type="range" class="holo-slider" min="0" max="100" value="70" oninput="updateVal('valSustain',this.value,'%')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Release</span><span class="holo-val" id="valRelease">200ms</span></div>
-          <input type="range" class="holo-slider" min="1" max="2000" value="200" oninput="updateVal('valRelease',this.value,'ms')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Volume</span><span class="holo-val" id="valVol">80%</span></div>
-          <input type="range" class="holo-slider" min="0" max="150" value="80" oninput="updateVal('valVol',this.value,'%')">
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- Grid önizleme modal -->
-<div class="grid-preview" id="gridPreview">
-  <div class="grid-preview-inner">
-    <div class="grid-preview-title">⊞ GRID OVERVIEW</div>
-    <button class="grid-close" onclick="toggleGridPreview()">✕</button>
-    <div class="grid-tracks" id="gridTracks"></div>
-  </div>
-</div>
-
+<!-- ══ PERFORMANCE JS ══ -->
 <script>
+
 
 // ══════════════════════════════════════════════
 // ── AUDIO ENGINE — sıfır gecikme ──
@@ -6693,7 +7552,8 @@ document.getElementById('recBtn').addEventListener('click', e=>{
   document.getElementById('recBtn').classList.toggle('active');
 });
 
+
 </script>
-</div>
 
 </body>
+</html>
