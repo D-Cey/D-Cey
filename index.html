@@ -1654,9 +1654,6 @@ body::before { transition:opacity .3s; }
       <div class="sound-label-name" id="soundLabelName">KICK</div>
     </div>
 
-    <div class="arc-nav">
-      <canvas id="arcNavCanvas" width="700" height="160"></canvas>
-    </div>
 
     <!-- Sol shift menüsü -->
     <div class="shift-menu">
@@ -3090,7 +3087,6 @@ function loop(ts){
 
   // Arc nav
   arcPos+=(arcTarget-arcPos)*0.12;
-  drawArcNav();
 
   requestAnimationFrame(loop);
 }
@@ -3130,7 +3126,7 @@ stageEl.addEventListener('mousedown',e=>{
     const se=SOUND_EFFECTS[activeSound]||SOUND_EFFECTS['hihat'];
     startHold(activeSound, se);
   } else {
-    triggerSound(activeSound);
+    triggerPerfSound(activeSound);
   }
 });
 stageEl.addEventListener('mouseup',e=>{
@@ -3145,7 +3141,7 @@ stageEl.addEventListener('touchstart',e=>{
   if(HOLD_SOUNDS.has(activeSound)){
     const se=SOUND_EFFECTS[activeSound]||SOUND_EFFECTS['hihat'];
     startHold(activeSound, se);
-  } else { triggerSound(activeSound); }
+  } else { triggerPerfSound(activeSound); }
 },{passive:false});
 stageEl.addEventListener('touchend',()=>{
   Object.keys(holdState).forEach(stopHold);
@@ -5075,7 +5071,6 @@ function loop(ts){
 
   // Arc nav
   arcPos+=(arcTarget-arcPos)*0.12;
-  drawArcNav();
 
   requestAnimationFrame(loop);
 }
