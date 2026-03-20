@@ -2549,6 +2549,27 @@ function triggerSound(id, manual=false) {
 function fireHit(id, se, power, secondary=false) {
   // ── Ses ──
   if(!secondary){ if(id.startsWith('live_')||id.startsWith('kit_')) playLiveSound(id); else playSound(id, power); }
+  // ── Performance REC → Studio grid ──
+  if(!secondary && perfRecording && window._studioAPI) {
+    // id'den track belirle (live_kicks_0 → kicks → kick)
+    const catMap = {kicks:'kick',snares:'snare',hats:'hihat',melody:'melody',bass:'bass'};
+    let track = null;
+    if(id.startsWith('live_')) {
+      const cat = id.split('_')[1];
+      track = catMap[cat] || null;
+    } else if(id.startsWith('kit_')) {
+      const k = myKit.find(x=>x.id===id);
+      if(k) track = catMap[k.cat] || k.cat;
+    } else {
+      // hihat, kick vs direkt
+      if(id.includes('kick')) track='kick';
+      else if(id.includes('snare')) track='snare';
+      else if(id.includes('hat')) track='hihat';
+      else if(id.includes('melody')) track='melody';
+      else if(id.includes('bass')) track='bass';
+    }
+    if(track) window._studioAPI.recordHit(track);
+  }
   // ── Seçili ses vurgusunu koru ──
   if(!secondary) {
     document.querySelectorAll('.sound-btn.active').forEach(b=>{
@@ -4461,6 +4482,13 @@ function buildGridRows(){
 
         // Right click: open ADSR (single listener)
         cell.addEventListener('contextmenu',e=>{
+          // Dolu bar → FX paneli aç
+          if(grid[track][sc]) {
+            e.preventDefault();
+            e.stopPropagation();
+            openCellFXPanel(track, sc, e.clientX, e.clientY);
+            return;
+          }
           e.preventDefault();
           if(!grid[track][sc]){grid[track][sc]=true;cell.classList.add('active');}
           openADSR(track,sc);
@@ -6836,6 +6864,42 @@ function stageHitEffect(track, overrideColor) {
 
 init();
 
+
+  // ── Performance ekranına köprü ──
+  window._studioAPI = {
+    get grid()          { return grid; },
+    get TRACKS()        { return TRACKS; },
+    get bpm()           { return bpm; },
+    get isPlaying()     { return isPlaying; },
+    get isRecording()   { return isRecording; },
+    get lastHL()        { return lastHL; },
+    get currentStep()   { return currentStep; },
+    totalSteps:         ()=> totalSteps(),
+    startRec:           ()=> { getCtx(); startCountIn(); },
+    stopRec:            ()=> endRecording(),
+    // Performance'dan hit gelince doğru adıma yaz
+    recordHit: function(track, stepOverride) {
+      const step = (stepOverride !== undefined) ? stepOverride
+                 : (isPlaying && lastHL >= 0) ? lastHL : currentStep;
+      if(!TRACKS.includes(track)) return;
+      if(step < 0 || step >= totalSteps()) return;
+      grid[track][step] = true;
+      const cell = document.getElementById('cell-'+track+'-'+step);
+      if(cell) { cell.classList.add('active'); }
+    },
+    // Bar FX: track ve step için envelope getir/kaydet
+    getCellFX: function(track, step) {
+      return envelopes[track]?.[step] || {};
+    },
+    setCellFX: function(track, step, fx) {
+      if(!envelopes[track]) envelopes[track]={};
+      envelopes[track][step] = {...(envelopes[track][step]||{}), ...fx};
+      // FX varsa cell'i işaretle
+      const cell = document.getElementById('cell-'+track+'-'+step);
+      if(cell) cell.classList.add('has-env');
+    }
+  };
+
 })();
 document.addEventListener('gridScreenOpen',function(){if(typeof init==='function')init();});
 </script>
@@ -6905,6 +6969,31 @@ function gotoScreen(n) {
     document.getElementById('holo-inject')?.remove();
   }
 }
+
+// ── Performance REC (studio ile sync) ──
+let perfRecording = false;
+
+function toggleRec() {
+  if(!window._studioAPI) return;
+  perfRecording = !perfRecording;
+  const btn = document.getElementById('recBtn');
+  if(btn) btn.classList.toggle('active', perfRecording);
+  if(perfRecording) {
+    window._studioAPI.startRec(); // count-in + studio kayıt başlar
+  } else {
+    window._studioAPI.stopRec();
+  }
+}
+
+// Studio kayıt durumunu performance butonuna yansıt
+setInterval(()=>{
+  if(!window._studioAPI) return;
+  const studioRec = window._studioAPI.isRecording;
+  if(studioRec !== perfRecording) {
+    perfRecording = studioRec;
+    document.getElementById('recBtn')?.classList.toggle('active', perfRecording);
+  }
+}, 200);
 
 window.addEventListener('keydown', e => {
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
@@ -6995,5 +7084,42 @@ window.addEventListener('keydown',e=>{
 
 </script>
 
+
+<!-- Bar FX Panel -->
+<div id="cellFXPanel" style="
+  position:fixed;z-index:9000;display:none;
+  background:rgba(0,8,28,0.97);backdrop-filter:blur(20px);
+  border:1px solid rgba(0,229,255,0.22);border-radius:12px;
+  padding:16px;width:260px;
+  box-shadow:0 0 40px rgba(0,229,255,0.1);
+  font-family:'Space Mono',monospace;
+">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(0,229,255,0.1);">
+    <div id="cellFXTitle" style="font-size:8px;letter-spacing:3px;color:rgba(0,229,255,0.6);text-transform:uppercase;">BAR FX</div>
+    <button onclick="closeCellFXPanel()" style="background:none;border:1px solid rgba(0,229,255,0.2);border-radius:50%;width:20px;height:20px;color:rgba(0,229,255,0.5);cursor:pointer;font-size:10px;">✕</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:7px;color:rgba(0,229,255,0.4);margin-bottom:3px;"><span>Volume</span><span id="cfxVol">100%</span></div>
+      <input type="range" min="0" max="150" value="100" style="width:100%;accent-color:#00e5ff;" oninput="setCellFX('volume',this.value/100);document.getElementById('cfxVol').textContent=this.value+'%'">
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:7px;color:rgba(0,229,255,0.4);margin-bottom:3px;"><span>Pitch</span><span id="cfxPitch">0st</span></div>
+      <input type="range" min="-12" max="12" value="0" style="width:100%;accent-color:#00e5ff;" oninput="setCellFX('pitch',parseInt(this.value));document.getElementById('cfxPitch').textContent=this.value+'st'">
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:7px;color:rgba(0,229,255,0.4);margin-bottom:3px;"><span>Pan</span><span id="cfxPan">C</span></div>
+      <input type="range" min="-100" max="100" value="0" style="width:100%;accent-color:#00e5ff;" oninput="setCellFX('pan',this.value/100);document.getElementById('cfxPan').textContent=(this.value>0?'R'+this.value:this.value<0?'L'+Math.abs(this.value):'C')">
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:7px;color:rgba(0,229,255,0.4);margin-bottom:3px;"><span>Reverb</span><span id="cfxReverb">0%</span></div>
+      <input type="range" min="0" max="100" value="0" style="width:100%;accent-color:#00e5ff;" oninput="setCellFX('reverb',this.value/100);document.getElementById('cfxReverb').textContent=this.value+'%'">
+    </div>
+    <div style="display:flex;gap:6px;margin-top:4px;">
+      <button onclick="deleteCellHit()" style="flex:1;padding:6px;border:1px solid rgba(255,45,85,0.3);border-radius:6px;background:rgba(255,45,85,0.06);color:rgba(255,45,85,0.7);font-size:7px;letter-spacing:1px;cursor:pointer;">✕ SİL</button>
+      <button onclick="closeCellFXPanel()" style="flex:1;padding:6px;border:1px solid rgba(0,229,255,0.2);border-radius:6px;background:rgba(0,229,255,0.06);color:rgba(0,229,255,0.7);font-size:7px;letter-spacing:1px;cursor:pointer;">✓ TAMAM</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
