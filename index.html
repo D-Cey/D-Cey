@@ -120,7 +120,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 }
 
 /* Scrollable sounds */
-.sounds-scroll { flex:1; overflow-y:auto; padding:0 12px 20px; scrollbar-width:thin; scrollbar-color:rgba(0,229,255,0.2) transparent; }
+.sounds-scroll { flex:1; overflow-y:auto; overflow-x:hidden; padding:0 12px 20px; scrollbar-width:thin; scrollbar-color:rgba(0,229,255,0.2) transparent; min-height:0; }
 .sounds-scroll::-webkit-scrollbar { width:3px; }
 .sounds-scroll::-webkit-scrollbar-thumb { background:rgba(0,229,255,0.2); border-radius:2px; }
 .sounds-scroll::-webkit-scrollbar { display:none; }
@@ -2335,16 +2335,24 @@ async function selectLiveSound(cat, idx, genre) {
   activeSound = dynamicId;
   _activeFreesoundId = s.id;
 
-  // Sesi yükle — önizleme URL'den AudioBuffer oluştur
+  // Preview URL'yi hemen cache'e al
   const previewUrl = s.previews?.['preview-hq-mp3']||s.previews?.['preview-lq-mp3'];
-  if(previewUrl && !_liveAudioBuffers[s.id]) {
-    try {
-      const actx = getACtxS2();
-      const resp = await fetch(previewUrl);
-      const arrayBuf = await resp.arrayBuffer();
-      _liveAudioBuffers[s.id] = await actx.decodeAudioData(arrayBuf);
-    } catch(e){ console.warn('Audio load err:', e.message); }
+  if(previewUrl) {
+    _livePreviewUrls[s.id] = previewUrl;
+    // Arka planda buffer yükle
+    if(!_liveAudioBuffers[s.id]) loadLiveBuffer(s.id, previewUrl);
   }
+
+  // Seçilince anlık önizleme çal
+  if(previewUrl) {
+    const a = new Audio(previewUrl);
+    a.volume = 0.8;
+    a.play().catch(()=>{});
+  }
+
+  // Görsel efekti tetikle
+  const se = SOUND_EFFECTS[dynamicId];
+  if(se) fireHit(dynamicId, se, 0.6, false);
 }
 
 function hexToRgb(hex){
@@ -2365,10 +2373,28 @@ function playLiveSound(id) {
     const gain = actx.createGain(); gain.gain.value = 0.85;
     src.connect(gain); gain.connect(actx.destination);
     src.start(actx.currentTime);
+  } else if(_livePreviewUrls[fId]) {
+    // Buffer yüklenmemişse HTML5 Audio ile anlık çal
+    const a = new Audio(_livePreviewUrls[fId]);
+    a.volume = 0.85; a.play().catch(()=>{});
+    // Arka planda buffer'ı yükle
+    loadLiveBuffer(fId, _livePreviewUrls[fId]);
   } else {
-    // Buffer henüz yüklenmemişse önizleme audio ile çal
-    playSound(id, 1.0);
+    playSound('kick', 1.0); // son çare fallback
   }
+}
+
+// Preview URL cache
+const _livePreviewUrls = {};
+
+async function loadLiveBuffer(soundId, url) {
+  if(_liveAudioBuffers[soundId]) return;
+  try {
+    const actx = getACtxS2();
+    const resp = await fetch(url);
+    const arr = await resp.arrayBuffer();
+    _liveAudioBuffers[soundId] = await actx.decodeAudioData(arr);
+  } catch(e) { console.warn('Buffer load err:', e.message); }
 }
 
 // ── Genre seç ──
