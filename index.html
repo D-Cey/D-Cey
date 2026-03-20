@@ -414,94 +414,192 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 <div id="screen-grid" style="display:none;position:fixed;inset:0;z-index:800;
   background:rgba(2,4,18,0.98);overflow:hidden;">
 <style>
-/* ── GRID EKRANI HOLOGRAFİK TEMA OVERRIDE ── */
+/* ── GRID EKRANI HOLOGRAFİK TEMA ── */
+
+/* Temel renk değişkenleri override */
+#screen-grid { 
+  --bg:#020412; --surface:rgba(0,8,28,0.8); --surface2:rgba(0,12,38,0.7);
+  --surface3:rgba(0,16,48,0.6); --border:rgba(0,229,255,0.12);
+  --border2:rgba(0,229,255,0.2); --text:rgba(255,255,255,0.82);
+  --text2:rgba(0,229,255,0.5); --text3:rgba(0,229,255,0.25);
+  --accent:#00e5ff; --accent2:rgba(0,229,255,0.8); --accent3:#00d4aa;
+  background:#020412 !important; color:rgba(255,255,255,0.82) !important;
+  font-family:'Lexend',sans-serif !important;
+}
+
+/* Gürültü katmanını kaldır */
+#screen-grid ~ * .noise, 
+#screen-grid .noise { display:none !important; }
+
+/* HEADER */
 #screen-grid header {
-  background:rgba(0,8,28,0.95) !important;
+  background:rgba(0,6,22,0.97) !important;
   border-bottom:1px solid rgba(0,229,255,0.15) !important;
 }
-#screen-grid .logo { color:rgba(0,229,255,0.9) !important; font-family:'Lexend',sans-serif !important; }
-#screen-grid body, #screen-grid { background:rgba(2,4,18,0.98) !important; color:rgba(255,255,255,0.82) !important; }
-#screen-grid .structure-bar {
-  background:rgba(0,8,28,0.8) !important;
-  border-bottom:1px solid rgba(0,229,255,0.08) !important;
+#screen-grid .logo { 
+  color:rgba(0,229,255,0.92) !important; 
+  font-family:'Lexend',sans-serif !important; 
+  font-weight:900 !important;
 }
+#screen-grid .logo-dot { background:#00e5ff !important; box-shadow:0 0 10px #00e5ff !important; }
+
+/* STRUCTURE BAR */
+#screen-grid .structure-bar {
+  background:rgba(0,6,22,0.9) !important;
+  border-color:rgba(0,229,255,0.1) !important;
+}
+#screen-grid .structure-label { color:rgba(0,229,255,0.45) !important; }
+#screen-grid .structure-info  { color:rgba(0,229,255,0.6) !important; }
+
+/* BUTTONS */
+#screen-grid .btn, #screen-grid button {
+  background:rgba(0,12,35,0.7) !important;
+  border-color:rgba(0,229,255,0.18) !important;
+  color:rgba(0,229,255,0.6) !important;
+}
+#screen-grid .btn:hover, #screen-grid button:hover {
+  background:rgba(0,229,255,0.1) !important;
+  border-color:rgba(0,229,255,0.5) !important;
+  color:rgba(0,229,255,1) !important;
+}
+#screen-grid .btn-play, #screen-grid .btn-play.active {
+  background:rgba(0,229,255,0.12) !important;
+  border-color:rgba(0,229,255,0.5) !important;
+  color:rgba(0,229,255,1) !important;
+  box-shadow:0 0 12px rgba(0,229,255,0.25) !important;
+}
+#screen-grid .btn-stop { 
+  background:rgba(255,45,85,0.08) !important;
+  border-color:rgba(255,45,85,0.25) !important;
+  color:rgba(255,45,85,0.6) !important;
+}
+#screen-grid .btn-record {
+  background:rgba(255,45,85,0.08) !important;
+  border-color:rgba(255,45,85,0.3) !important;
+  color:rgba(255,45,85,0.7) !important;
+}
+#screen-grid .btn-record.recording {
+  background:rgba(255,45,85,0.2) !important;
+  box-shadow:0 0 16px rgba(255,45,85,0.4) !important;
+}
+
+/* BPM */
+#screen-grid .bpm-control {
+  background:rgba(0,12,38,0.7) !important;
+  border-color:rgba(0,229,255,0.18) !important;
+}
+#screen-grid .bpm-control label { color:rgba(0,229,255,0.4) !important; }
+#screen-grid .bpm-control input { color:rgba(0,229,255,0.9) !important; }
+#screen-grid .bpm-btn { color:rgba(0,229,255,0.5) !important; }
+
+/* TOGGLE PILL */
+#screen-grid .toggle-pill { 
+  background:rgba(0,8,28,0.6) !important; 
+  border-color:rgba(0,229,255,0.15) !important; 
+}
+#screen-grid .toggle-pill-btn { color:rgba(0,229,255,0.4) !important; }
+#screen-grid .toggle-pill-btn.active { 
+  background:rgba(0,229,255,0.15) !important; 
+  color:rgba(0,229,255,0.95) !important; 
+  box-shadow:0 0 10px rgba(0,229,255,0.2) !important;
+}
+
+/* MAIN GRID LAYOUT */
 #screen-grid .main { background:transparent !important; }
 #screen-grid .sidebar {
-  background:rgba(0,6,20,0.7) !important;
+  background:rgba(0,6,22,0.85) !important;
   border-right:1px solid rgba(0,229,255,0.1) !important;
-  backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px) !important;
 }
+#screen-grid .studio { background:rgba(2,4,18,0.6) !important; }
+
+/* TRACK ITEMS */
 #screen-grid .track-item {
-  background:rgba(0,10,30,0.5) !important;
+  background:rgba(0,8,28,0.6) !important;
   border:1px solid rgba(0,229,255,0.08) !important;
-  color:rgba(255,255,255,0.7) !important;
 }
 #screen-grid .track-item.active {
-  background:rgba(0,20,50,0.7) !important;
-  border-color:rgba(0,229,255,0.3) !important;
+  background:rgba(0,18,50,0.75) !important;
+  border-color:rgba(0,229,255,0.28) !important;
+  box-shadow:inset 0 0 12px rgba(0,229,255,0.05) !important;
 }
-#screen-grid .studio {
-  background:rgba(2,4,18,0.6) !important;
-}
-#screen-grid .beat-cell {
-  background:rgba(0,229,255,0.04) !important;
-  border-color:rgba(0,229,255,0.07) !important;
-}
-#screen-grid .beat-cell.active {
-  opacity:0.9 !important;
-}
-#screen-grid .beat-cell.playing-col {
-  box-shadow:0 0 16px rgba(0,229,255,0.6) !important;
-  border-color:rgba(0,229,255,0.6) !important;
-}
-#screen-grid .slot-header-num {
-  color:rgba(0,229,255,0.3) !important;
-  font-family:'Space Mono',monospace !important;
-}
+#screen-grid .track-name { color:rgba(255,255,255,0.75) !important; }
+#screen-grid .track-key { color:rgba(0,229,255,0.4) !important; }
+
+/* GRID HEADER */
 #screen-grid .grid-header-bar {
   background:rgba(0,229,255,0.06) !important;
   border-color:rgba(0,229,255,0.12) !important;
   color:rgba(0,229,255,0.5) !important;
 }
-#screen-grid .btn, #screen-grid .btn-play, #screen-grid .btn-stop, #screen-grid .btn-record {
-  border-color:rgba(0,229,255,0.2) !important;
-  background:rgba(0,229,255,0.05) !important;
-  color:rgba(0,229,255,0.6) !important;
+#screen-grid .slot-header-num {
+  color:rgba(0,229,255,0.35) !important;
+  font-family:'Space Mono',monospace !important;
 }
-#screen-grid .btn-play:hover, #screen-grid .btn-play.active {
-  background:rgba(0,229,255,0.15) !important;
-  color:rgba(0,229,255,1) !important;
-  box-shadow:0 0 16px rgba(0,229,255,0.3) !important;
+
+/* BEAT CELLS */
+#screen-grid .beat-cell {
+  background:rgba(0,229,255,0.03) !important;
+  border-color:rgba(0,229,255,0.07) !important;
+  border-radius:3px !important;
 }
-#screen-grid .metronome-btn {
-  border-color:rgba(0,229,255,0.15) !important;
-  background:rgba(0,229,255,0.04) !important;
-  color:rgba(0,229,255,0.5) !important;
+#screen-grid .beat-cell:hover {
+  background:rgba(0,229,255,0.1) !important;
+  border-color:rgba(0,229,255,0.25) !important;
 }
-#screen-grid .bpm-control {
-  background:rgba(0,10,30,0.6) !important;
-  border-color:rgba(0,229,255,0.15) !important;
+#screen-grid .beat-cell.active.kick   { background:rgba(233,69,96,0.55)  !important; box-shadow:0 0 8px rgba(233,69,96,0.4)  !important; }
+#screen-grid .beat-cell.active.snare  { background:rgba(245,166,35,0.55) !important; box-shadow:0 0 8px rgba(245,166,35,0.4) !important; }
+#screen-grid .beat-cell.active.hihat  { background:rgba(0,212,170,0.55)  !important; box-shadow:0 0 8px rgba(0,212,170,0.4)  !important; }
+#screen-grid .beat-cell.active.melody { background:rgba(124,111,247,0.55)!important; box-shadow:0 0 8px rgba(124,111,247,0.4)!important; }
+#screen-grid .beat-cell.active.bass   { background:rgba(58,159,245,0.55) !important; box-shadow:0 0 8px rgba(58,159,245,0.4) !important; }
+#screen-grid .beat-cell.playing-col {
+  border-color:rgba(0,229,255,0.7) !important;
+  box-shadow:0 0 14px rgba(0,229,255,0.5) !important;
 }
-#screen-grid .bpm-control input { color:rgba(0,229,255,0.9) !important; }
-#screen-grid .toggle-pill { background:rgba(0,229,255,0.05) !important; border-color:rgba(0,229,255,0.15) !important; }
-#screen-grid .toggle-pill-btn.active { background:rgba(0,229,255,0.15) !important; color:rgba(0,229,255,0.9) !important; }
-#screen-grid .popup, #screen-grid .modal { 
+
+/* VOLUME SLIDERS */
+#screen-grid .vol-slider { accent-color:#00e5ff !important; }
+#screen-grid .vol-label   { color:rgba(0,229,255,0.4) !important; }
+
+/* RULER */
+#screen-grid .ruler-wrap {
+  background:rgba(0,6,22,0.8) !important;
+  border-top:1px solid rgba(0,229,255,0.1) !important;
+}
+#screen-grid .ruler-tick { background:rgba(0,229,255,0.15) !important; }
+#screen-grid .ruler-tick.beat4 { background:rgba(0,229,255,0.3) !important; }
+#screen-grid .ruler-segment:hover { background:rgba(0,229,255,0.08) !important; }
+#screen-grid .ruler-segment.active { background:rgba(0,229,255,0.12) !important; }
+
+/* ADSR/POPUP PANELLERİ */
+#screen-grid .ap-panel, #screen-grid .adsr-panel,
+#screen-grid .sound-popup, #screen-grid .modal-overlay .modal {
   background:rgba(0,8,28,0.97) !important;
   border:1px solid rgba(0,229,255,0.2) !important;
-  backdrop-filter:blur(20px);
+  backdrop-filter:blur(20px) !important;
+  box-shadow:0 0 40px rgba(0,229,255,0.08) !important;
 }
-#screen-grid .ap-panel, #screen-grid .adsr-panel {
-  background:rgba(0,8,28,0.9) !important;
-  border-color:rgba(0,229,255,0.12) !important;
+#screen-grid .popup-header, #screen-grid .ap-header {
+  background:rgba(0,12,40,0.95) !important;
+  border-bottom-color:rgba(0,229,255,0.12) !important;
 }
-/* Scrollbar */
+
+/* SCROLLBAR */
 #screen-grid ::-webkit-scrollbar { width:4px; height:4px; }
 #screen-grid ::-webkit-scrollbar-thumb { background:rgba(0,229,255,0.2); border-radius:2px; }
 #screen-grid ::-webkit-scrollbar-track { background:transparent; }
-/* noise overlay kaldır */
-#screen-grid::before { display:none !important; }
-/* Body'nin global stilini geçersiz kıl */
-#screen-grid * { box-sizing:border-box; }
+
+/* TOAST */
+#screen-grid .toast { 
+  background:rgba(0,8,28,0.9) !important; 
+  border-color:rgba(0,229,255,0.25) !important;
+  color:rgba(0,229,255,0.9) !important;
+}
+
+/* HINTS */
+#screen-grid .hint-text, #screen-grid [style*="color:var(--text3)"] {
+  color:rgba(0,229,255,0.25) !important;
+}
 </style>
   
 <!-- COUNT-IN -->
@@ -2622,9 +2720,13 @@ function gotoScreen(n) {
     if(n===2) { stageOv.classList.add('show'); if(typeof openStage==='function') openStage(); }
     else       { stageOv.classList.remove('show'); if(typeof closeStage==='function') closeStage(); }
   }
-  // Grid ekranı açılınca studio'yu başlat
+  // Grid ekranı
   if(n===3) {
     document.dispatchEvent(new CustomEvent('gridScreenOpen'));
+    // body noise overlay'i gizle
+    document.body.style.setProperty('--noise-opacity','0');
+  } else {
+    document.body.style.removeProperty('--noise-opacity');
   }
 }
 
