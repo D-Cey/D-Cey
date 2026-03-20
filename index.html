@@ -655,6 +655,76 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 #screen-grid .hint-text, #screen-grid [style*="color:var(--text3)"] {
   color:rgba(0,229,255,0.25) !important;
 }
+
+/* ── KIT PANEL ── */
+.kit-panel {
+  position:absolute; left:58px; top:50%; transform:translateY(-50%);
+  z-index:40; width:280px;
+  background:rgba(0,8,28,0.88); backdrop-filter:blur(20px);
+  border:1px solid rgba(0,229,255,0.18); border-radius:12px;
+  padding:14px; display:none; flex-direction:column; gap:10px;
+  box-shadow:0 0 40px rgba(0,229,255,0.07);
+  max-height:70vh; overflow:hidden;
+}
+.kit-panel.show { display:flex; }
+.kit-panel-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding-bottom:10px; border-bottom:1px solid rgba(0,229,255,0.1);
+  flex-shrink:0;
+}
+.kit-panel-title {
+  font-size:8px; letter-spacing:4px; text-transform:uppercase;
+  color:rgba(0,229,255,0.6); font-family:'Space Mono',monospace;
+}
+.kit-list { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:4px; scrollbar-width:thin; scrollbar-color:rgba(0,229,255,0.15) transparent; }
+
+/* Kit item */
+.kit-item {
+  display:flex; align-items:center; gap:8px;
+  padding:7px 10px; border-radius:7px;
+  background:rgba(0,229,255,0.04); border:1px solid rgba(0,229,255,0.08);
+  transition:all .18s; position:relative;
+}
+.kit-item:hover { background:rgba(0,229,255,0.08); border-color:rgba(0,229,255,0.2); }
+.kit-item.active-kit { border-color:var(--kc); background:rgba(255,255,255,0.06); }
+.kit-item-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; box-shadow:0 0 6px currentColor; }
+.kit-item-name {
+  flex:1; font-size:10px; font-weight:300; color:rgba(255,255,255,0.75);
+  cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  outline:none; background:transparent; border:none; padding:0;
+  font-family:'Lexend',sans-serif;
+}
+.kit-item-name:focus {
+  color:rgba(0,229,255,0.9); border-bottom:1px solid rgba(0,229,255,0.4);
+}
+.kit-item-key {
+  font-family:'Space Mono',monospace; font-size:7px;
+  color:rgba(0,229,255,0.3); border:1px solid rgba(0,229,255,0.12);
+  padding:1px 5px; border-radius:3px; flex-shrink:0;
+}
+.kit-item-actions { display:flex; gap:4px; opacity:0; transition:opacity .15s; }
+.kit-item:hover .kit-item-actions { opacity:1; }
+.kit-item-btn {
+  width:20px; height:20px; border-radius:4px;
+  border:1px solid rgba(255,255,255,0.1); background:transparent;
+  color:rgba(255,255,255,0.35); font-size:10px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .15s;
+}
+.kit-item-btn:hover { border-color:rgba(255,45,85,0.5); color:rgba(255,45,85,0.8); }
+.kit-item-btn.rename:hover { border-color:rgba(0,229,255,0.5); color:rgba(0,229,255,0.8); }
+
+/* Add to kit butonu — sol paneldeki ses kartlarında */
+.add-to-kit-btn {
+  width:18px; height:18px; border-radius:4px; flex-shrink:0;
+  border:1px solid rgba(0,229,255,0.15); background:transparent;
+  color:rgba(0,229,255,0.35); font-size:11px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .15s; line-height:1;
+}
+.add-to-kit-btn:hover { border-color:rgba(0,229,255,0.6); color:rgba(0,229,255,0.9); background:rgba(0,229,255,0.08); }
+.add-to-kit-btn.in-kit { border-color:rgba(0,229,255,0.5); color:rgba(0,229,255,0.8); background:rgba(0,229,255,0.1); }
+
 </style>
 </style>
 </head>
@@ -1258,6 +1328,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
       <div class="shift-icon-btn" id="btnADSR" onclick="togglePanel('adsr')">〜
         <div class="tip">ADSR</div>
       </div>
+      <div class="shift-icon-btn" id="btnKit" onclick="toggleKitPanel()">♪
+        <div class="tip">KIT</div>
+      </div>
       <div class="shift-icon-btn" id="btnGrid" onclick="toggleGridPreview()">⊞
         <div class="tip">GRID</div>
       </div>
@@ -1319,6 +1392,22 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
         <div class="holo-row">
           <div class="holo-row-label"><span>Volume</span><span class="holo-val" id="valVol">80%</span></div>
           <input type="range" class="holo-slider" min="0" max="150" value="80" oninput="updateVal('valVol',this.value,'%')">
+        </div>
+      </div>
+    </div>
+
+    <!-- Kit paneli -->
+    <div class="kit-panel" id="kitPanel">
+      <div class="kit-panel-header">
+        <div class="kit-panel-title">♪ MY KIT</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:7px;color:rgba(0,229,255,0.3);font-family:'Space Mono',monospace;" id="kitCount">0 ses</span>
+          <button class="holo-panel-close" onclick="toggleKitPanel()">✕</button>
+        </div>
+      </div>
+      <div class="kit-list" id="kitList">
+        <div style="text-align:center;padding:20px;font-size:9px;color:rgba(0,229,255,0.3);letter-spacing:2px;">
+          Sol panelden ses ekle →
         </div>
       </div>
     </div>
@@ -1819,17 +1908,23 @@ function renderCategorySection(genre, cat, resetCount=false) {
         : `<span style="font-size:7px;color:rgba(255,255,255,.2);">${(s.tags||[]).slice(0,1).join('')}</span>`;
       const energyDot = s._energy==='high'?'●':s._energy==='mid'?'◉':'○';
       html += `
-        <div class="sound-btn${`live_${cat}_${i}`===activeSound?' active':''}" data-cat="${cat}" data-idx="${i}"
+        <div class="sound-btn${`live_${cat}_${i}`===activeSound?' active':''}" 
+             data-cat="${cat}" data-idx="${i}" data-sound-id="${s.id}"
              style="--snd-col:${col};" onclick="selectLiveSound('${cat}',${i},'${genre}')">
           <div class="snd-icon">${CAT_ICONS[cat]||'🎵'}</div>
           <div class="snd-info">
-            <div class="snd-name" style="font-size:9px;">${s.name.substring(0,26)}${s.name.length>26?'…':''}</div>
+            <div class="snd-name" style="font-size:9px;">${s.name.substring(0,22)}${s.name.length>22?'…':''}</div>
             <div class="snd-type" style="display:flex;gap:5px;align-items:center;">
               ${badge}
               <span style="font-size:7px;color:rgba(255,255,255,.18);">${dur}</span>
               <span style="font-size:7px;color:${col};opacity:.5;">${energyDot}</span>
             </div>
           </div>
+          <button class="add-to-kit-btn ${myKit.find(k=>k.soundId===s.id)?'in-kit':''}"
+                  onclick="event.stopPropagation();addToKit('${cat}',${i},'${genre}')"
+                  title="Kit'e ekle">
+            ${myKit.find(k=>k.soundId===s.id)?'✓':'+'}
+          </button>
         </div>`;
     });
 
@@ -6125,3 +6220,131 @@ document.addEventListener('gridScreenOpen', function() {
 </script>
 </body>
 </html>
+// ══════════════════════════════════════════════
+// ── MY KIT — Ses ekle/çıkar/yeniden adlandır ──
+// ══════════════════════════════════════════════
+let myKit = [];
+let kitIdCounter = 0;
+const KIT_KEYS = ['q','w','e','r','t','y','u','a','s','d','f','g','h','j','k','l'];
+
+function toggleKitPanel() {
+  const panel = document.getElementById('kitPanel');
+  const btn   = document.getElementById('btnKit');
+  const isOpen = panel.classList.toggle('show');
+  btn.classList.toggle('active', isOpen);
+  if(isOpen) {
+    document.getElementById('holoPanel').classList.remove('show');
+    renderKit();
+  }
+}
+
+function addToKit(cat, idx, genre) {
+  const sounds = dynamicSounds[genre]?.[cat];
+  if(!sounds) return;
+  const s = sounds[idx];
+  if(!s) return;
+  const existing = myKit.findIndex(k => k.soundId === s.id);
+  if(existing >= 0) { removeFromKit(myKit[existing].id); return; }
+  const kitId = 'kit_' + (++kitIdCounter);
+  const col = CAT_COLORS[cat] || '#00e5ff';
+  myKit.push({
+    id: kitId,
+    name: (s._sub || s.name).substring(0,20),
+    cat, idx, genre, col,
+    soundId: s.id,
+    key: KIT_KEYS[myKit.length % KIT_KEYS.length],
+    effectId: 'live_' + cat + '_' + idx,
+  });
+  SOUND_EFFECTS[kitId] = {
+    col, rgb: hexToRgb(col),
+    effect: CAT_EFFECT[cat]||'WALL_LAMP',
+    label: (s._sub||s.name).substring(0,12).toUpperCase()
+  };
+  updateKitCount();
+  renderKit();
+  refreshAddBtns();
+}
+
+function removeFromKit(kitId) {
+  myKit = myKit.filter(k => k.id !== kitId);
+  myKit.forEach((k,i) => k.key = KIT_KEYS[i % KIT_KEYS.length]);
+  updateKitCount();
+  renderKit();
+  refreshAddBtns();
+  if(activeSound === kitId) activeSound = myKit[0]?.id || 'hihat';
+}
+
+function updateKitCount() {
+  const el = document.getElementById('kitCount');
+  if(el) el.textContent = myKit.length + ' ses';
+}
+
+function refreshAddBtns() {
+  const genre = document.getElementById('activeGenreLabel').textContent;
+  const cat = activeCat;
+  renderSingleCat(genre, cat);
+}
+
+function renderKit() {
+  const list = document.getElementById('kitList');
+  if(!list) return;
+  if(!myKit.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px 10px;font-size:9px;color:rgba(0,229,255,0.3);letter-spacing:1.5px;">Sol panelden + ile ses ekle</div>';
+    return;
+  }
+  list.innerHTML = myKit.map(k => `
+    <div class="kit-item ${activeSound===k.id?'active-kit':''}" style="--kc:${k.col};"
+         onclick="selectKitSound('${k.id}')">
+      <div class="kit-item-dot" style="background:${k.col};color:${k.col};"></div>
+      <input class="kit-item-name" id="kname_${k.id}" value="${escHtml(k.name)}"
+             readonly onclick="event.stopPropagation()"
+             ondblclick="startRename('${k.id}')"
+             onblur="finishRename('${k.id}',this.value)"
+             onkeydown="if(event.key==='Enter'){finishRename('${k.id}',this.value);this.blur();}event.stopPropagation();"
+             title="Cift tikla - yeniden adlandir"/>
+      <div class="kit-item-key">${k.key.toUpperCase()}</div>
+      <div class="kit-item-actions">
+        <button class="kit-item-btn rename" onclick="event.stopPropagation();startRename('${k.id}')" title="Adlandir">✎</button>
+        <button class="kit-item-btn" onclick="event.stopPropagation();removeFromKit('${k.id}')" title="Kaldir">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function selectKitSound(kitId) {
+  const k = myKit.find(x => x.id === kitId);
+  if(!k) return;
+  activeSound = kitId;
+  _activeFreesoundId = k.soundId;
+  const se = SOUND_EFFECTS[kitId];
+  if(se) fireHit(kitId, se, 0.5, false);
+  renderKit();
+}
+
+function startRename(kitId) {
+  const inp = document.getElementById('kname_' + kitId);
+  if(inp) { inp.readOnly=false; inp.focus(); inp.select(); }
+}
+
+function finishRename(kitId, val) {
+  const inp = document.getElementById('kname_' + kitId);
+  if(inp) inp.readOnly = true;
+  const k = myKit.find(x => x.id===kitId);
+  if(k && val.trim()) {
+    k.name = val.trim().substring(0,24);
+    if(SOUND_EFFECTS[kitId]) SOUND_EFFECTS[kitId].label = k.name.substring(0,12).toUpperCase();
+  }
+}
+
+// Kit klavye kısayolları
+window.addEventListener('keydown', e => {
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(!myKit.length) return;
+  const k = myKit.find(x => x.key === e.key.toLowerCase());
+  if(!k||e.repeat) return;
+  e.preventDefault();
+  selectKitSound(k.id);
+});
+
+
