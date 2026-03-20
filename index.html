@@ -117,7 +117,29 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 }
 
 /* Sound categories */
-.cat-section { padding:10px 20px 6px; }
+.cat-section { padding:6px 12px 4px; }
+
+/* ── Kategori sekmeleri ── */
+.cat-tabs {
+  display:flex; gap:4px; padding:8px 12px 6px;
+  border-bottom:1px solid rgba(0,229,255,0.08);
+  flex-wrap:wrap;
+}
+.cat-tab {
+  padding:5px 10px; border-radius:16px; font-size:8px; font-weight:300;
+  letter-spacing:1px; cursor:pointer; transition:all .18s;
+  border:1px solid rgba(255,255,255,0.08); color:rgba(255,255,255,0.3);
+  background:transparent; white-space:nowrap;
+}
+.cat-tab:hover {
+  border-color:var(--tc); color:var(--tc);
+  background:rgba(255,255,255,0.04);
+}
+.cat-tab.active {
+  border-color:var(--tc); color:var(--tc);
+  background:rgba(255,255,255,0.06);
+  box-shadow:0 0 10px rgba(255,255,255,0.05);
+}
 .cat-title {
   font-size:7px; letter-spacing:3px; font-weight:200; text-transform:uppercase;
   color:rgba(0,229,255,0.3); margin-bottom:8px;
@@ -1193,6 +1215,15 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
       <div class="genre-pill" onclick="selectGenre(this,'LO-FI')">Lo-Fi</div>
     </div>
 
+    <!-- Kategori sekmeleri -->
+    <div class="cat-tabs" id="catTabs">
+      <div class="cat-tab active" data-cat="kicks"  onclick="selectCat('kicks')" style="--tc:#ff2d55">🥁 Kick</div>
+      <div class="cat-tab" data-cat="snares" onclick="selectCat('snares')" style="--tc:#ff9f0a">🪘 Snare</div>
+      <div class="cat-tab" data-cat="hats"   onclick="selectCat('hats')"   style="--tc:#00e5ff">🎩 Hat</div>
+      <div class="cat-tab" data-cat="melody" onclick="selectCat('melody')" style="--tc:#bf5af2">🎹 Melody</div>
+      <div class="cat-tab" data-cat="bass"   onclick="selectCat('bass')"   style="--tc:#30d158">🎸 Bass</div>
+    </div>
+
     <div class="sounds-scroll" id="soundsScroll"></div>
 
     <div class="fx-row">
@@ -1604,6 +1635,7 @@ const CAT_EFFECT = {
 // Dinamik ses koleksiyonu — genre seçilince Freesound'dan dolar
 let dynamicSounds = {}; // { genre: { catKey: [soundObjects] } }
 let currentLoadingGenre = null;
+let activeCat = 'kicks'; // aktif görünen kategori
 const FREESOUND_API_KEY = 'z7b5u8NuPhyEZ0sRodt82pW00VelwaGSwjZJGWLM';
 
 
@@ -1662,12 +1694,12 @@ async function fetchGenreSounds(genre, catFilter=null) {
     }
 
     dynamicSounds[genre][cat] = allResults;
-    if(currentLoadingGenre === genre) renderCategorySection(genre, cat);
+    if(currentLoadingGenre === genre && cat === activeCat) renderSingleCat(genre, cat);
   }));
 
   if(currentLoadingGenre === genre) {
-    const allSounds = Object.values(dynamicSounds[genre]).flat();
-    analyzeGenreSoundsWithClaude(genre, allSounds);
+    const catSounds = dynamicSounds[genre]?.[activeCat] || [];
+    analyzeGenreSoundsWithClaude(genre, catSounds);
   }
 }
 
@@ -1734,7 +1766,7 @@ ${list}`
       const s = allSounds[a.index];
       if(s) { s._cat=a.category; s._sub=a.subtype; s._energy=a.energy; s._analyzed=true; }
     });
-    if(currentLoadingGenre===genre) renderAllCategories(genre);
+    if(currentLoadingGenre===genre) renderSingleCat(genre, activeCat);
   } catch(e){ console.warn('Claude analiz err:', e.message); }
 }
 
@@ -1849,8 +1881,37 @@ function toggleCatCollapse(cat) {
   renderCategorySection(genre, cat);
 }
 
+// ── Kategori seç (tab tıklama) ──
+function selectCat(cat) {
+  activeCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.cat === cat);
+  });
+  const genre = document.getElementById('activeGenreLabel').textContent;
+  // Cache'de varsa anında göster, yoksa çek
+  if(dynamicSounds[genre]?.[cat]?.length > 0) {
+    renderSingleCat(genre, cat);
+  } else {
+    const scroll = document.getElementById('soundsScroll');
+    scroll.innerHTML = '<div style="padding:16px;text-align:center;font-size:9px;color:rgba(0,229,255,.4);letter-spacing:2px;">⟳ Yükleniyor...</div>';
+    fetchGenreSounds(genre, cat);
+  }
+}
+
+function renderSingleCat(genre, cat) {
+  const scroll = document.getElementById('soundsScroll');
+  scroll.innerHTML = '';
+  // Eski section varsa kaldır
+  const old = document.getElementById('cat-sec-' + cat);
+  if(old) old.remove();
+  const sec = document.createElement('div');
+  sec.className = 'cat-section'; sec.id = 'cat-sec-' + cat;
+  scroll.appendChild(sec);
+  renderCategorySection(genre, cat, true);
+}
+
 function renderAllCategories(genre) {
-  Object.keys(GENRE_QUERIES[genre]||{}).forEach(cat => renderCategorySection(genre, cat, true));
+  renderSingleCat(genre, activeCat);
 }
 
 // ── Ses seç ve yükle ──
