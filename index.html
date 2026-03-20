@@ -2889,39 +2889,67 @@ function gotoScreen(n) {
     if(n===2) { stageOv.classList.add('show'); if(typeof openStage==='function') openStage(); }
     else       { stageOv.classList.remove('show'); if(typeof closeStage==='function') closeStage(); }
   }
-  // Grid ekranı — body stilini geçici değiştir
+  // Grid ekranı — tüm stilleri inject et
+  const existingHoloStyle = document.getElementById('holo-inject');
   if(n===3) {
     document.dispatchEvent(new CustomEvent('gridScreenOpen'));
-    document.body.style.background = '#020412';
-    document.body.style.setProperty('--noise-opacity','0');
-    document.body.style.setProperty('--bg','#020412');
-    document.body.style.setProperty('--surface','rgba(0,8,28,0.85)');
-    document.body.style.setProperty('--surface2','rgba(0,12,38,0.75)');
-    document.body.style.setProperty('--surface3','rgba(0,16,48,0.65)');
-    document.body.style.setProperty('--border','rgba(0,229,255,0.12)');
-    document.body.style.setProperty('--border2','rgba(0,229,255,0.22)');
-    document.body.style.setProperty('--text','rgba(255,255,255,0.82)');
-    document.body.style.setProperty('--text2','rgba(0,229,255,0.55)');
-    document.body.style.setProperty('--text3','rgba(0,229,255,0.28)');
-    document.body.style.setProperty('--accent','#00e5ff');
-    document.body.style.setProperty('--accent2','rgba(0,229,255,0.85)');
-    document.body.style.setProperty('--accent3','#00d4aa');
+    if(!existingHoloStyle) {
+      const st = document.createElement('style');
+      st.id = 'holo-inject';
+      st.textContent = `
+        body { background:#020412 !important; }
+        body::before { opacity:0 !important; }
+        :root {
+          --bg:#020412 !important; --surface:rgba(0,8,28,0.88) !important;
+          --surface2:rgba(0,12,38,0.78) !important; --surface3:rgba(0,16,48,0.68) !important;
+          --border:rgba(0,229,255,0.13) !important; --border2:rgba(0,229,255,0.24) !important;
+          --text:rgba(255,255,255,0.84) !important; --text2:rgba(0,229,255,0.58) !important;
+          --text3:rgba(0,229,255,0.30) !important;
+          --accent:#00e5ff !important; --accent2:rgba(0,229,255,0.88) !important; --accent3:#00d4aa !important;
+          --kick:#00e5ff !important; --snare:#40d0ff !important; --hihat:#80e8ff !important;
+          --melody:#a0b4ff !important; --bass:#60d8a0 !important;
+        }
+        header {
+          background:rgba(0,6,22,0.97) !important;
+          border-bottom-color:rgba(0,229,255,0.15) !important;
+        }
+        .logo { color:rgba(0,229,255,0.92) !important; font-family:'Lexend',sans-serif !important; }
+        .logo-dot { background:#00e5ff !important; box-shadow:0 0 10px #00e5ff !important; }
+        .structure-bar { background:rgba(0,6,22,0.9) !important; border-bottom-color:rgba(0,229,255,0.1) !important; }
+        .main { background:transparent !important; }
+        .sidebar { background:rgba(0,6,22,0.82) !important; border-right-color:rgba(0,229,255,0.1) !important; }
+        .studio { background:rgba(2,4,18,0.55) !important; }
+        .track-item { background:rgba(0,8,28,0.65) !important; border-color:rgba(0,229,255,0.08) !important; }
+        .track-item.active { background:rgba(0,18,52,0.8) !important; border-color:rgba(0,229,255,0.3) !important; }
+        .track-name { color:rgba(255,255,255,0.78) !important; }
+        .beat-cell { background:rgba(0,229,255,0.03) !important; border-color:rgba(0,229,255,0.07) !important; }
+        .beat-cell:hover { background:rgba(0,229,255,0.1) !important; }
+        .beat-cell.active { border-color:transparent !important; }
+        .beat-cell.playing-col { border-color:rgba(0,229,255,0.7) !important; box-shadow:0 0 12px rgba(0,229,255,0.5) !important; }
+        .grid-header-bar { background:rgba(0,229,255,0.05) !important; color:rgba(0,229,255,0.5) !important; border-color:rgba(0,229,255,0.1) !important; }
+        .slot-header-num { color:rgba(0,229,255,0.35) !important; }
+        button, .btn { background:rgba(0,8,28,0.7) !important; border-color:rgba(0,229,255,0.18) !important; color:rgba(0,229,255,0.6) !important; }
+        .btn-play { background:rgba(0,229,255,0.12) !important; border-color:rgba(0,229,255,0.5) !important; color:rgba(0,229,255,1) !important; }
+        .btn-stop { background:rgba(255,45,85,0.06) !important; border-color:rgba(255,45,85,0.25) !important; color:rgba(255,45,85,0.55) !important; }
+        .btn-record { background:rgba(255,45,85,0.06) !important; border-color:rgba(255,45,85,0.3) !important; color:rgba(255,45,85,0.7) !important; }
+        .btn-record.recording { background:rgba(255,45,85,0.2) !important; box-shadow:0 0 16px rgba(255,45,85,0.4) !important; }
+        .bpm-control { background:rgba(0,12,38,0.7) !important; border-color:rgba(0,229,255,0.18) !important; }
+        .bpm-control input { color:rgba(0,229,255,0.92) !important; }
+        .toggle-pill { background:rgba(0,8,28,0.6) !important; border-color:rgba(0,229,255,0.15) !important; }
+        .toggle-pill-btn { color:rgba(0,229,255,0.4) !important; background:transparent !important; }
+        .toggle-pill-btn.active { background:rgba(0,229,255,0.15) !important; color:rgba(0,229,255,0.95) !important; }
+        .ap-panel, .adsr-panel, .sound-popup, .modal { background:rgba(0,8,28,0.97) !important; border-color:rgba(0,229,255,0.2) !important; }
+        .vol-slider { accent-color:#00e5ff !important; }
+        .ruler-wrap { background:rgba(0,6,22,0.85) !important; border-top-color:rgba(0,229,255,0.1) !important; }
+        .ruler-segment.active { background:rgba(0,229,255,0.1) !important; }
+        ::-webkit-scrollbar { width:4px; height:4px; }
+        ::-webkit-scrollbar-thumb { background:rgba(0,229,255,0.22); border-radius:2px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+      `;
+      document.head.appendChild(st);
+    }
   } else {
-    // Orijinal renklere dön
-    document.body.style.background = '';
-    document.body.style.removeProperty('--noise-opacity');
-    document.body.style.removeProperty('--bg');
-    document.body.style.removeProperty('--surface');
-    document.body.style.removeProperty('--surface2');
-    document.body.style.removeProperty('--surface3');
-    document.body.style.removeProperty('--border');
-    document.body.style.removeProperty('--border2');
-    document.body.style.removeProperty('--text');
-    document.body.style.removeProperty('--text2');
-    document.body.style.removeProperty('--text3');
-    document.body.style.removeProperty('--accent');
-    document.body.style.removeProperty('--accent2');
-    document.body.style.removeProperty('--accent3');
+    if(existingHoloStyle) existingHoloStyle.remove();
   }
 }
 
