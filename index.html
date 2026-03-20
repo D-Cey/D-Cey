@@ -748,10 +748,15 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 </div>
 
 <!-- ══ EKRAN 3: GRID ══ -->
-<div id="screen-grid" style="display:none;position:fixed;inset:0;z-index:800;
-  background:rgba(2,4,18,0.98);overflow:hidden;">
-
-  
+<div id="screen-grid" style="display:none;position:fixed;inset:0;z-index:800;overflow:hidden;">
+<style>
+/* Grid ekranına özel font */
+#screen-grid * { font-family:'Lexend',sans-serif; }
+#screen-grid header, #screen-grid .bpm-control, #screen-grid .structure-bar,
+#screen-grid .slot-header-num, #screen-grid .track-key, #screen-grid .sound-tag {
+  font-family:'Space Mono',monospace !important;
+}
+</style>
 <!-- COUNT-IN -->
 <div class="countin-overlay" id="countinOverlay">
   <div class="countin-number" id="countinNumber">4</div>
@@ -771,8 +776,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 </div>
 
 <!-- HEADER -->
-<header style="background:rgba(0,8,28,0.92);border-bottom:1px solid rgba(0,229,255,0.12);backdrop-filter:blur(16px);">
-  <div class="logo" style="color:rgba(0,229,255,0.9);"><div class="logo-dot" style="background:#00e5ff;box-shadow:0 0 8px #00e5ff;"></div>D-CEY STUDIO</div>
+<header>
+  <div class="logo"><div class="logo-dot"></div>RhythmAI</div>
   <div class="bpm-control">
     <label>BPM</label>
     <button class="bpm-btn" id="bpmMinus">−</button>
@@ -799,7 +804,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
   </div>
   <div class="header-spacer"></div>
   <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;">hover a lit cell → click ⊹ to edit envelope</div>
-
+  <button class="stage-open-btn" id="stageOpenBtn" title="Stage Modu — F">🎭 Stage</button>
 </header>
 
 <!-- STRUCTURE BAR -->
@@ -1174,45 +1179,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 <!-- ═══════════════════════════════════════════════════════
      STAGE MODE OVERLAY
 ════════════════════════════════════════════════════════ -->
-<div class="stage-overlay" id="stageOverlay">
-
-  <!-- Close -->
-  <button class="stage-close" id="stageClose" title="Kapat (Esc)">✕</button>
-
-  <!-- Top bar -->
-  <div class="stage-topbar">
-    <div class="stage-bpm-pill" id="stageBpmPill">♩ <span id="stageBpmVal">120</span> BPM</div>
-    <div class="stage-status" id="stageStatus"></div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button class="stage-topbar-pill" id="stageClearBtn">✕ Clear</button>
-      <div class="stage-listen-pill" id="stageListenPill">👂</div>
-    </div>
-  </div>
-
-  <!-- Nebula canvas — full stage -->
-  <canvas id="stageNebulaCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;"></canvas>
-
-  <!-- Hit area over sphere -->
-  <div id="stageHitArea" style="position:absolute;border-radius:50%;z-index:8;cursor:pointer;touch-action:none;"></div>
-
-  <!-- Arc selector canvas — bottom -->
-  <canvas id="stageArcCanvas" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:15;touch-action:none;cursor:grab;width:620px;height:180px;background:transparent;"></canvas>
-
-  <!-- Rec button -->
-  <button class="stage-inline-rec" id="stageInlineRec">●</button>
-
-  <!-- Countdown overlay -->
-  <div class="stage-countdown" id="stageCountdown">
-    <div class="stage-countdown-num" id="stageCountdownNum">4</div>
-  </div>
-
-  <!-- Rec stopped flash -->
-  <div class="stage-stopped-flash" id="stageStoppedFlash">
-    <div class="stage-stopped-icon">⏹</div>
-    <div class="stage-stopped-label">KAYIT DURDURULDU</div>
-  </div>
-</div>
-
 <!-- ADD TRACK MODAL -->
 <div class="modal-overlay" id="addTrackModal" style="display:none;opacity:0;pointer-events:none;">
   <div class="modal" style="max-width:340px;padding:28px;">
@@ -1250,169 +1216,6 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 
 <div class="tooltip" id="tooltip"></div>
 <div class="toast" id="toast"></div>
-</div>
-
-<div class="cursor" id="cursor"></div>
-<div class="cursor-dot" id="cursorDot"></div>
-
-<canvas id="bg"></canvas>
-
-<div class="layout">
-  <!-- LEFT PANEL -->
-  <div class="left-panel">
-    <div class="panel-header-row">
-      <div class="panel-header">
-        <div class="panel-logo">D-CEY</div>
-        <div class="panel-genre" id="activeGenreLabel">RAP BEAT</div>
-      </div>
-      <button class="collapse-btn" id="collapseBtn" onclick="togglePanelCollapse()" title="Küçült / Genişlet">‹</button>
-    </div>
-
-    <!-- Collapsed state — sadece renkli noktalar -->
-    <div class="collapsed-icon" id="collapsedIcon">
-      <div class="collapsed-cat-dot" style="background:#ff2d55" onclick="expandAndScroll('kicks')" title="Kicks"></div>
-      <div class="collapsed-cat-dot" style="background:#ff9f0a" onclick="expandAndScroll('snares')" title="Snares"></div>
-      <div class="collapsed-cat-dot" style="background:#00e5ff" onclick="expandAndScroll('hats')" title="Hi-Hats"></div>
-      <div class="collapsed-cat-dot" style="background:#bf5af2" onclick="expandAndScroll('melody')" title="Melody"></div>
-      <div class="collapsed-cat-dot" style="background:#30d158" onclick="expandAndScroll('bass')" title="Bass"></div>
-    </div>
-
-    <div class="genre-row">
-      <div class="genre-pill active" onclick="selectGenre(this,'RAP BEAT')">Rap</div>
-      <div class="genre-pill" onclick="selectGenre(this,'TRAP')">Trap</div>
-      <div class="genre-pill" onclick="selectGenre(this,'PHONK')">Phonk</div>
-      <div class="genre-pill" onclick="selectGenre(this,'DRILL')">Drill</div>
-      <div class="genre-pill" onclick="selectGenre(this,'LO-FI')">Lo-Fi</div>
-    </div>
-
-    <!-- Kategori sekmeleri -->
-    <div class="cat-tabs" id="catTabs">
-      <div class="cat-tab active" data-cat="kicks"  onclick="selectCat('kicks')" style="--tc:#ff2d55">🥁 Kick</div>
-      <div class="cat-tab" data-cat="snares" onclick="selectCat('snares')" style="--tc:#ff9f0a">🪘 Snare</div>
-      <div class="cat-tab" data-cat="hats"   onclick="selectCat('hats')"   style="--tc:#00e5ff">🎩 Hat</div>
-      <div class="cat-tab" data-cat="melody" onclick="selectCat('melody')" style="--tc:#bf5af2">🎹 Melody</div>
-      <div class="cat-tab" data-cat="bass"   onclick="selectCat('bass')"   style="--tc:#30d158">🎸 Bass</div>
-    </div>
-
-    <div class="sounds-scroll" id="soundsScroll"></div>
-
-    <div class="fx-row">
-      <div class="fx-btn" onclick="this.classList.toggle('on')">Reverb</div>
-      <div class="fx-btn" onclick="this.classList.toggle('on')">Delay</div>
-      <div class="fx-btn" onclick="this.classList.toggle('on')">Tune</div>
-      <div class="fx-btn" onclick="this.classList.toggle('on')">Robot</div>
-    </div>
-  </div>
-
-  <!-- CENTER STAGE -->
-  <div class="center-stage" id="centerStage">
-    <canvas id="stageCanvas"></canvas>
-
-
-
-    <div class="sound-label" id="soundLabel">
-      <div class="sound-label-name" id="soundLabelName">KICK</div>
-    </div>
-
-
-
-    <!-- Sol shift menüsü -->
-    <div class="shift-menu">
-      <div class="shift-rec" id="recBtn">●
-        <div class="tip">REC</div>
-      </div>
-      <div class="shift-divider"></div>
-      <div class="shift-icon-btn" id="btnFX" onclick="togglePanel('fx')">⚡
-        <div class="tip">FX</div>
-      </div>
-      <div class="shift-icon-btn" id="btnADSR" onclick="togglePanel('adsr')">〜
-        <div class="tip">ADSR</div>
-      </div>
-      <div class="shift-icon-btn" id="btnKit" onclick="toggleKitPanel()">♪
-        <div class="tip">KIT</div>
-      </div>
-      <div class="shift-icon-btn" id="btnGrid" onclick="toggleGridPreview()">⊞
-        <div class="tip">GRID</div>
-      </div>
-    </div>
-
-    <!-- Holografik panel -->
-    <div class="holo-panel" id="holoPanel">
-      <div class="holo-panel-header">
-        <div class="holo-panel-title" id="holoPanelTitle">FX</div>
-        <button class="holo-panel-close" onclick="closePanel()">✕</button>
-      </div>
-      <div class="holo-tabs">
-        <div class="holo-tab active" onclick="switchHoloTab('fx',this)">FX</div>
-        <div class="holo-tab" onclick="switchHoloTab('adsr',this)">ADSR</div>
-      </div>
-
-      <!-- FX tab -->
-      <div class="holo-tab-content active" id="holoFX">
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Robotize</span><span class="holo-val" id="valRobot">0%</span></div>
-          <input type="range" class="holo-slider" min="0" max="100" value="0" oninput="updateVal('valRobot',this.value,'%')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Autotune</span><span class="holo-val" id="valTune">0%</span></div>
-          <input type="range" class="holo-slider" min="0" max="100" value="0" oninput="updateVal('valTune',this.value,'%')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Reverb</span><span class="holo-val" id="valReverb">20%</span></div>
-          <input type="range" class="holo-slider" min="0" max="100" value="20" oninput="updateVal('valReverb',this.value,'%')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Delay</span><span class="holo-val" id="valDelay">0ms</span></div>
-          <input type="range" class="holo-slider" min="0" max="500" value="0" oninput="updateVal('valDelay',this.value,'ms')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Pitch</span><span class="holo-val" id="valPitch">0st</span></div>
-          <input type="range" class="holo-slider" min="-12" max="12" value="0" oninput="updateVal('valPitch',this.value,'st')">
-        </div>
-      </div>
-
-      <!-- ADSR tab -->
-      <div class="holo-tab-content" id="holoADSR">
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Attack</span><span class="holo-val" id="valAttack">5ms</span></div>
-          <input type="range" class="holo-slider" min="1" max="500" value="5" oninput="updateVal('valAttack',this.value,'ms')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Decay</span><span class="holo-val" id="valDecay">100ms</span></div>
-          <input type="range" class="holo-slider" min="1" max="1000" value="100" oninput="updateVal('valDecay',this.value,'ms')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Sustain</span><span class="holo-val" id="valSustain">70%</span></div>
-          <input type="range" class="holo-slider" min="0" max="100" value="70" oninput="updateVal('valSustain',this.value,'%')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Release</span><span class="holo-val" id="valRelease">200ms</span></div>
-          <input type="range" class="holo-slider" min="1" max="2000" value="200" oninput="updateVal('valRelease',this.value,'ms')">
-        </div>
-        <div class="holo-row">
-          <div class="holo-row-label"><span>Volume</span><span class="holo-val" id="valVol">80%</span></div>
-          <input type="range" class="holo-slider" min="0" max="150" value="80" oninput="updateVal('valVol',this.value,'%')">
-        </div>
-      </div>
-    </div>
-
-    <!-- Kit paneli -->
-    <div class="kit-panel" id="kitPanel">
-      <div class="kit-panel-header">
-        <div class="kit-panel-title">♪ MY KIT</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <span style="font-size:7px;color:rgba(0,229,255,0.3);font-family:'Space Mono',monospace;" id="kitCount">0 ses</span>
-          <button class="holo-panel-close" onclick="toggleKitPanel()">✕</button>
-        </div>
-      </div>
-      <div class="kit-list" id="kitList">
-        <div style="text-align:center;padding:20px;font-size:9px;color:rgba(0,229,255,0.3);letter-spacing:2px;">
-          Sol panelden ses ekle →
-        </div>
-      </div>
-    </div>
-
-  </div>
 </div>
 
 <!-- Grid önizleme modal -->
@@ -1773,13 +1576,20 @@ async function fetchGenreSounds(genre, catFilter=null) {
     for(const q of queryList) {
       try {
         // page_size=150 — Freesound max
-        const url = `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(q)}&fields=id,name,tags,duration,previews&filter=duration:[0.1%20TO%206]&page_size=150&token=${FREESOUND_API_KEY}`;
+        const url = `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(q)}&fields=id,name,tags,duration,previews&filter=duration:[0.1 TO 6]&page_size=150&token=${FREESOUND_API_KEY}`;
         const res = await fetch(url);
         const data = await res.json();
         _freesoundTotals[key] = (data.count||0);
         const fresh = (data.results||[]).filter(r=>!allResults.find(e=>e.id===r.id));
         allResults = [...allResults, ...fresh];
-      } catch(e) { console.warn('Fetch err:', cat, e.message); }
+      } catch(e) { 
+        console.warn('Freesound err:', cat, q, e.message); 
+      }
+      // Her sorgu sonrası anında güncelle
+      if(allResults.length > 0 && currentLoadingGenre === genre && cat === activeCat) {
+        dynamicSounds[genre][cat] = allResults;
+        renderSingleCat(genre, cat);
+      }
     }
 
     dynamicSounds[genre][cat] = allResults;
@@ -1806,7 +1616,7 @@ async function loadMoreSounds(genre, cat) {
   let newResults = [];
   for(const q of queries[cat]) {
     try {
-      const url = `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(q)}&fields=id,name,tags,duration,previews&filter=duration:[0.1%20TO%206]&page_size=150&page=${page}&token=${FREESOUND_API_KEY}`;
+      const url = `https://freesound.org/apiv2/search/text/?query=${encodeURIComponent(q)}&fields=id,name,tags,duration,previews&filter=duration:[0.1 TO 6]&page_size=150&page=${page}&token=${FREESOUND_API_KEY}`;
       const res = await fetch(url);
       const data = await res.json();
       const fresh = (data.results||[]).filter(r=>!existing.find(e=>e.id===r.id)&&!newResults.find(e=>e.id===r.id));
@@ -1995,14 +1805,19 @@ function selectCat(cat) {
 
 function renderSingleCat(genre, cat) {
   const scroll = document.getElementById('soundsScroll');
+  if(!scroll) return;
   scroll.innerHTML = '';
-  // Eski section varsa kaldır
   const old = document.getElementById('cat-sec-' + cat);
   if(old) old.remove();
   const sec = document.createElement('div');
   sec.className = 'cat-section'; sec.id = 'cat-sec-' + cat;
   scroll.appendChild(sec);
-  renderCategorySection(genre, cat, true);
+  const sounds = dynamicSounds[genre]?.[cat];
+  if(!sounds || sounds.length === 0) {
+    sec.innerHTML = '<div style="padding:16px;text-align:center;font-size:9px;color:rgba(0,229,255,.4);letter-spacing:1.5px;">⟳ Yükleniyor...</div>';
+  } else {
+    renderCategorySection(genre, cat, true);
+  }
 }
 
 function renderAllCategories(genre) {
@@ -2103,7 +1918,7 @@ function getACtxS2(){
 }
 
 // Sayfa açılışında ilk genre yükle
-buildSounds('RAP BEAT');
+activeCat = 'kicks'; buildSounds('RAP BEAT');
 
 
 // ── Stage canvas ──
@@ -3254,9 +3069,8 @@ document.getElementById('recBtn').addEventListener('click', e => {
 
 </script>
 <script>
-// ══ ANA STUDIO JS ══
-(function() {
-// Namespace çakışmasını önle — init() fonksiyonu grid açılınca çağrılacak
+// ══ STUDIO JS ══
+(function(){
 
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -5383,7 +5197,35 @@ function stageDrawArc(ac2, actx2) {
   actx2.fillStyle=mR; actx2.fillRect(SW*0.8,0,SW*0.2,SH);
 }
 
+// ── Arc swipe ──
+let stageArcDragSX=0, stageArcDragSY=0, stageArcDragging=false;
+let stageArcDragVel=0, stageArcLastX=0, stageArcLastT=0;
 
+function stageArcDragStart(x,y){
+  stageArcDragging=true; stageArcDragSX=x; stageArcDragSY=y;
+  stageArcDragVel=0; stageArcLastX=x; stageArcLastT=Date.now();
+}
+function stageArcDragMove(x){
+  if(!stageArcDragging) return;
+  const now=Date.now();
+  stageArcDragVel=(x-stageArcLastX)/Math.max(1,now-stageArcLastT)*16;
+  stageArcLastX=x; stageArcLastT=now;
+  stageArcTarget=stageArcPosition+(stageArcDragSX-x)/320;
+}
+function stageArcDragEnd(x,y){
+  if(!stageArcDragging) return; stageArcDragging=false;
+  const N2=TRACKS.length;
+  const fling=Math.sign(stageArcDragVel)*Math.min(Math.abs(stageArcDragVel*0.08),0.6);
+  const pn=((Math.round(stageArcPosition)%N2)+N2)%N2;
+  const tn=(((Math.round(stageArcPosition-fling))%N2)+N2)%N2;
+  let diff=tn-pn;
+  if(diff>N2/2) diff-=N2;
+  if(diff<-N2/2) diff+=N2;
+  stageArcTarget=Math.round(stageArcPosition)+diff;
+  // Update active track
+  const newIdx=((Math.round(stageArcTarget)%N2)+N2)%N2;
+  selectStageTrack(TRACKS[newIdx]);
+}
 
 // ── Hold ──
 function stageStartHold(){
@@ -6212,11 +6054,9 @@ function stageHitEffect(track, overrideColor) {
 
 init();
 
-// Grid ekranı açılınca init et
-document.addEventListener('gridScreenOpen', function() {
-  if(typeof init === 'function') init();
-});
 })();
+// Grid ekranı açılınca init et
+document.addEventListener("gridScreenOpen",function(){if(typeof init==="function")init();});
 </script>
 </body>
 </html>
