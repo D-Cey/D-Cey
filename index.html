@@ -2001,7 +2001,7 @@ async function buildBuffers() {
 
 // ── Anlık ses çalma — buffer.start() en düşük gecikme ──
 function playSound(id, volumeMult = 1.0) {
-  if (!_buffersReady) return;
+  if (!_buffersReady) { buildBuffers().then(()=>playSound(id,volumeMult)); return; }
   const ctx = getACtx();
   const buf = _buffers[id]; if (!buf) return;
 
@@ -2477,7 +2477,6 @@ function triggerSound(id, manual=false) {
   // Hold sesine basılırsa aktif hold değilse normal başlat
   if(isHoldSound) {
     activeSound = id;
-    buildSounds(document.getElementById('activeGenreLabel').textContent);
     startHold(id, se);
     return;
   }
@@ -3156,12 +3155,15 @@ window.addEventListener('keyup',e=>{
 // Stage hold — mousedown/up
 const stageEl = document.getElementById('centerStage');
 stageEl.addEventListener('mousedown',e=>{
-  if(e.target===document.getElementById('recBtn')) return;
+  if(e.target.closest('.shift-menu,.holo-panel,.kit-panel')) return;
+  // AudioContext hemen aç
+  getACtx(); getACtxS2();
+  if(!_buffersReady) buildBuffers().then(()=>{ if(!HOLD_SOUNDS.has(activeSound)) triggerSound(activeSound); });
   if(HOLD_SOUNDS.has(activeSound)){
     const se=SOUND_EFFECTS[activeSound]||SOUND_EFFECTS['hihat'];
     startHold(activeSound, se);
-  } else {
-    triggerPerfSound(activeSound);
+  } else if(_buffersReady) {
+    triggerSound(activeSound);
   }
 });
 stageEl.addEventListener('mouseup',e=>{
@@ -3171,12 +3173,14 @@ stageEl.addEventListener('mouseleave',e=>{
   Object.keys(holdState).forEach(stopHold);
 });
 stageEl.addEventListener('touchstart',e=>{
-  if(e.target===document.getElementById('recBtn')) return;
+  if(e.target.closest('.shift-menu,.holo-panel,.kit-panel')) return;
   e.preventDefault();
+  getACtx(); getACtxS2();
+  if(!_buffersReady) buildBuffers().then(()=>{ triggerSound(activeSound); });
   if(HOLD_SOUNDS.has(activeSound)){
     const se=SOUND_EFFECTS[activeSound]||SOUND_EFFECTS['hihat'];
     startHold(activeSound, se);
-  } else { triggerPerfSound(activeSound); }
+  } else if(_buffersReady) { triggerSound(activeSound); }
 },{passive:false});
 stageEl.addEventListener('touchend',()=>{
   Object.keys(holdState).forEach(stopHold);
@@ -3255,9 +3259,8 @@ function toggleGridPreview() {
 }
 
 // rec butonu
-document.getElementById('recBtn').addEventListener('click', e=>{
-  e.stopPropagation();
-  document.getElementById('recBtn').classList.toggle('active');
+document.getElementById('recBtn')?.addEventListener('click', e=>{
+  e.stopPropagation(); toggleRec();
 });
 
 </script>
