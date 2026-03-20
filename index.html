@@ -104,9 +104,20 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
   width:2px; background:var(--snd-col,var(--holo-cyan));
   opacity:0; transition:opacity .18s;
 }
-.sound-btn:hover, .sound-btn.active {
+.sound-btn:hover {
   background:rgba(0,20,55,0.45); border-color:var(--snd-col,var(--holo-cyan));
-  box-shadow:0 0 16px rgba(0,229,255,0.1), inset 0 0 20px rgba(0,229,255,0.03);
+  box-shadow:0 0 16px rgba(0,229,255,0.1), inset 0 0 18px rgba(0,229,255,0.04);
+}
+.sound-btn.active {
+  border-color:var(--snd-col,var(--holo-cyan));
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--snd-col,#00e5ff) 7%, rgba(0,10,30,0.6)),
+    rgba(0,8,24,0.55)
+  );
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--snd-col,#00e5ff) 25%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--snd-col,#00e5ff) 10%, transparent),
+    inset 0 0 8px color-mix(in srgb, var(--snd-col,#00e5ff) 6%, transparent);
 }
 .sound-btn:hover::before, .sound-btn.active::before { opacity:1; }
 .snd-icon { font-size:14px; filter:grayscale(0.4); }
@@ -2509,19 +2520,25 @@ function triggerSound(id, manual=false) {
 
   // Normal hit
   activeSound = id;
-  buildSounds(document.getElementById('activeGenreLabel').textContent);
-  setTimeout(()=>{
-    document.querySelectorAll('.sound-btn').forEach(b=>{
-      if(b.querySelector('.snd-name')?.textContent === getSoundName(id))
-        b.classList.add('active');
-    });
-  },0);
   fireHit(id, se, 1);
 }
 
 function fireHit(id, se, power, secondary=false) {
-  // ── Anlık ses — görsel efektten önce ──
-  if(!secondary){ if(id.startsWith('live_')) playLiveSound(id); else playSound(id, power); }
+  // ── Ses ──
+  if(!secondary){ if(id.startsWith('live_')||id.startsWith('kit_')) playLiveSound(id); else playSound(id, power); }
+  // ── Seçili ses vurgusunu koru ──
+  if(!secondary) {
+    document.querySelectorAll('.sound-btn.active').forEach(b=>{
+      // Sadece farklı ses seçildiyse kaldır
+      const bCat=b.dataset.cat, bIdx=b.dataset.idx;
+      const bId=`live_${bCat}_${bIdx}`;
+      if(bId!==activeSound) b.classList.remove('active');
+    });
+    document.querySelectorAll(`[data-cat][data-idx]`).forEach(b=>{
+      const bId=`live_${b.dataset.cat}_${b.dataset.idx}`;
+      b.classList.toggle('active', bId===activeSound);
+    });
+  }
   hitEvents.push({
     time: performance.now(),
     duration: se.effect==='WALL_CRACK'?1400:se.effect==='SHOCKWAVE'?1600:1100,
