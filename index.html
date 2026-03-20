@@ -33,7 +33,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 #bg { position:fixed; inset:0; z-index:0; }
 
 /* ── Layout ── */
-.layout { position:fixed; inset:0; z-index:10; display:grid; grid-template-columns:240px 1fr; }
+.layout { position:fixed; inset:0; z-index:10; display:grid; grid-template-columns:var(--panel-w,240px) 1fr; transition:grid-template-columns .28s; }
 
 /* ── Left panel ── */
 .left-panel {
@@ -42,7 +42,44 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
   display:flex; flex-direction:column; padding:0;
   backdrop-filter: blur(18px);
   position:relative; overflow:hidden;
+  transition: width .28s cubic-bezier(.4,0,.2,1), min-width .28s;
+  width:240px; min-width:240px;
 }
+.left-panel.collapsed {
+  width:44px !important; min-width:44px !important;
+}
+.left-panel.collapsed .panel-header-text,
+.left-panel.collapsed .genre-row,
+.left-panel.collapsed .sounds-scroll,
+.left-panel.collapsed .fx-row,
+.left-panel.collapsed .panel-genre { display:none !important; }
+.left-panel.collapsed .panel-logo { display:none !important; }
+.left-panel.collapsed .collapse-btn { writing-mode:initial; }
+
+/* Panel header row */
+.panel-header-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 14px 0;
+}
+.collapse-btn {
+  width:22px; height:22px; border-radius:5px; flex-shrink:0;
+  border:1px solid rgba(0,229,255,0.2); background:rgba(0,229,255,0.05);
+  color:rgba(0,229,255,0.55); font-size:11px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .2s;
+}
+.collapse-btn:hover { border-color:rgba(0,229,255,0.55); color:rgba(0,229,255,0.9); }
+.collapsed-icon {
+  display:none; flex-direction:column; align-items:center; gap:14px;
+  padding:14px 0; width:100%;
+}
+.left-panel.collapsed .collapsed-icon { display:flex; }
+.collapsed-cat-dot {
+  width:8px; height:8px; border-radius:50%; cursor:pointer;
+  transition:transform .15s; opacity:0.7;
+}
+.collapsed-cat-dot:hover { transform:scale(1.4); opacity:1; }
+
 .left-panel::before {
   content:''; position:absolute; inset:0;
   background: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,229,255,0.015) 40px);
@@ -389,32 +426,28 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 .full-grid-cell.active { background:var(--gc);box-shadow:0 0 8px var(--gc);border-color:transparent; }
 .full-grid-cell.playing { box-shadow:0 0 16px rgba(255,255,255,0.6)!important;border-color:rgba(255,255,255,0.6)!important; }
 
-</style>
-</head>
-<body>
 
-
-<!-- ── Global Navigation ── -->
-<div id="globalNav" style="position:fixed;top:0;right:0;z-index:1000;
-  display:flex;align-items:center;gap:4px;padding:10px 14px;">
-  <div style="font-family:'Space Mono',monospace;font-size:7px;
-    color:rgba(0,229,255,0.2);letter-spacing:2px;margin-right:6px;">D-CEY</div>
-  <button class="gn-btn active" id="gn1" onclick="gotoScreen(1)" title="1">
-    <span class="gn-num">1</span> PERF
-  </button>
-  <button class="gn-btn" id="gn2" onclick="gotoScreen(2)" title="2">
-    <span class="gn-num">2</span> STAGE
-  </button>
-  <button class="gn-btn" id="gn3" onclick="gotoScreen(3)" title="3">
-    <span class="gn-num">3</span> GRID
-  </button>
-</div>
-
-<!-- ══ EKRAN 3: GRID ══ -->
-<div id="screen-grid" style="display:none;position:fixed;inset:0;z-index:800;
-  background:rgba(2,4,18,0.98);overflow:hidden;">
 <style>
 /* ── GRID EKRANI HOLOGRAFİK TEMA ── */
+/* ── TEMEL DEĞİŞKEN OVERRIDE ── */
+#screen-grid {
+  --bg: #020412;
+  --surface: rgba(0,8,28,0.85);
+  --surface2: rgba(0,12,38,0.75);
+  --surface3: rgba(0,16,48,0.65);
+  --border: rgba(0,229,255,0.12);
+  --border2: rgba(0,229,255,0.22);
+  --text: rgba(255,255,255,0.82);
+  --text2: rgba(0,229,255,0.55);
+  --text3: rgba(0,229,255,0.28);
+  --accent: #00e5ff;
+  --accent2: rgba(0,229,255,0.85);
+  --accent3: #00d4aa;
+}
+#screen-grid, #screen-grid * {
+  color: inherit;
+}
+
 
 /* Temel renk değişkenleri override */
 #screen-grid { 
@@ -601,6 +634,31 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
   color:rgba(0,229,255,0.25) !important;
 }
 </style>
+</style>
+</head>
+<body>
+
+
+<!-- ── Global Navigation ── -->
+<div id="globalNav" style="position:fixed;top:0;right:0;z-index:1000;
+  display:flex;align-items:center;gap:4px;padding:10px 14px;">
+  <div style="font-family:'Space Mono',monospace;font-size:7px;
+    color:rgba(0,229,255,0.2);letter-spacing:2px;margin-right:6px;">D-CEY</div>
+  <button class="gn-btn active" id="gn1" onclick="gotoScreen(1)" title="1">
+    <span class="gn-num">1</span> PERF
+  </button>
+  <button class="gn-btn" id="gn2" onclick="gotoScreen(2)" title="2">
+    <span class="gn-num">2</span> STAGE
+  </button>
+  <button class="gn-btn" id="gn3" onclick="gotoScreen(3)" title="3">
+    <span class="gn-num">3</span> GRID
+  </button>
+</div>
+
+<!-- ══ EKRAN 3: GRID ══ -->
+<div id="screen-grid" style="display:none;position:fixed;inset:0;z-index:800;
+  background:rgba(2,4,18,0.98);overflow:hidden;">
+
   
 <!-- COUNT-IN -->
 <div class="countin-overlay" id="countinOverlay">
@@ -1110,9 +1168,21 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--holo-dark
 <div class="layout">
   <!-- LEFT PANEL -->
   <div class="left-panel">
-    <div class="panel-header">
-      <div class="panel-logo">D-CEY</div>
-      <div class="panel-genre" id="activeGenreLabel">RAP BEAT</div>
+    <div class="panel-header-row">
+      <div class="panel-header">
+        <div class="panel-logo">D-CEY</div>
+        <div class="panel-genre" id="activeGenreLabel">RAP BEAT</div>
+      </div>
+      <button class="collapse-btn" id="collapseBtn" onclick="togglePanelCollapse()" title="Küçült / Genişlet">‹</button>
+    </div>
+
+    <!-- Collapsed state — sadece renkli noktalar -->
+    <div class="collapsed-icon" id="collapsedIcon">
+      <div class="collapsed-cat-dot" style="background:#ff2d55" onclick="expandAndScroll('kicks')" title="Kicks"></div>
+      <div class="collapsed-cat-dot" style="background:#ff9f0a" onclick="expandAndScroll('snares')" title="Snares"></div>
+      <div class="collapsed-cat-dot" style="background:#00e5ff" onclick="expandAndScroll('hats')" title="Hi-Hats"></div>
+      <div class="collapsed-cat-dot" style="background:#bf5af2" onclick="expandAndScroll('melody')" title="Melody"></div>
+      <div class="collapsed-cat-dot" style="background:#30d158" onclick="expandAndScroll('bass')" title="Bass"></div>
     </div>
 
     <div class="genre-row">
@@ -1669,12 +1739,14 @@ ${list}`
 }
 
 // ── Kategori bölümü render ──
-function renderCategorySection(genre, cat) {
+// Her kategori için kaç ses gösterildiğini tut
+const _catVisible = {}; // "genre_cat" -> count
+
+function renderCategorySection(genre, cat, resetCount=false) {
   const sounds = dynamicSounds[genre]?.[cat] || [];
   const scroll = document.getElementById('soundsScroll');
   const catLabels = {kicks:'KICKS',snares:'SNARES',hats:'HI-HATS',melody:'MELODY',bass:'BASS'};
 
-  // Varsa güncelle, yoksa ekle
   let sec = document.getElementById(`cat-sec-${cat}`);
   if(!sec) {
     sec = document.createElement('div');
@@ -1682,58 +1754,103 @@ function renderCategorySection(genre, cat) {
     scroll.appendChild(sec);
   }
 
-  const col = CAT_COLORS[cat]||'#00e5ff';
   const key = `${genre}_${cat}`;
+  if(resetCount) _catVisible[key] = 9;
+  if(!_catVisible[key]) _catVisible[key] = 9; // başlangıç: 9 ses
+
+  const visibleCount = _catVisible[key];
+  const visibleSounds = sounds.slice(0, visibleCount);
+  const col = CAT_COLORS[cat]||'#00e5ff';
   const total = _freesoundTotals[key];
-  const totalLabel = total ? ` / ~${total.toLocaleString()} freesound` : '';
-  let html = `<div class="cat-title">${CAT_ICONS[cat]||'🎵'} ${catLabels[cat]||cat}
-    <span style="font-size:7px;color:${col};margin-left:4px;">${sounds.length} ses${totalLabel}</span>
-  </div>`;
+
+  // Header — collapse toggle ile
+  const isCollapsed = sec.dataset.collapsed === 'true';
+  let html = `
+  <div class="cat-title" style="cursor:pointer;user-select:none;"
+       onclick="toggleCatCollapse('${cat}')">
+    <span>${CAT_ICONS[cat]||'🎵'} ${catLabels[cat]||cat}</span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+      <span style="font-size:7px;color:${col};">${sounds.length}${total?'/'+total:''}</span>
+      <span style="font-size:9px;color:rgba(0,229,255,0.4);transition:transform .2s;
+            transform:rotate(${isCollapsed?'-90deg':'0deg'});">▾</span>
+    </span>
+  </div>
+  <div class="cat-sounds-list" style="display:${isCollapsed?'none':'block'};">`;
 
   if(!sounds.length) {
-    html += `<div style="font-size:9px;color:rgba(255,255,255,.2);padding:8px 0;">Yükleniyor...</div>`;
+    html += `<div style="font-size:9px;color:rgba(255,255,255,.2);padding:6px 0 8px;">Yükleniyor...</div>`;
   } else {
-    sounds.forEach((s,i) => {
+    visibleSounds.forEach((s,i) => {
       const dur = s.duration ? s.duration.toFixed(1)+'s' : '?';
       const badge = s._analyzed
         ? `<span style="font-size:7px;color:${col};opacity:.8;">${s._sub||s._cat||''}</span>`
         : `<span style="font-size:7px;color:rgba(255,255,255,.2);">${(s.tags||[]).slice(0,1).join('')}</span>`;
       const energyDot = s._energy==='high'?'●':s._energy==='mid'?'◉':'○';
       html += `
-        <div class="sound-btn" data-snd-id="${s.id}" data-cat="${cat}" data-idx="${i}"
+        <div class="sound-btn${`live_${cat}_${i}`===activeSound?' active':''}" data-cat="${cat}" data-idx="${i}"
              style="--snd-col:${col};" onclick="selectLiveSound('${cat}',${i},'${genre}')">
           <div class="snd-icon">${CAT_ICONS[cat]||'🎵'}</div>
           <div class="snd-info">
-            <div class="snd-name" style="font-size:9px;">${s.name.substring(0,28)}${s.name.length>28?'…':''}</div>
-            <div class="snd-type" style="display:flex;gap:6px;align-items:center;">
+            <div class="snd-name" style="font-size:9px;">${s.name.substring(0,26)}${s.name.length>26?'…':''}</div>
+            <div class="snd-type" style="display:flex;gap:5px;align-items:center;">
               ${badge}
-              <span style="font-size:7px;color:rgba(255,255,255,.2);">${dur}</span>
+              <span style="font-size:7px;color:rgba(255,255,255,.18);">${dur}</span>
               <span style="font-size:7px;color:${col};opacity:.5;">${energyDot}</span>
             </div>
           </div>
         </div>`;
     });
+
+    // "Daha fazla yükle" — 6'şar yükle
+    if(sounds.length > visibleCount || total > sounds.length) {
+      const remaining = sounds.length - visibleCount;
+      const loadLabel = remaining > 0 ? ('+ ' + Math.min(6,remaining) + ' daha goster') : '+ Freesoundan yukle';
+      html += `
+      <button id="more-btn-${cat}"
+        onclick="showMoreSounds('${genre}','${cat}')"
+        style="width:100%;padding:6px;margin-top:4px;border-radius:5px;font-size:7px;
+        letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;
+        font-family:'Space Mono',monospace;border:1px solid rgba(0,229,255,0.12);
+        color:rgba(0,229,255,0.38);background:rgba(0,229,255,0.03);transition:all .2s;"
+        onmouseover="this.style.borderColor='rgba(0,229,255,0.4)';this.style.color='rgba(0,229,255,0.8)'"
+        onmouseout="this.style.borderColor='rgba(0,229,255,0.12)';this.style.color='rgba(0,229,255,0.38)'">
+        ${loadLabel}
+      </button>`;
+    }
   }
-  // Daha fazla yükle butonu
-  if(sounds.length > 0) {
-    html += `<div style="padding:8px 0 4px;">
-      <button id="more-btn-${cat}" onclick="loadMoreSounds('${genre}','${cat}')"
-        style="width:100%;padding:7px;border-radius:6px;font-size:8px;letter-spacing:2px;
-        text-transform:uppercase;cursor:pointer;font-family:'Space Mono',monospace;
-        border:1px solid rgba(0,229,255,0.15);color:rgba(0,229,255,0.4);
-        background:rgba(0,229,255,0.04);transition:all .2s;"
-        onmouseover="this.style.borderColor='rgba(0,229,255,0.45)';this.style.color='rgba(0,229,255,0.85)'"
-        onmouseout="this.style.borderColor='rgba(0,229,255,0.15)';this.style.color='rgba(0,229,255,0.4)'">
-        + Daha Fazla Yükle
-      </button>
-    </div>`;
-  }
+  html += '</div>'; // cat-sounds-list
 
   sec.innerHTML = html;
+  if(isCollapsed) sec.dataset.collapsed = 'true';
+}
+
+// 6 tane daha göster / Freesound'dan yükle
+function showMoreSounds(genre, cat) {
+  const key = `${genre}_${cat}`;
+  const sounds = dynamicSounds[genre]?.[cat] || [];
+  const current = _catVisible[key] || 9;
+  const next = current + 6;
+  if(next <= sounds.length) {
+    _catVisible[key] = next;
+    renderCategorySection(genre, cat);
+  } else {
+    // Freesound'dan daha fazla çek
+    loadMoreSounds(genre, cat);
+  }
+}
+
+// Kategori aç/kapat
+function toggleCatCollapse(cat) {
+  const sec = document.getElementById(`cat-sec-${cat}`);
+  if(!sec) return;
+  const isNowCollapsed = sec.dataset.collapsed !== 'true';
+  sec.dataset.collapsed = isNowCollapsed ? 'true' : 'false';
+  const genre = document.getElementById('activeGenreLabel').textContent;
+  renderCategorySection(genre, cat);
 }
 
 function renderAllCategories(genre) {
-  Object.keys(GENRE_QUERIES[genre]||{}).forEach(cat => renderCategorySection(genre, cat));
+  Object.keys(GENRE_QUERIES[genre]||{}).forEach(cat => renderCategorySection(genre, cat, true));
 }
 
 // ── Ses seç ve yükle ──
@@ -1746,10 +1863,9 @@ async function selectLiveSound(cat, idx, genre) {
   const s = sounds[idx];
   if(!s) return;
 
-  // UI güncelle
-  document.querySelectorAll('.sound-btn').forEach(b=>b.classList.remove('active'));
-  const btns = document.querySelectorAll(`[data-cat="${cat}"][data-idx="${idx}"]`);
-  btns.forEach(b=>b.classList.add('active'));
+  // UI — önceki aktifi kaldır, yenisini işaretle (rebuild yok)
+  document.querySelectorAll('.sound-btn.active').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll(`[data-cat="${cat}"][data-idx="${idx}"]`).forEach(b=>b.classList.add('active'));
 
   // Efekt ve renk belirle
   const col = CAT_COLORS[cat]||'#00e5ff';
@@ -1902,23 +2018,15 @@ function triggerPerfSound(id, manual=false) {
     return;
   }
 
-  // Hold sesine basılırsa aktif hold değilse normal başlat
+  // Hold sesine basılırsa
   if(isHoldSound) {
     activeSound = id;
-    buildSounds(document.getElementById('activeGenreLabel').textContent);
     startHold(id, se);
     return;
   }
 
-  // Normal hit
+  // Normal hit — buildSounds çağırma, sadece ses çal
   activeSound = id;
-  buildSounds(document.getElementById('activeGenreLabel').textContent);
-  setTimeout(()=>{
-    document.querySelectorAll('.sound-btn').forEach(b=>{
-      if(b.querySelector('.snd-name')?.textContent === getSoundName(id))
-        b.classList.add('active');
-    });
-  },0);
   fireHit(id, se, 1);
 }
 
@@ -2720,13 +2828,39 @@ function gotoScreen(n) {
     if(n===2) { stageOv.classList.add('show'); if(typeof openStage==='function') openStage(); }
     else       { stageOv.classList.remove('show'); if(typeof closeStage==='function') closeStage(); }
   }
-  // Grid ekranı
+  // Grid ekranı — body stilini geçici değiştir
   if(n===3) {
     document.dispatchEvent(new CustomEvent('gridScreenOpen'));
-    // body noise overlay'i gizle
+    document.body.style.background = '#020412';
     document.body.style.setProperty('--noise-opacity','0');
+    document.body.style.setProperty('--bg','#020412');
+    document.body.style.setProperty('--surface','rgba(0,8,28,0.85)');
+    document.body.style.setProperty('--surface2','rgba(0,12,38,0.75)');
+    document.body.style.setProperty('--surface3','rgba(0,16,48,0.65)');
+    document.body.style.setProperty('--border','rgba(0,229,255,0.12)');
+    document.body.style.setProperty('--border2','rgba(0,229,255,0.22)');
+    document.body.style.setProperty('--text','rgba(255,255,255,0.82)');
+    document.body.style.setProperty('--text2','rgba(0,229,255,0.55)');
+    document.body.style.setProperty('--text3','rgba(0,229,255,0.28)');
+    document.body.style.setProperty('--accent','#00e5ff');
+    document.body.style.setProperty('--accent2','rgba(0,229,255,0.85)');
+    document.body.style.setProperty('--accent3','#00d4aa');
   } else {
+    // Orijinal renklere dön
+    document.body.style.background = '';
     document.body.style.removeProperty('--noise-opacity');
+    document.body.style.removeProperty('--bg');
+    document.body.style.removeProperty('--surface');
+    document.body.style.removeProperty('--surface2');
+    document.body.style.removeProperty('--surface3');
+    document.body.style.removeProperty('--border');
+    document.body.style.removeProperty('--border2');
+    document.body.style.removeProperty('--text');
+    document.body.style.removeProperty('--text2');
+    document.body.style.removeProperty('--text3');
+    document.body.style.removeProperty('--accent');
+    document.body.style.removeProperty('--accent2');
+    document.body.style.removeProperty('--accent3');
   }
 }
 
